@@ -1,126 +1,147 @@
 @extends('layouts.storefront')
 
 @section('content')
-    <section class="hero-section">
-        <div class="container hero-grid">
-            <div class="hero-main">
-                <p class="eyebrow">Quick commerce for everyday needs</p>
-                <h1>Fast, friendly grocery shopping with a Zepto-style user experience.</h1>
-                <p class="lead">ExpressBazar is designed as a clean quick-commerce storefront with category rails, product cards, promo banners, and a fast checkout flow.</p>
+    @php
+        $categoryTiles = collect($categories)->take(10)->values();
+        $subcategoryTiles = collect($subcategories)->take(10)->values();
+        $featuredSections = collect($featuredSections ?? [])->take(3)->values();
+        $popularRows = $popularRows ?? [];
+        $trendingRows = $trendingRows ?? [];
+    @endphp
+
+    <section id="categories" class="container section-block">
+        <span class="sr-only">Groceries that feel fast, simple, and familiar.</span>
+        <div class="category-rail-grid">
+            @foreach ($categoryTiles as $tile)
+                <a class="category-rail-card" href="{{ route('category.show', $tile['slug']) }}">
+                    <img class="category-rail-thumb" src="{{ $tile['image'] }}" alt="{{ $tile['name'] }}">
+                    <span>{{ $tile['name'] }}</span>
+                </a>
+            @endforeach
+        </div>
+    </section>
+
+    <section id="subcategories" class="container section-block">
+        <div class="subcategory-rail">
+            @foreach ($subcategoryTiles as $tile)
+                <a class="subcategory-chip" href="{{ route('subcategory.show', $tile['slug']) }}">
+                    <strong>{{ $tile['name'] }}</strong>
+                    <span>{{ $tile['category_name'] }}</span>
+                    <small>{{ $tile['products_count'] }} products</small>
+                </a>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="container section-block">
+        <div class="grid-2">
+            <article class="promo-card purple promo-small promo-left">
+                <div class="promo-banner-title">ALL NEW ZEPTO EXPERIENCE</div>
+                <div class="banner-grid">
+                    <div class="banner-mini">0 FEES</div>
+                    <div class="banner-mini">EVERYDAY LOWEST PRICES</div>
+                </div>
+            </article>
+
+            <article class="promo-card dark promo-small promo-right">
+                <div class="promo-banner-title light">Paan Corner</div>
+                <p>Get smoking accessories, fresheners and more in minutes.</p>
                 <div class="hero-actions">
-                    <a class="btn btn-primary" href="{{ route('category.show', 'atta-rice-dals') }}">Shop groceries</a>
-                    <a class="btn btn-ghost" href="{{ route('checkout.show') }}">Go to checkout</a>
+                    <a class="btn btn-white" href="#featured-rails">Order now</a>
                 </div>
-                <div class="hero-metrics">
-                    <div><strong>10 min</strong><span>delivery promise</span></div>
-                    <div><strong>4.8/5</strong><span>customer rating</span></div>
-                    <div><strong>500+</strong><span>daily staples</span></div>
-                </div>
-            </div>
-            <div class="hero-side">
-                <div class="promo-card primary">
-                    <span class="promo-tag">Express picks</span>
-                    <h3>Everyday lowest prices</h3>
-                    <p>Make repeat buying obvious with focused offer cards and clean deal badges.</p>
-                </div>
-                <div class="promo-card secondary">
-                    <span class="promo-tag">Fresh</span>
-                    <h3>Fruits, dairy, pantry</h3>
-                    <p>Highlight fast-moving categories with soft gradients and product-first layouts.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="container section-block">
-        <div class="section-heading">
-            <h2>Popular categories</h2>
-            <a href="{{ route('category.show', 'fruits-vegetables') }}">See all</a>
-        </div>
-        <div class="category-grid">
-                @foreach ($categoryCards as $category)
-                    <a class="category-card" href="{{ route('category.show', $category['slug']) }}">
-                    <span class="category-icon" style="background: linear-gradient(135deg, {{ $category['color'] }}, rgba(255, 255, 255, 0.92));"></span>
-                    <strong>{{ $category['name'] }}</strong>
-                    <small>{{ $category['description'] }}</small>
-                </a>
-                @endforeach
-        </div>
-    </section>
-
-    <section class="container section-block split-grid">
-        @foreach ($benefits as $benefit)
-            <article class="info-card">
-                <h3>{{ $benefit['title'] }}</h3>
-                <p>{{ $benefit['text'] }}</p>
             </article>
+        </div>
+    </section>
+
+    <section id="featured-rails" class="container section-block">
+        @foreach ($featuredSections as $section)
+            <div class="rail-section spaced">
+                <div class="rail-head">
+                    <div class="section-copy">
+                        <h2>{{ $section['subcategory']['name'] }}</h2>
+                        <p>{{ $section['subcategory']['category_name'] }}</p>
+                    </div>
+                    <a href="{{ route('subcategory.show', $section['subcategory']['slug']) }}">See All</a>
+                </div>
+
+                <div class="rail-scroll compact">
+                    @foreach ($section['products'] as $item)
+                        <article class="product-card">
+                            <div class="product-image">
+                                <span class="deal-badge">{{ $item['vendor_name'] }}</span>
+                                <a href="{{ route('product.show', $item['product_slug']) }}">
+                                    <img src="{{ $item['image'] }}" alt="{{ $item['product_name'] }}">
+                                </a>
+                                <form method="POST" action="{{ route('cart.add', $item['product_slug']) }}">
+                                    @csrf
+                                    <input type="hidden" name="vendor_product_id" value="{{ $item['id'] }}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button class="product-add" type="submit">ADD</button>
+                                </form>
+                            </div>
+                            <div class="price-row">
+                                <span class="price">Rs. {{ $item['price'] }}</span>
+                                <span class="mrp">Rs. {{ $item['price'] + 20 }}</span>
+                            </div>
+                            <div class="save-text">Rs. {{ max(1, $item['price'] - 5) }} OFF</div>
+                            <h3><a href="{{ route('product.show', $item['product_slug']) }}">{{ $item['product_name'] }}</a></h3>
+                            <p>{{ $item['vendor_name'] }}</p>
+                            <div class="pack-text">{{ $item['subcategory_name'] ?? '1 pack (1 kg)' }}</div>
+                            <div class="rating-row">★ 4.8</div>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
         @endforeach
     </section>
 
-    <section class="container section-block">
-        <div class="section-heading">
-            <h2>Featured products</h2>
-            <a href="{{ route('category.show', 'atta-rice-dals') }}">Browse more</a>
+    <section id="trending-searches" class="container section-block">
+        <div class="rail-head">
+            <div class="section-copy">
+                <h2>Trending Searches</h2>
+            </div>
         </div>
-        <div class="product-strip">
-            @foreach ($featuredProducts as $product)
-                <a class="product-card" href="{{ route('product.show', $product['slug']) }}">
-                    <div class="product-image">
-                        <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
-                        <span class="deal-badge">{{ $product['deal'] }}</span>
-                        <button class="add-chip" type="button">ADD</button>
-                    </div>
-                    <div class="price-row">
-                        <span class="price">Rs. {{ $product['price'] }}</span>
-                        <span class="mrp">Rs. {{ $product['mrp'] }}</span>
-                    </div>
-                    <div class="save-text">Save Rs. {{ $product['mrp'] - $product['price'] }}</div>
-                    <h3>{{ $product['name'] }}</h3>
-                    <p>{{ $product['unit'] }}</p>
-                    <div class="rating-row">* {{ $product['rating'] }}</div>
-                </a>
+
+        <div class="search-stack">
+            @foreach ($trendingRows as $label => $values)
+                <div class="search-row">
+                    <strong>{{ $label }}</strong>
+                    <p>{{ implode(' | ', $values) }}</p>
+                </div>
             @endforeach
         </div>
     </section>
 
-    <section class="container section-block promo-grid">
-        @foreach ($promoBanners as $banner)
-            <article class="banner-card">
-                <h3>{{ $banner['title'] }}</h3>
-                <p>{{ $banner['text'] }}</p>
-                <a href="{{ route('checkout.show') }}" class="btn btn-light">Order now</a>
-            </article>
-        @endforeach
-    </section>
-
-    <section class="container section-block">
-        <div class="section-heading">
-            <h2>How it works</h2>
+    <section id="popular-searches" class="container section-block">
+        <div class="rail-head">
+            <div class="section-copy">
+                <h2>Popular Searches</h2>
+            </div>
         </div>
-        <div class="steps-grid">
-            @foreach ($howItWorks as $step)
-                <article class="step-card">
-                    <span class="step-number">{{ $loop->iteration }}</span>
-                    <h3>{{ $step['title'] }}</h3>
-                    <p>{{ $step['text'] }}</p>
-                </article>
+
+        <div class="search-stack">
+            @foreach ($popularRows as $label => $values)
+                <div class="search-row">
+                    <strong>{{ $label }}</strong>
+                    <p>{{ implode(' | ', $values) }}</p>
+                </div>
             @endforeach
         </div>
     </section>
 
     <section class="container section-block">
-        <div class="section-heading">
-            <h2>More to explore</h2>
-            <a href="{{ route('cart.show') }}">View cart</a>
+        <div class="rail-head">
+            <div class="section-copy">
+                <h2>Categories</h2>
+            </div>
         </div>
-        <div class="product-strip compact">
-            @foreach ($moreProducts as $product)
-                <a class="mini-card" href="{{ route('product.show', $product['slug']) }}">
-                    <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
-                    <div>
-                        <strong>{{ $product['name'] }}</strong>
-                        <p>Rs. {{ $product['price'] }} | {{ $product['unit'] }}</p>
-                    </div>
+
+        <div class="category-grid wide">
+            @foreach ($categoryTiles as $tile)
+                <a class="category-card" href="{{ route('category.show', $tile['slug']) }}">
+                    <img class="category-thumb" src="{{ $tile['image'] }}" alt="{{ $tile['name'] }}">
+                    <strong>{{ $tile['name'] }}</strong>
+                    <small>{{ $tile['subcategories_count'] }} subcategories</small>
                 </a>
             @endforeach
         </div>

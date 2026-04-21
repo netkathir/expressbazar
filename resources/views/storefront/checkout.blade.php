@@ -1,55 +1,66 @@
 @extends('layouts.storefront')
 
 @section('content')
+    @php
+        $couponCode = $orderSummary['coupon_code'] ?? null;
+    @endphp
+
     <section class="container section-block">
-        <div class="section-heading hero-inline">
-            <div>
-                <h1>Checkout</h1>
-                <p>Complete address, delivery slot, and payment details in one simple flow.</p>
+        <div class="section-title">
+            <div class="section-copy">
+                <span class="eyebrow">Checkout</span>
+                <h1>Delivery details</h1>
+                <p>Fill in your address and place the order.</p>
             </div>
         </div>
 
         <div class="checkout-layout">
-            <form class="checkout-form">
-                <div class="form-card">
-                    <h2>Delivery address</h2>
-                    <div class="form-grid">
-                        <label>Full name<input type="text" placeholder="Enter your name"></label>
-                        <label>Mobile number<input type="text" placeholder="10-digit phone"></label>
-                        <label class="full">Address<textarea rows="4" placeholder="House no, street, area, city"></textarea></label>
-                    </div>
+            <form class="checkout-card checkout-form" method="POST" action="{{ route('checkout.place') }}">
+                @csrf
+                <div class="field-grid">
+                    <label class="field">
+                        <span>Full name</span>
+                        <input class="input" type="text" name="shipping_name" value="{{ old('shipping_name') }}">
+                    </label>
+                    <label class="field">
+                        <span>Phone</span>
+                        <input class="input" type="text" name="shipping_phone" value="{{ old('shipping_phone') }}">
+                    </label>
+                    <label class="field">
+                        <span>Pincode</span>
+                        <input class="input" type="text" name="pincode" value="{{ old('pincode') }}">
+                    </label>
+                    <label class="field full">
+                        <span>Address</span>
+                        <textarea class="textarea" name="shipping_address">{{ old('shipping_address', $oldAddress ?? '') }}</textarea>
+                    </label>
                 </div>
 
-                <div class="form-card">
-                    <h2>Delivery slot</h2>
-                    <div class="slot-row">
-                        <span class="filter-chip active">10:00 - 10:20</span>
-                        <span class="filter-chip">10:20 - 10:40</span>
-                        <span class="filter-chip">11:00 - 11:20</span>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <h2>Payment</h2>
-                    <div class="slot-row">
-                        <span class="filter-chip active">UPI</span>
-                        <span class="filter-chip">Card</span>
-                        <span class="filter-chip">Cash on delivery</span>
-                    </div>
+                <div class="form-actions">
+                    <a class="btn btn-outline" href="{{ route('cart.show') }}">Back to cart</a>
+                    <button class="btn btn-primary" type="submit">Place order</button>
                 </div>
             </form>
 
             <aside class="summary-card">
-                <h2>Cart total</h2>
+                <h2>Order summary</h2>
+                @if ($couponCode)
+                    <div class="summary-row">
+                        <span>Coupon</span>
+                        <strong>{{ $couponCode }}</strong>
+                    </div>
+                @endif
+
                 @foreach ($cartItems as $item)
                     <div class="summary-row">
-                        <span>{{ $item['name'] }}</span>
-                        <strong>Rs. {{ $item['price'] * $item['qty'] }}</strong>
+                        <span>{{ $item['name'] }} x {{ $item['quantity'] }}</span>
+                        <strong>Rs. {{ $item['line_total'] }}</strong>
                     </div>
                 @endforeach
                 <hr>
-                <div class="summary-row"><span>Total</span><strong>Rs. {{ $orderSummary['total'] }}</strong></div>
-                <button class="btn btn-primary block" type="button">Place order</button>
+                <div class="summary-row"><span>Subtotal</span><strong>Rs. {{ $orderSummary['subtotal'] }}</strong></div>
+                <div class="summary-row"><span>Discount</span><strong>-Rs. {{ $orderSummary['discount_total'] }}</strong></div>
+                <div class="summary-row total"><span>Total</span><strong>Rs. {{ $orderSummary['grand_total'] }}</strong></div>
             </aside>
         </div>
     </section>

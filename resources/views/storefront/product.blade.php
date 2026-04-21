@@ -5,51 +5,89 @@
         <div class="breadcrumb">
             <a href="{{ route('home') }}">Home</a>
             <span>/</span>
+            @if (! empty($category['slug'] ?? null))
+                <a href="{{ route('category.show', $category['slug']) }}">{{ $category['name'] }}</a>
+                <span>/</span>
+            @endif
+            @if (! empty($subcategory['slug'] ?? null))
+                <a href="{{ route('subcategory.show', $subcategory['slug']) }}">{{ $subcategory['name'] }}</a>
+                <span>/</span>
+            @endif
             <span>{{ $product['name'] }}</span>
         </div>
 
-        <div class="product-layout">
-            <div class="product-visual">
+        <div class="product-detail-grid">
+            <div class="product-detail-visual">
                 <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
             </div>
-            <div class="product-summary">
-                <span class="deal-badge inline">{{ $product['deal'] }}</span>
+
+            <div class="product-detail-copy">
+                <span class="eyebrow">Product detail</span>
                 <h1>{{ $product['name'] }}</h1>
-                <p class="muted">{{ $product['description'] }}</p>
-                <div class="price-row large">
-                    <span class="price">Rs. {{ $product['price'] }}</span>
-                    <span class="mrp">Rs. {{ $product['mrp'] }}</span>
+                <p class="summary-subtitle">{{ $product['description'] }}</p>
+
+                <div class="highlight-card stack-card">
+                    <div class="summary-row"><span>Category</span><strong>{{ $product['category_name'] ?? 'Grocery' }}</strong></div>
+                    <div class="summary-row"><span>Subcategory</span><strong>{{ $product['subcategory_name'] ?? 'General' }}</strong></div>
+                    <div class="summary-row"><span>SKU</span><strong>{{ $product['sku'] ?? '-' }}</strong></div>
                 </div>
-                <div class="rating-row">* {{ $product['rating'] }} rating</div>
-                <p class="muted">{{ $product['unit'] }} | Delivery in 10-20 minutes</p>
-                <div class="action-row">
-                    <button class="btn btn-ghost" type="button">-</button>
-                    <button class="btn btn-primary" type="button">Add to cart</button>
-                    <button class="btn btn-ghost" type="button">+</button>
-                </div>
-                <div class="feature-list">
-                    <div>Fresh stock and clear pricing</div>
-                    <div>Easy substitutions and repeat buys</div>
-                    <div>Supports cart, checkout, and order flow</div>
-                </div>
+
+                @if (($vendorProducts ?? []) !== [])
+                    <div class="vendor-stack">
+                        @foreach ($vendorProducts as $item)
+                            <div class="vendor-offer-card">
+                                <div>
+                                    <strong>{{ $item['vendor_name'] }}</strong>
+                                    <p>Stock {{ $item['stock'] }} | Rs. {{ $item['price'] }}</p>
+                                </div>
+
+                                @if ($item['stock'] > 0)
+                                    <form method="POST" action="{{ route('cart.add', $product['slug']) }}">
+                                        @csrf
+                                        <input type="hidden" name="vendor_product_id" value="{{ $item['id'] }}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button class="btn btn-primary" type="submit">Add to cart</button>
+                                    </form>
+                                @else
+                                    <span class="stock-pill muted">Out of stock</span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </section>
 
-    <section class="container section-block">
-        <div class="section-heading">
-            <h2>Related products</h2>
-        </div>
-        <div class="product-strip compact">
-            @foreach ($relatedProducts as $related)
-                <a class="mini-card" href="{{ route('product.show', $related['slug']) }}">
-                    <img src="{{ $related['image'] }}" alt="{{ $related['name'] }}">
-                    <div>
-                        <strong>{{ $related['name'] }}</strong>
-                        <p>Rs. {{ $related['price'] }} | {{ $related['unit'] }}</p>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    </section>
+    @if (($relatedProducts ?? []) !== [])
+        <section class="container section-block">
+            <div class="rail-head">
+                <div class="section-copy">
+                    <h2>Related products</h2>
+                    <p>More items from the same subcategory.</p>
+                </div>
+            </div>
+
+            <div class="rail-scroll compact">
+                @foreach ($relatedProducts as $item)
+                    <article class="product-card">
+                        <div class="product-image">
+                            <span class="deal-badge">{{ $item['vendor_name'] ?? 'ExpressBazar' }}</span>
+                            <a href="{{ route('product.show', $item['slug']) }}">
+                                <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}">
+                            </a>
+                        </div>
+                        <div class="price-row">
+                            <span class="price">View</span>
+                            <span class="mrp">Related</span>
+                        </div>
+                        <h3><a href="{{ route('product.show', $item['slug']) }}">{{ $item['name'] }}</a></h3>
+                        <p>{{ $item['category_name'] ?? 'Grocery' }}</p>
+                        <div class="pack-text">{{ $item['subcategory_name'] ?? '1 pack (1 kg)' }}</div>
+                        <div class="rating-row">★ 4.8</div>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
 @endsection

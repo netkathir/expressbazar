@@ -2,238 +2,557 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Str;
+use App\Models\CouponUsage;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
+use App\Models\VendorProduct;
+use App\Services\CartService;
+use App\Services\MarketplaceCatalogService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class StorefrontController extends Controller
 {
-    public function home(): View
+    public function __construct(
+        private readonly MarketplaceCatalogService $catalog,
+        private readonly CartService $cartService,
+    ) {
+    }
+
+    public function home(Request $request): View
     {
+        $locationId = $this->resolveLocationId($request);
+        $categories = $this->catalog->categories();
+        $subcategories = $this->catalog->subcategories();
+        $vendors = $this->catalog->vendorsForLocation($locationId);
+        $products = $this->catalog->productsForLocation($locationId);
+        $subCategorySections = $this->buildSubcategorySections($products, $subcategories, 3);
+
         return view('storefront.home', $this->storefrontData([
-            'pageTitle' => 'ExpressBazar | Quick grocery, daily essentials, and fresh deals',
-            'pageDescription' => 'A Zepto-inspired commerce experience for groceries, essentials, and fast delivery.',
+            'pageTitle' => 'ExpressBazar | Grocery marketplace',
+            'pageDescription' => 'Simple multi-vendor grocery shopping with location filtering.',
             'activeNav' => 'home',
+            'selectedLocationId' => $locationId,
+            'selectedLocation' => $this->selectedLocationLabel($locationId),
+            'categories' => $categories,
+            'subcategories' => $subcategories,
+            'featuredSections' => $subCategorySections,
+            'vendors' => $vendors,
+            'products' => $products,
+            'vendorCount' => count($vendors),
+            'productCount' => count($products),
+            'trendingRows' => [
+                'Categories' => ['Fresh Produce', 'Dairy & Bakery', 'Pantry Staples', 'Masala & Dry Fruits', 'Breakfast & Sauces'],
+                'Products' => ['Tomato', 'Milk', 'Bread', 'Onion', 'Potato', 'Lemon', 'Rice'],
+                'Brands' => ['Amul', 'Britannia', 'Nandini', 'Fortune', 'Tata', 'Aashirvaad'],
+            ],
+            'popularRows' => [
+                'Products' => ['Avocado', 'Coconut Water', 'Diet Coke', 'Lettuce', 'Butter', 'Paneer'],
+                'Brands' => ['Yakult', 'My Muse', 'Keventer', 'Dermicool', 'Lays', 'Vim'],
+                'Categories' => ['Grocery', 'Fresh fruits', 'Fresh vegetables', 'Curd', 'Butter price', 'Paneer price'],
+            ],
+            'topTabs' => [
+                ['label' => 'All', 'icon' => null, 'anchor' => '#categories', 'active' => true],
+                ['label' => 'Cafe', 'icon' => null, 'anchor' => '#subcategories'],
+                ['label' => 'Home', 'icon' => null, 'anchor' => '#featured-rails'],
+                ['label' => 'Toys', 'icon' => null, 'anchor' => '#featured-rails'],
+                ['label' => 'Fresh', 'icon' => null, 'anchor' => '#featured-rails'],
+                ['label' => 'Electronics', 'icon' => null, 'anchor' => '#popular-searches'],
+                ['label' => 'Mobiles', 'icon' => null, 'anchor' => '#popular-searches'],
+                ['label' => 'Beauty', 'icon' => null, 'anchor' => '#popular-searches'],
+                ['label' => 'Fashion', 'icon' => null, 'anchor' => '#popular-searches'],
+            ],
         ]));
     }
 
-    public function category(string $slug): View
+    public function browseAll(Request $request): View
     {
-        $categories = collect($this->categories());
-        $category = $categories->firstWhere('slug', $slug) ?? $categories->first();
+        $locationId = $this->resolveLocationId($request);
+        $subcategories = $this->catalog->subcategories();
+        $sections = $this->buildSubcategorySections($this->catalog->productsForLocation($locationId), $subcategories, null);
 
-        $products = collect($this->products())
-            ->where('categorySlug', $category['slug'])
+        return view('storefront.browse', $this->storefrontData([
+            'pageTitle' => 'All subcategory products | ExpressBazar',
+            'pageDescription' => 'Browse all subcategory products.',
+            'activeNav' => 'home',
+            'selectedLocationId' => $locationId,
+            'selectedLocation' => $this->selectedLocationLabel($locationId),
+            'subcategories' => $subcategories,
+            'featuredSections' => $sections,
+            'topTabs' => [
+                ['label' => 'All', 'icon' => null, 'anchor' => '#categories', 'active' => true],
+                ['label' => 'Cafe', 'icon' => null, 'anchor' => '#subcategories'],
+                ['label' => 'Home', 'icon' => null, 'anchor' => '#featured-rails'],
+                ['label' => 'Toys', 'icon' => null, 'anchor' => '#featured-rails'],
+                ['label' => 'Fresh', 'icon' => null, 'anchor' => '#featured-rails'],
+                ['label' => 'Electronics', 'icon' => null, 'anchor' => '#popular-searches'],
+                ['label' => 'Mobiles', 'icon' => null, 'anchor' => '#popular-searches'],
+                ['label' => 'Beauty', 'icon' => null, 'anchor' => '#popular-searches'],
+                ['label' => 'Fashion', 'icon' => null, 'anchor' => '#popular-searches'],
+            ],
+        ]));
+    }
+
+    public function category(string $slug, Request $request): View
+    {
+        $category = $this->catalog->categoryBySlug($slug);
+        abort_if(! $category, 404);
+
+        $locationId = $this->resolveLocationId($request);
+        $subcategories = collect($this->catalog->subcategories())
+            ->filter(fn (array $item) => ($item['category_slug'] ?? null) === $slug)
             ->values()
             ->all();
+        $products = $this->catalog->productsForCategory($slug, $locationId);
+        $sections = $this->buildSubcategorySections($products, $subcategories, null);
 
         return view('storefront.category', $this->storefrontData([
             'pageTitle' => $category['name'] . ' | ExpressBazar',
-            'pageDescription' => $category['description'],
-            'activeNav' => 'categories',
+            'pageDescription' => $category['description'] ?? $category['name'],
+            'activeNav' => 'home',
+            'selectedLocationId' => $locationId,
+            'selectedLocation' => $this->selectedLocationLabel($locationId),
+            'category' => $category,
+            'subcategories' => $subcategories,
+            'featuredSections' => $sections,
+            'products' => $products,
+        ]));
+    }
+
+    public function subcategory(string $slug, Request $request): View
+    {
+        $subcategory = $this->catalog->subcategoryBySlug($slug);
+        abort_if(! $subcategory, 404);
+
+        $locationId = $this->resolveLocationId($request);
+        $products = $this->catalog->productsForSubcategory($slug, $locationId);
+        $category = $subcategory['category_slug'] ? $this->catalog->categoryBySlug($subcategory['category_slug']) : null;
+
+        return view('storefront.subcategory', $this->storefrontData([
+            'pageTitle' => $subcategory['name'] . ' | ExpressBazar',
+            'pageDescription' => $subcategory['description'] ?? $subcategory['name'],
+            'activeNav' => 'home',
+            'selectedLocationId' => $locationId,
+            'selectedLocation' => $this->selectedLocationLabel($locationId),
+            'subcategory' => $subcategory,
             'category' => $category,
             'products' => $products,
         ]));
     }
 
-    public function product(string $slug): View
+    public function vendor(string $slug, Request $request): View
     {
-        $product = collect($this->products())->firstWhere('slug', $slug) ?? $this->products()[0];
-        $related = collect($this->products())
-            ->where('categorySlug', $product['categorySlug'])
-            ->where('slug', '!=', $product['slug'])
-            ->take(4)
-            ->values()
-            ->all();
+        $vendor = $this->catalog->findVendorBySlug($slug);
+        abort_if(! $vendor, 404);
+
+        $locationId = $this->resolveLocationId($request);
+        $allowedVendorIds = collect($this->catalog->vendorsForLocation($locationId))->pluck('id')->all();
+        $products = in_array((int) $vendor['id'], $allowedVendorIds, true)
+            ? $this->catalog->productsForVendor((int) $vendor['id'])
+            : [];
+
+        return view('storefront.vendor', $this->storefrontData([
+            'pageTitle' => $vendor['name'] . ' | ExpressBazar',
+            'pageDescription' => $vendor['description'] ?? $vendor['name'],
+            'activeNav' => 'vendors',
+            'vendor' => $vendor,
+            'selectedLocationId' => $locationId,
+            'products' => $products,
+        ]));
+    }
+
+    public function product(string $slug, Request $request): View
+    {
+        $product = $this->catalog->findProductBySlug($slug);
+        abort_if(! $product, 404);
+
+        $locationId = $this->resolveLocationId($request);
+        $allowedVendorIds = collect($this->catalog->vendorsForLocation($locationId))->pluck('id')->all();
+        $vendorProducts = collect($this->catalog->vendorProducts())
+            ->filter(fn (array $item) => (int) $item['product_id'] === (int) $product['id'] && in_array((int) $item['vendor_id'], $allowedVendorIds, true));
+        $relatedProducts = $product['subcategory_slug'] ?? null
+            ? collect($this->catalog->productsForSubcategory($product['subcategory_slug'], $locationId))
+                ->reject(fn (array $item) => (int) $item['product_id'] === (int) $product['id'])
+                ->take(6)
+                ->values()
+                ->all()
+            : [];
+        $subcategory = $product['subcategory_slug'] ?? null ? $this->catalog->subcategoryBySlug($product['subcategory_slug']) : null;
+        $category = $subcategory && ! empty($subcategory['category_slug']) ? $this->catalog->categoryBySlug($subcategory['category_slug']) : null;
 
         return view('storefront.product', $this->storefrontData([
             'pageTitle' => $product['name'] . ' | ExpressBazar',
-            'pageDescription' => $product['description'],
+            'pageDescription' => $product['description'] ?? $product['name'],
             'activeNav' => 'products',
             'product' => $product,
-            'relatedProducts' => $related,
+            'subcategory' => $subcategory,
+            'category' => $category,
+            'selectedLocationId' => $locationId,
+            'vendorProducts' => $vendorProducts->values()->all(),
+            'relatedProducts' => $relatedProducts,
         ]));
     }
 
     public function cart(): View
     {
+        $pricing = $this->pricing();
+
         return view('storefront.cart', $this->storefrontData([
-            'pageTitle' => 'Your Cart | ExpressBazar',
-            'pageDescription' => 'Review your cart and continue to checkout.',
+            'pageTitle' => 'Cart | ExpressBazar',
+            'pageDescription' => 'Review your selected items before checkout.',
             'activeNav' => 'cart',
-            'cartItems' => $this->cartItems(),
-            'orderSummary' => [
-                'subtotal' => 1584,
-                'deliveryFee' => 0,
-                'handlingFee' => 0,
-                'discount' => 145,
-                'total' => 1439,
-            ],
+            'cartItems' => $pricing['items'],
+            'orderSummary' => $pricing,
         ]));
     }
 
-    public function checkout(): View
+    public function checkout(Request $request): View|RedirectResponse
     {
+        $pricing = $this->pricing();
+
+        if ($pricing['items'] === []) {
+            return redirect()->route('home')->with('status', 'Your cart is empty.');
+        }
+
         return view('storefront.checkout', $this->storefrontData([
             'pageTitle' => 'Checkout | ExpressBazar',
-            'pageDescription' => 'Enter address, choose delivery slot, and place your order.',
+            'pageDescription' => 'Enter delivery details and place your order.',
             'activeNav' => 'checkout',
-            'cartItems' => $this->cartItems(),
-            'orderSummary' => [
-                'subtotal' => 1584,
-                'deliveryFee' => 0,
-                'handlingFee' => 0,
-                'discount' => 145,
-                'total' => 1439,
-            ],
+            'cartItems' => $pricing['items'],
+            'orderSummary' => $pricing,
+            'oldAddress' => $request->old('shipping_address', ''),
         ]));
+    }
+
+    public function applyCoupon(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'coupon_code' => ['required', 'string', 'max:50'],
+        ]);
+
+        $pricing = $this->pricing();
+        if ($pricing['items'] === []) {
+            return redirect()->route('cart.show')->with('status', 'Add items to your cart first.');
+        }
+
+        $coupon = $this->catalog->couponByCode($data['coupon_code']);
+        if (! $coupon || ! $this->isCouponUsable($coupon, $pricing['subtotal'])) {
+            return redirect()->route('cart.show')->withErrors(['coupon_code' => 'This coupon is not valid for your cart.']);
+        }
+
+        $this->cartService->applyCoupon($coupon['code']);
+
+        return redirect()->route('cart.show')->with('status', 'Coupon applied successfully.');
+    }
+
+    public function removeCoupon(): RedirectResponse
+    {
+        $this->cartService->removeCoupon();
+
+        return redirect()->route('cart.show')->with('status', 'Coupon removed.');
+    }
+
+    public function placeOrder(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'shipping_name' => ['required', 'string', 'max:255'],
+            'shipping_phone' => ['required', 'string', 'max:20'],
+            'shipping_address' => ['required', 'string', 'max:500'],
+            'pincode' => ['required', 'string', 'max:20'],
+        ]);
+
+        $pricing = $this->pricing();
+        if ($pricing['items'] === []) {
+            return redirect()->route('home')->with('status', 'Your cart is empty.');
+        }
+
+        $order = DB::transaction(function () use ($data, $pricing): Order {
+            $order = Order::create([
+                'user_id' => auth()->id(),
+                'vendor_id' => $pricing['vendor_id'],
+                'order_number' => 'ORD-' . now()->format('YmdHis') . '-' . random_int(100, 999),
+                'status' => 'placed',
+                'subtotal' => $pricing['subtotal'],
+                'discount_total' => $pricing['discount_total'],
+                'delivery_fee' => 0,
+                'grand_total' => $pricing['grand_total'],
+                'currency' => 'INR',
+                'shipping_name' => $data['shipping_name'],
+                'shipping_phone' => $data['shipping_phone'],
+                'shipping_address' => $data['shipping_address'] . ' - ' . $data['pincode'],
+                'payment_status' => 'pending',
+            ]);
+
+            foreach ($pricing['items'] as $item) {
+                $vendorProduct = VendorProduct::query()
+                    ->where('vendor_id', $item['vendor_id'])
+                    ->where('product_id', $item['product_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $vendorProduct || $vendorProduct->stock < $item['quantity']) {
+                    throw ValidationException::withMessages([
+                        'shipping_address' => 'One or more items are out of stock.',
+                    ]);
+                }
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'line_total' => $item['line_total'],
+                ]);
+
+                $vendorProduct->decrement('stock', $item['quantity']);
+            }
+
+            if ($pricing['coupon'] !== null) {
+                CouponUsage::create([
+                    'coupon_id' => $pricing['coupon']['id'],
+                    'user_id' => auth()->id(),
+                    'order_id' => $order->id,
+                    'discount_amount' => $pricing['discount_total'],
+                ]);
+            }
+
+            Payment::create([
+                'order_id' => $order->id,
+                'provider' => 'cod',
+                'amount' => $pricing['grand_total'],
+                'currency' => 'INR',
+                'status' => 'pending',
+                'payload' => ['payment_method' => 'cod'],
+            ]);
+
+            return $order;
+        });
+
+        $this->cartService->clear();
+
+        return redirect()->route('order.success', $order->order_number)->with('status', 'Order placed successfully.');
+    }
+
+    public function success(string $orderNumber): View
+    {
+        $order = Order::query()->with(['items.product', 'vendor', 'user'])->where('order_number', $orderNumber)->firstOrFail();
+
+        return view('storefront.success', $this->storefrontData([
+            'pageTitle' => 'Order confirmed | ExpressBazar',
+            'pageDescription' => 'Your order has been confirmed.',
+            'activeNav' => 'checkout',
+            'order' => $order,
+        ]));
+    }
+
+    public function myOrders(Request $request): View
+    {
+        abort_unless(auth()->check(), 403);
+
+        $orders = Order::query()
+            ->with(['items.product', 'vendor'])
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->get();
+
+        return view('storefront.orders', $this->storefrontData([
+            'pageTitle' => 'My Orders | ExpressBazar',
+            'pageDescription' => 'Track your ExpressBazar orders.',
+            'activeNav' => 'orders',
+            'selectedLocationId' => $this->resolveLocationId($request),
+            'orders' => $orders,
+        ]));
+    }
+
+    public function addToCart(Request $request, string $slug): RedirectResponse
+    {
+        $product = $this->catalog->findProductBySlug($slug);
+        abort_if(! $product, 404);
+
+        $vendorProductId = (int) $request->input('vendor_product_id');
+        $vendorProduct = collect($this->catalog->vendorProducts())->firstWhere('id', $vendorProductId);
+
+        if (! $vendorProduct || (int) $vendorProduct['product_id'] !== (int) $product['id']) {
+            return redirect()->back()->with('status', 'Please choose a vendor for this product.');
+        }
+
+        $currentVendorId = $this->cartService->vendorId();
+        if ($currentVendorId !== null && (int) $currentVendorId !== (int) $vendorProduct['vendor_id']) {
+            $this->cartService->clear();
+        }
+
+        $this->cartService->add([
+            'id' => $vendorProduct['id'],
+            'vendor_product_id' => $vendorProduct['id'],
+            'product_id' => $product['id'],
+            'vendor_id' => $vendorProduct['vendor_id'],
+            'vendor_name' => $vendorProduct['vendor_name'],
+            'name' => $product['name'],
+            'slug' => $product['slug'],
+            'price' => $vendorProduct['price'],
+            'image' => $vendorProduct['image'],
+        ], (int) $request->input('quantity', 1));
+
+        return redirect()->back()->with('status', 'Added to cart.');
+    }
+
+    public function removeFromCart(int $productId): RedirectResponse
+    {
+        $this->cartService->remove($productId);
+
+        return redirect()->route('cart.show')->with('status', 'Item removed from cart.');
+    }
+
+    public function clearCart(): RedirectResponse
+    {
+        $this->cartService->clear();
+
+        return redirect()->route('cart.show')->with('status', 'Cart cleared.');
+    }
+
+    private function pricing(): array
+    {
+        $items = [];
+        $vendorId = null;
+
+        foreach ($this->cartService->lines() as $line) {
+            $vendorId = $vendorId ?: (int) $line['vendor_id'];
+            $items[] = [
+                'vendor_id' => (int) $line['vendor_id'],
+                'product_id' => (int) $line['product_id'],
+                'vendor_product_id' => (int) ($line['vendor_product_id'] ?? 0),
+                'name' => $line['name'],
+                'slug' => $line['slug'],
+                'vendor_name' => $line['vendor_name'] ?? '',
+                'quantity' => (int) $line['quantity'],
+                'unit_price' => (int) $line['unit_price'],
+                'line_total' => (int) $line['unit_price'] * (int) $line['quantity'],
+                'image' => $line['image'] ?? null,
+            ];
+        }
+
+        $subtotal = collect($items)->sum('line_total');
+        $couponCode = $this->cartService->couponCode();
+        $coupon = $couponCode ? $this->catalog->couponByCode($couponCode) : null;
+        $discountTotal = 0;
+
+        if ($coupon !== null && $this->isCouponUsable($coupon, $subtotal)) {
+            $discountTotal = $this->calculateCouponDiscount($coupon, $subtotal);
+        } elseif ($couponCode !== null) {
+            $this->cartService->removeCoupon();
+            $coupon = null;
+        }
+
+        $grandTotal = max(0, $subtotal - $discountTotal);
+
+        return [
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'discount_total' => $discountTotal,
+            'grand_total' => $grandTotal,
+            'vendor_id' => $vendorId,
+            'coupon' => $coupon,
+            'coupon_code' => $coupon['code'] ?? null,
+        ];
+    }
+
+    private function resolveLocationId(Request $request): ?int
+    {
+        $locationId = $request->integer('location_id', (int) session('selected_location_id', 0));
+
+        if ($request->filled('location_id')) {
+            session(['selected_location_id' => $locationId]);
+        }
+
+        return $locationId ?: null;
+    }
+
+    private function selectedLocationLabel(?int $locationId): string
+    {
+        if (! $locationId) {
+            return 'Choose location';
+        }
+
+        $location = collect($this->catalog->locations())->firstWhere('id', $locationId);
+
+        return $location['label'] ?? 'Choose location';
     }
 
     private function storefrontData(array $overrides = []): array
     {
+        $selectedLocationId = $overrides['selectedLocationId'] ?? session('selected_location_id');
+
         return array_merge([
             'brandName' => config('app.name', 'ExpressBazar'),
-            'location' => 'Hyderabad, Telangana',
-            'cartCount' => 4,
+            'cartCount' => collect($this->cartService->lines())->sum('quantity'),
+            'locations' => $this->catalog->locations(),
+            'selectedLocationId' => $selectedLocationId,
+            'selectedLocation' => $this->selectedLocationLabel($selectedLocationId ? (int) $selectedLocationId : null),
             'navItems' => [
-                ['label' => 'All', 'slug' => 'all'],
-                ['label' => 'Cafe', 'slug' => 'cafe'],
-                ['label' => 'Home', 'slug' => 'home'],
-                ['label' => 'Toys', 'slug' => 'toys'],
-                ['label' => 'Fresh', 'slug' => 'fresh'],
-                ['label' => 'Electronics', 'slug' => 'electronics'],
-                ['label' => 'Mobiles', 'slug' => 'mobiles'],
-                ['label' => 'Beauty', 'slug' => 'beauty'],
-                ['label' => 'Fashion', 'slug' => 'fashion'],
+                ['label' => 'All', 'slug' => 'all', 'anchor' => '#categories', 'icon' => null],
+                ['label' => 'Cafe', 'slug' => 'cafe', 'anchor' => '#subcategories', 'icon' => null],
+                ['label' => 'Home', 'slug' => 'home', 'anchor' => '#featured-rails', 'icon' => null],
+                ['label' => 'Toys', 'slug' => 'toys', 'anchor' => '#featured-rails', 'icon' => null],
+                ['label' => 'Fresh', 'slug' => 'fresh', 'anchor' => '#featured-rails', 'icon' => null],
+                ['label' => 'Beauty', 'slug' => 'beauty', 'anchor' => '#popular-searches', 'icon' => null],
+                ['label' => 'Fashion', 'slug' => 'fashion', 'anchor' => '#popular-searches', 'icon' => null],
             ],
-            'benefits' => [
-                ['title' => '0 fees, every day', 'text' => 'Keep the experience simple with no handling surprises on the essentials route.'],
-                ['title' => 'Fast delivery slots', 'text' => 'Clear promise bands for 10 to 20 minute delivery windows and scheduled checkout.'],
-                ['title' => 'Fresh and curated', 'text' => 'Focus on daily needs, top repeat buys, and local relevance that feels retail-first.'],
-            ],
-            'categoryCards' => $this->categories(),
-            'collections' => [
-                ['title' => 'Daily groceries', 'subtitle' => 'Staples, rice, flour, cooking oil, and quick restocks.', 'accent' => 'from-[#f4e9ff] to-[#ece1ff]'],
-                ['title' => 'Household care', 'subtitle' => 'Cleaning, laundry, kitchen, and home essentials.', 'accent' => 'from-[#edf8ff] to-[#dfeeff]'],
-                ['title' => 'Fresh picks', 'subtitle' => 'Produce, dairy, bread, and chilled favorites.', 'accent' => 'from-[#f1fff2] to-[#ddf7df]'],
-            ],
-            'featuredProducts' => array_slice($this->products(), 0, 8),
-            'moreProducts' => array_slice($this->products(), 8, 4),
-            'promoBanners' => [
-                [
-                    'title' => 'All new ExpressBazar experience',
-                    'text' => 'Build the same quick-commerce feeling with transparent prices, fast re-ordering, and a clean browsing flow.',
-                ],
-                [
-                    'title' => 'Fast repeat buying',
-                    'text' => 'Surface previously purchased items, suggested add-ons, and one-tap cart updates for power users.',
-                ],
-            ],
-            'howItWorks' => [
-                ['title' => 'Search or browse', 'text' => 'Use the top search bar and category rail to find what you need quickly.'],
-                ['title' => 'Add to cart', 'text' => 'Product cards include prices, offers, ratings, and clear add actions.'],
-                ['title' => 'Checkout fast', 'text' => 'Finish with address, delivery slot, and payment options in one smooth flow.'],
-            ],
-            'footerLinks' => [
-                'About ExpressBazar',
-                'Delivery areas',
-                'Customer support',
-                'Orders & returns',
-                'Privacy policy',
-                'Terms of use',
-            ],
+            'footerLinks' => ['Home', 'Delivery Areas', 'Customer Support', 'Privacy Policy', 'Terms of Use'],
             'pageTitle' => config('app.name', 'ExpressBazar'),
-            'pageDescription' => 'Zepto-inspired ecommerce storefront.',
-            'activeNav' => 'home',
         ], $overrides);
     }
 
-    private function categories(): array
+    private function buildSubcategorySections(array $products, array $subcategories, ?int $limit): array
     {
-        return [
-            ['name' => 'Fruits & Vegetables', 'slug' => 'fruits-vegetables', 'description' => 'Fresh produce, seasonal fruits, and everyday greens.', 'color' => '#19a55b'],
-            ['name' => 'Dairy, Bread & Eggs', 'slug' => 'dairy-bread-eggs', 'description' => 'Milk, curd, bread, eggs, and breakfast staples.', 'color' => '#5fa9f8'],
-            ['name' => 'Atta, Rice & Dals', 'slug' => 'atta-rice-dals', 'description' => 'Rice, flour, pulses, and cooking staples.', 'color' => '#8f5cff'],
-            ['name' => 'Breakfast & Snacks', 'slug' => 'breakfast-snacks', 'description' => 'Quick bites, cereals, spreads, and snack packs.', 'color' => '#ff8d2f'],
-            ['name' => 'Packaged Food', 'slug' => 'packaged-food', 'description' => 'Ready-to-cook, ready-to-eat, and pantry stockups.', 'color' => '#ef4b83'],
-            ['name' => 'Beverages', 'slug' => 'beverages', 'description' => 'Soft drinks, juices, coffee, tea, and energy drinks.', 'color' => '#23b5a8'],
-            ['name' => 'Household', 'slug' => 'household', 'description' => 'Cleaning, laundry, kitchen and everyday home care.', 'color' => '#4c7df0'],
-            ['name' => 'Personal Care', 'slug' => 'personal-care', 'description' => 'Hair care, skin care, grooming, and bath essentials.', 'color' => '#af57ff'],
-        ];
+        $grouped = collect($products)->groupBy('subcategory_slug');
+
+        return collect($subcategories)
+            ->map(fn (array $subcategory) => [
+                'subcategory' => $subcategory,
+                'products' => $grouped->get($subcategory['slug'], collect())->take(8)->values()->all(),
+            ])
+            ->filter(fn (array $section) => $section['products'] !== [])
+            ->when($limit !== null, fn ($collection) => $collection->take($limit))
+            ->values()
+            ->all();
     }
 
-    private function products(): array
+    private function isCouponUsable(array $coupon, int $subtotal): bool
     {
-        return [
-            $this->productCard('Daily Good Sona Masoori Raw Rice', 'atta-rice-dals', 69, 100, 4.8, '1 kg pack', '31% OFF', '#1f8f5c', '#eafbf1'),
-            $this->productCard('India Gate Jeera Rice Short Grain', 'atta-rice-dals', 226, 320, 4.9, '1 kg pack', '29% OFF', '#0c7fb5', '#e8f7ff'),
-            $this->productCard('Daawat Rozana Super Basmati Rice', 'atta-rice-dals', 75, 100, 4.6, '1 kg pack', '25% OFF', '#7b4de8', '#f1e9ff'),
-            $this->productCard('Fortune Sona Masoori Regular', 'atta-rice-dals', 342, 450, 4.6, '5 kg pack', '24% OFF', '#ef7f27', '#fff1e4'),
-            $this->productCard('Parachute Advanced Men Hair Cream', 'personal-care', 82, 100, 4.5, '100 g', '18% OFF', '#3743bf', '#ecedff'),
-            $this->productCard('L\'Oreal Paris Hyaluron Moisture 72H', 'personal-care', 238, 345, 4.7, '180 ml', '31% OFF', '#e05bc0', '#ffe9f8'),
-            $this->productCard('Streax Professional Vitaglaze Hair Serum', 'personal-care', 171, 180, 4.8, '100 ml', '5% OFF', '#11a4a7', '#e7fffb'),
-            $this->productCard('Dove Intense Repair Conditioner', 'personal-care', 194, 285, 4.6, '180 ml', '31% OFF', '#8c5dd9', '#f4edff'),
-            $this->productCard('Amul Taaza Toned Milk', 'dairy-bread-eggs', 58, 62, 4.7, '1 L', '6% OFF', '#f7b500', '#fff7dd'),
-            $this->productCard('Farm Fresh White Bread', 'dairy-bread-eggs', 42, 50, 4.6, '400 g', '16% OFF', '#f14f75', '#fff0f5'),
-            $this->productCard('Farm Eggs Large Pack', 'dairy-bread-eggs', 92, 120, 4.8, '12 pieces', '23% OFF', '#c28652', '#fff2e7'),
-            $this->productCard('Fresh Bananas Bunch', 'fruits-vegetables', 36, 48, 4.7, '1 dozen', '25% OFF', '#34b86b', '#effbf2'),
-            $this->productCard('Kurkure Masala Munch Pack', 'breakfast-snacks', 19, 20, 4.5, '75 g', '5% OFF', '#ff8c32', '#fff3e7'),
-            $this->productCard('Makhana Crunch Mix', 'breakfast-snacks', 124, 160, 4.6, '200 g', '22% OFF', '#b95de9', '#f9ecff'),
-            $this->productCard('Cold Coffee Bottle', 'beverages', 89, 110, 4.5, '250 ml', '19% OFF', '#2d6ff3', '#e8f0ff'),
-            $this->productCard('Fresh Lemon Soda', 'beverages', 39, 45, 4.4, '300 ml', '13% OFF', '#11aeb1', '#e8fffd'),
-        ];
+        if (! ($coupon['is_active'] ?? false)) {
+            return false;
+        }
+
+        if (! empty($coupon['starts_at']) && now()->lt($coupon['starts_at'])) {
+            return false;
+        }
+
+        if (! empty($coupon['ends_at']) && now()->gt($coupon['ends_at'])) {
+            return false;
+        }
+
+        return $subtotal >= (int) ($coupon['min_order_amount'] ?? 0);
     }
 
-    private function cartItems(): array
+    private function calculateCouponDiscount(array $coupon, int $subtotal): int
     {
-        return [
-            ['name' => 'Daily Good Sona Masoori Raw Rice', 'price' => 69, 'qty' => 2, 'unit' => '1 kg', 'image' => $this->art('Rice', '#1f8f5c', '#ecfff4')],
-            ['name' => 'Amul Taaza Toned Milk', 'price' => 58, 'qty' => 3, 'unit' => '1 L', 'image' => $this->art('Milk', '#0c7fb5', '#eef8ff')],
-            ['name' => 'Parachute Advanced Men Hair Cream', 'price' => 82, 'qty' => 1, 'unit' => '100 g', 'image' => $this->art('Care', '#3743bf', '#f0f2ff')],
-        ];
-    }
+        $value = (int) ($coupon['value'] ?? 0);
 
-    private function productCard(
-        string $name,
-        string $categorySlug,
-        int $price,
-        int $mrp,
-        float $rating,
-        string $unit,
-        string $deal,
-        string $accent,
-        string $background
-    ): array {
-        return [
-            'name' => $name,
-            'slug' => Str::slug($name),
-            'categorySlug' => $categorySlug,
-            'price' => $price,
-            'mrp' => $mrp,
-            'rating' => $rating,
-            'unit' => $unit,
-            'deal' => $deal,
-            'description' => 'A quick-commerce style product detail page with pricing, highlights, and related recommendations.',
-            'accent' => $accent,
-            'background' => $background,
-            'image' => $this->art($name, $accent, $background),
-        ];
-    }
+        if (($coupon['type'] ?? 'percentage') === 'fixed') {
+            $discount = $value;
+        } else {
+            $discount = (int) round(($subtotal * $value) / 100);
+        }
 
-    private function art(string $label, string $accent, string $background): string
-    {
-        $svg = sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%%" stop-color="%s"/><stop offset="100%%" stop-color="%s"/></linearGradient></defs><rect width="360" height="320" rx="36" fill="url(#g)"/><circle cx="278" cy="74" r="46" fill="%s" opacity=".25"/><circle cx="70" cy="258" r="58" fill="%s" opacity=".25"/><rect x="86" y="62" width="188" height="196" rx="28" fill="#fff" opacity=".86"/><rect x="118" y="92" width="124" height="74" rx="16" fill="%s" opacity=".16"/><text x="180" y="126" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="%s">%s</text><text x="180" y="176" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="%s">Quick commerce</text><text x="180" y="202" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="%s">style product art</text></svg>',
-            $accent,
-            $background,
-            $background,
-            $accent,
-            $background,
-            $accent,
-            Str::before($label, ' '),
-            $accent,
-            $accent
-        );
+        $maxDiscount = $coupon['max_discount_amount'] ?? null;
+        if ($maxDiscount !== null) {
+            $discount = min($discount, (int) $maxDiscount);
+        }
 
-        return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+        return max(0, min($subtotal, $discount));
     }
 }

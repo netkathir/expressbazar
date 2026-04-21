@@ -1,59 +1,275 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Multi-Vendor Ecommerce System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 + MySQL + Stripe + EposNow
 
-## About Laravel
+## Project Overview
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This project is a scalable multi-vendor ecommerce platform built with Laravel 12 and MySQL. It combines marketplace functionality, location-aware vendor discovery, online payments, inventory synchronization, and role-based control panels for admins, vendors, and customers.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Core Goals
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Support multiple vendors in a single marketplace
+- Filter vendors by customer location
+- Sync inventory with EposNow
+- Enable secure payments through Stripe
+- Provide offer, discount, and coupon workflows
+- Offer dedicated admin, vendor, and customer panels
 
-## Learning Laravel
+## Architecture
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- MVC for application structure
+- Service layer for business rules
+- Repository pattern for database abstraction
+- RESTful APIs for frontend and integrations
+- Queue and scheduler for background jobs and sync tasks
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## User Roles
 
-## Laravel Sponsors
+| Role | Access |
+| --- | --- |
+| Admin | Full system control |
+| Vendor | Manage products, stock, and orders |
+| Customer | Browse products, place orders, and manage profile |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Database Design
 
-### Premium Partners
+### Core Tables
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- `users`
+- `vendors`
+- `products`
+- `categories`
+- `product_category`
+- `carts`
+- `cart_items`
+- `orders`
+- `order_items`
+- `payments`
 
-## Contributing
+### Discount Tables
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- `coupons`
+- `discounts`
+- `coupon_usages`
 
-## Code of Conduct
+## Location-Based Filtering
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The system detects customer location using:
 
-## Security Vulnerabilities
+- Latitude and longitude
+- Pincode
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Nearby vendors are found using the Haversine formula and filtered by radius, such as 20 km.
 
-## License
+## Ecommerce Flow
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. Customer enters location
+2. System loads nearby vendors
+3. Customer selects a vendor
+4. Products are displayed
+5. Items are added to cart
+6. Stock is validated
+7. Discounts are applied
+8. Checkout is completed
+9. Payment is processed through Stripe
+10. Order is created
+11. Inventory is updated
+
+## Payment Integration
+
+Stripe is used for online payments.
+
+### Payment Flow
+
+- Create a PaymentIntent
+- Send `client_secret` to the frontend
+- Confirm payment
+- Store transaction details
+
+### Payment Status
+
+- Pending
+- Paid
+- Failed
+
+## EposNow Integration
+
+EposNow is used for inventory synchronization.
+
+### Features
+
+- Fetch product stock
+- Sync inventory data
+
+### Implementation
+
+- Service class: `EposNowService`
+- Scheduled sync every 10 minutes
+
+## Inventory Management
+
+Inventory tracking includes:
+
+- `stock_quantity`
+- `last_synced_at`
+
+### Inventory Flow
+
+- Validate stock before checkout
+- Deduct stock after order placement
+- Sync stock with EposNow on schedule
+
+## Offers and Discounts
+
+### Discount Types
+
+- Product-level discounts
+- Vendor-level discounts
+- Cart-level discounts
+- Coupon-based discounts
+
+### Discount Order
+
+1. Product discount
+2. Vendor discount
+3. Cart discount
+4. Coupon discount
+
+### Example
+
+- `₹1000` with 10% product discount becomes `₹900`
+- Vendor discount of `₹50` becomes `₹850`
+- Cart discount of 5% becomes `₹807.5`
+- Coupon discount reduces the total to `₹727.5`
+
+## Core Services
+
+- `EposNowService`
+- `StripeService`
+- `DiscountService`
+- `CartService`
+- `OrderService`
+
+## Admin Panel
+
+### Features
+
+- Dashboard for users, revenue, and orders
+- Manage users
+- Manage vendors
+- Manage products
+- Manage categories
+- Manage orders
+- Monitor payments
+- Manage offers and coupons
+- Monitor inventory
+
+## Vendor Panel
+
+- Sales and orders dashboard
+- Manage products
+- View stock
+- Manage orders
+- Create product-level discounts
+
+## Customer Panel
+
+- Location selection
+- Vendor selection
+- Product browsing
+- Cart management
+- Checkout
+- Payment
+- Order history
+- Profile management
+
+## API Structure
+
+```bash
+GET    /api/vendors?lat=&lng=
+GET    /api/products?vendor_id=
+POST   /api/cart/add
+POST   /api/checkout
+POST   /api/payment/intent
+POST   /api/payment/confirm
+POST   /api/coupon/apply
+GET    /api/epos/stock/{product_id}
+```
+
+## Frontend Pages
+
+- Home with location and vendor discovery
+- Product listing
+- Cart
+- Checkout
+- Payment success and failure
+
+## Performance Considerations
+
+- Cache vendors and products
+- Use Redis where appropriate
+- Queue external API calls
+- Avoid real-time EposNow requests during checkout
+
+## Security
+
+- Validate all inputs
+- Store API keys in `.env`
+- Use policies and middleware
+- Never trust frontend pricing
+- Always calculate totals on the backend
+
+## Routing Structure
+
+```bash
+/admin/*
+/vendor/*
+/user/*
+```
+
+## Offers UI
+
+- Show discount badges
+- Include coupon input at checkout
+- Display a transparent price breakdown
+
+## Bonus Features
+
+- Google Maps vendor display
+- Distance display
+- Ratings and reviews
+- Wishlist
+- First-order discount
+- Festival offers
+
+## Critical Best Practices
+
+- Never trust frontend pricing
+- Always calculate prices on the backend
+- Cache inventory data
+- Use retry logic for EposNow
+- Keep business logic inside services
+
+## Final Result
+
+### Customer Flow
+
+Browse -> Select Vendor -> Add to Cart -> Apply Offers -> Pay -> Order
+
+### Admin Flow
+
+Full system control
+
+### Vendor Flow
+
+Manage products and fulfill orders
+
+## Next Steps
+
+If you want to continue, the next practical deliverables are:
+
+- Full Laravel project structure
+- Controllers and service classes
+- Database ER diagram
+- Stripe and EposNow implementation
+- Production deployment guide

@@ -6,80 +6,111 @@
     <meta name="description" content="{{ $pageDescription ?? config('app.name') }}">
     <title>{{ $pageTitle ?? config('app.name', 'ExpressBazar') }}</title>
     <link rel="stylesheet" href="{{ asset('storefront.css') }}">
-    <script defer src="{{ asset('storefront.js') }}"></script>
 </head>
 <body>
-    <div class="app-shell">
-        <header class="topbar">
-            <div class="container header-row">
-                <a class="brand" href="{{ route('home') }}">
-                    <span class="brand-mark">E</span>
-                    <span class="brand-copy">
-                        <strong>{{ $brandName ?? config('app.name', 'ExpressBazar') }}</strong>
-                        <small>Quick grocery & daily essentials</small>
-                    </span>
-                </a>
+    <div class="site-shell">
+        <header class="site-header">
+            <div class="container header-grid">
+                <div class="brand-wrap">
+                    <a class="brand brand-wordmark" href="{{ route('home') }}" aria-label="ExpressBazar home">
+                        <img class="brand-logo-icon" src="{{ asset('admin/assets/images/logo-icon.svg') }}" alt="">
+                        <span class="brand-copy">
+                            <span class="brand-name">ExpressBazar</span>
+                            <span class="brand-subtitle">Quick grocery shopping</span>
+                        </span>
+                    </a>
+                    <form class="location-box" method="GET" action="{{ route('home') }}">
+                        <label class="location-select-wrap" aria-label="Select location">
+                            <select name="location_id" class="location-select" onchange="this.form.submit()">
+                                <option value="">Select Location</option>
+                                @foreach (($locations ?? []) as $location)
+                                    <option value="{{ $location['id'] }}" @selected((int) ($selectedLocationId ?? 0) === (int) $location['id'])>
+                                        {{ $location['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="location-chevron">&#9662;</span>
+                        </label>
+                    </form>
+                </div>
 
-                <button class="location-pill" type="button" aria-label="Current delivery location">
-                    <span class="dot"></span>
-                    <span>{{ $location ?? 'Hyderabad, Telangana' }}</span>
-                    <span class="chev">v</span>
-                </button>
-
-                <label class="searchbar" for="search">
-                    <span class="search-icon">/</span>
-                    <input id="search" type="search" placeholder='Search for "rice", "milk", or "kurkure"'>
-                </label>
+                <form class="search-bar search-bar-wide" method="GET" action="{{ route('home') }}">
+                    <span class="search-icon">&#128269;</span>
+                    <input
+                        type="search"
+                        name="q"
+                        value="{{ request('q', $query ?? '') }}"
+                        placeholder='Search for "amul butter"'
+                        aria-label="Search products"
+                    >
+                </form>
 
                 <div class="header-actions">
-                    <a class="icon-link" href="{{ route('checkout.show') }}">
-                        <span class="icon-ring">O</span>
-                        <span>Login</span>
-                    </a>
-                    <a class="cart-link" href="{{ route('cart.show') }}">
-                        <span class="icon-ring">Bag</span>
+                    @guest
+                        <a class="action-icon" href="{{ route('login') }}">
+                            <span class="action-icon-mark">&#128100;</span>
+                            <span>Login</span>
+                        </a>
+                    @endguest
+                    @auth
+                        <a class="action-icon" href="{{ route('orders.mine') }}">
+                            <span class="action-icon-mark">&#128100;</span>
+                            <span>Profile</span>
+                        </a>
+                    @endauth
+
+                    <a class="action-icon" href="{{ route('cart.show') }}">
+                        <span class="action-icon-mark cart-mark">&#128722;<span class="cart-badge">{{ $cartCount ?? 0 }}</span></span>
                         <span>Cart</span>
-                        <span class="badge">{{ $cartCount ?? 0 }}</span>
                     </a>
                 </div>
             </div>
         </header>
 
-        <nav class="category-nav">
-            <div class="container nav-row">
-                @foreach (($navItems ?? []) as $item)
-                    <a class="nav-chip {{ ($activeNav ?? '') === $item['slug'] ? 'active' : '' }}" href="{{ $item['slug'] === 'all' ? route('home') : route('category.show', $item['slug']) }}">
-                        {{ $item['label'] }}
+        <nav class="category-strip">
+            <div class="container chip-row">
+                @foreach (($topTabs ?? $navItems ?? []) as $tab)
+                    <a class="chip {{ !empty($tab['active']) ? 'active' : '' }}" href="{{ $tab['anchor'] ?? route('home') }}">
+                        @if (! empty($tab['icon']))
+                            <span class="chip-icon">{{ $tab['icon'] }}</span>
+                        @endif
+                        <span>{{ $tab['label'] }}</span>
                     </a>
                 @endforeach
             </div>
         </nav>
 
-        <main>
+        <main class="site-main">
+            @if (session('status'))
+                <div class="container alert-banner">
+                    {{ session('status') }}
+                </div>
+            @endif
+
             @yield('content')
         </main>
 
-        <footer class="footer">
+        <footer id="footer-links" class="site-footer">
             <div class="container footer-grid">
                 <div>
                     <div class="footer-brand">{{ $brandName ?? config('app.name', 'ExpressBazar') }}</div>
-                    <p class="muted">A Zepto-inspired shopping experience for daily essentials, fresh groceries, and fast checkout.</p>
+                    <p>Zepto-style grocery shopping with location-based vendor discovery and a simple checkout flow.</p>
                 </div>
                 <div>
-                    <h4>Quick links</h4>
-                    <ul class="footer-links">
+                    <h4>Trending searches</h4>
+                    <ul>
                         @foreach (($footerLinks ?? []) as $link)
                             <li>{{ $link }}</li>
                         @endforeach
                     </ul>
                 </div>
                 <div>
-                    <h4>Checkout flow</h4>
-                    <ul class="footer-links">
-                        <li>Browse categories</li>
+                    <h4>Need help?</h4>
+                    <ul>
+                        <li>Browse vendors</li>
                         <li>Add to cart</li>
-                        <li>Choose delivery slot</li>
-                        <li>Pay and track order</li>
+                        <li>Checkout</li>
+                        <li>Admin panel</li>
                     </ul>
                 </div>
             </div>
