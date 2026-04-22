@@ -1,0 +1,125 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\City;
+use App\Models\Country;
+use App\Models\RegionZone;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
+class RegionZoneController extends Controller
+{
+    public function index(Request $request)
+    {
+        $zones = RegionZone::query()
+            ->with(['country', 'city'])
+            ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+            ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim((string) $request->string('search'));
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('zone_name', 'like', "%{$search}%")
+                        ->orWhere('zone_code', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.zones.index', [
+            'title' => 'Region / Zone Management',
+            'activeMenu' => 'zones',
+            'zones' => $zones,
+            'countries' => Country::orderBy('country_name')->get(),
+            'cities' => City::orderBy('city_name')->get(),
+        ]);
+    }
+
+    public function create()
+    {
+        return view('admin.zones.form', [
+            'title' => 'Add Region / Zone',
+            'activeMenu' => 'zones',
+            'zone' => new RegionZone(),
+            'countries' => Country::orderBy('country_name')->get(),
+            'cities' => City::orderBy('city_name')->get(),
+            'mode' => 'create',
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'country_id' => ['required', 'exists:countries,id'],
+            'city_id' => ['required', 'exists:cities,id'],
+            'zone_name' => ['required', 'string', 'max:255'],
+            'zone_code' => ['nullable', 'string', 'max:100'],
+            'delivery_available' => ['required', 'boolean'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ]);
+
+        $duplicate = RegionZone::where('city_id', $data['city_id'])
+            ->whereRaw('LOWER(zone_name) = ?', [strtolower($data['zone_name'])])
+            ->exists();
+
+        if ($duplicate) {
+            return back()->withErrors(['zone_name' => 'Duplicate region under the same city is not allowed.'])->withInput();
+        }
+
+        $data['created_by'] = $request->user()?->id;
+        $data['updated_by'] = $request->user()?->id;
+
+        RegionZone::create($data);
+
+        return redirect()->route('admin.zones.index')->with('success', 'Region / zone created successfully.');
+    }
+
+    public function edit(RegionZone $zone)
+    {
+        return view('admin.zones.form', [
+            'title' => 'Edit Region / Zone',
+            'activeMenu' => 'zones',
+            'zone' => $zone,
+            'countries' => Country::orderBy('country_name')->get(),
+            'cities' => City::orderBy('city_name')->get(),
+            'mode' => 'edit',
+        ]);
+    }
+
+    public function update(Request $request, RegionZone $zone)
+    {
+        $data = $request->validate([
+            'country_id' => ['required', 'exists:countries,id'],
+            'city_id' => ['required', 'exists:cities,id'],
+            'zone_name' => ['required', 'string', 'max:255'],
+            'zone_code' => ['nullable', 'string', 'max:100'],
+            'delivery_available' => ['required', 'boolean'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ]);
+
+        $duplicate = RegionZone::where('city_id', $data['city_id'])
+            ->whereRaw('LOWER(zone_name) = ?', [strtolower($data['zone_name'])])
+            ->where('id', '!=', $zone->id)
+            ->exists();
+
+        if ($duplicate) {
+            return back()->withErrors(['zone_name' => 'Duplicate region under the same city is not allowed.'])->withInput();
+        }
+
+        $data['updated_by'] = $request->user()?->id;
+
+        $zone->update($data);
+
+        return redirect()->route('admin.zones.index')->with('success', 'Region / zone updated successfully.');
+    }
+
+    public function destroy(RegionZone $zone)
+    {
+        $zone->delete();
+
+        return redirect()->route('admin.zones.index')->with('success', 'Region / zone deleted successfully.');
+    }
+}
