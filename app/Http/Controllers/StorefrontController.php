@@ -284,7 +284,7 @@ class StorefrontController extends Controller
         $this->clearCartState();
 
         return redirect()
-            ->route('storefront.orders.show', $order)
+            ->route('storefront.orders.success', $order)
             ->with('success', 'Order '.$order->order_number.' placed successfully. Payment is pending.');
     }
 

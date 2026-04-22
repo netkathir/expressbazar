@@ -33,6 +33,26 @@ class CustomerAccountController extends Controller
         ]);
     }
 
+    public function orders(Request $request)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        $orders = Order::query()
+            ->where('customer_id', $user->id)
+            ->with(['vendor', 'items', 'payments'])
+            ->latest('placed_at')
+            ->latest('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('storefront.orders.index', [
+            'title' => 'My Orders',
+            'user' => $user,
+            'orders' => $orders,
+        ]);
+    }
+
     public function showOrder(Request $request, Order $order)
     {
         $user = $request->user();
@@ -40,6 +60,18 @@ class CustomerAccountController extends Controller
 
         return view('storefront.orders.show', [
             'title' => 'Order Details',
+            'order' => $order->load(['vendor', 'items', 'payments']),
+            'user' => $user,
+        ]);
+    }
+
+    public function showOrderSuccess(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        return view('storefront.orders.success', [
+            'title' => 'Order Confirmed',
             'order' => $order->load(['vendor', 'items', 'payments']),
             'user' => $user,
         ]);

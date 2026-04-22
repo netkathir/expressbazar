@@ -18,6 +18,9 @@
                 <div class="col-12 col-xl-8">
                     <div class="sf-info-card mb-4">
                         <h4 class="mb-3">Recent orders</h4>
+                        <div class="d-flex justify-content-end mb-3">
+                            <a href="{{ route('storefront.orders.index') }}" class="btn btn-outline-dark rounded-pill btn-sm">View all orders</a>
+                        </div>
                         <div class="d-grid gap-3">
                             @forelse ($orders as $order)
                                 @php($latestPayment = $order->payments->last())

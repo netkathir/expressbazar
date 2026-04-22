@@ -35,6 +35,8 @@ Route::post('/otp/verify', [CustomerAuthController::class, 'verifyOtp'])->name('
 Route::post('/otp/resend', [CustomerAuthController::class, 'resendOtp'])->name('storefront.otp.resend');
 Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storefront.logout');
 Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
+Route::get('/account/orders', [CustomerAccountController::class, 'orders'])->middleware('auth')->name('storefront.orders.index');
+Route::get('/account/orders/{order}/success', [CustomerAccountController::class, 'showOrderSuccess'])->middleware('auth')->name('storefront.orders.success');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
 Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
 Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
