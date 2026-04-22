@@ -107,6 +107,11 @@ class User extends Authenticatable
         return $this->hasRolePermission($moduleKey, $ability);
     }
 
+    public function addresses()
+    {
+        return $this->hasMany(CustomerAddress::class, 'user_id');
+    }
+
     private static function abilityFromRoute(string $routeName, string $method): string
     {
         if ($method === 'POST') {

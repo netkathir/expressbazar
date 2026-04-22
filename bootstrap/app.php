@@ -12,8 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
-        $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
+        $middleware->redirectGuestsTo(fn () => request()->is('admin*') ? route('admin.login') : route('storefront.login'));
+        $middleware->redirectUsersTo(fn () => auth()->user()?->role === 'customer' ? route('user.home') : route('admin.dashboard'));
 
         $middleware->alias([
             'admin' => AdminAccess::class,

@@ -18,11 +18,38 @@ use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\TaxController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\RegionZoneController;
+use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\CustomerAuthController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\PanelController;
+use App\Http\Controllers\StorefrontController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PanelController::class, 'userHome'])->name('user.home');
+Route::get('/', [StorefrontController::class, 'home'])->name('user.home');
+Route::get('/login', [CustomerAuthController::class, 'createLogin'])->name('storefront.login');
+Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->name('storefront.login.store');
+Route::get('/register', [CustomerAuthController::class, 'createRegister'])->name('storefront.register');
+Route::post('/register', [CustomerAuthController::class, 'storeRegister'])->name('storefront.register.store');
+Route::get('/otp', [CustomerAuthController::class, 'otpForm'])->name('storefront.otp.form');
+Route::post('/otp/verify', [CustomerAuthController::class, 'verifyOtp'])->name('storefront.otp.verify');
+Route::post('/otp/resend', [CustomerAuthController::class, 'resendOtp'])->name('storefront.otp.resend');
+Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storefront.logout');
+Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
+Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
+Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
+Route::get('/checkout', [StorefrontController::class, 'checkout'])->middleware('auth')->name('storefront.checkout');
+Route::get('/categories/{category}', [StorefrontController::class, 'category'])->name('storefront.category');
+Route::get('/subcategories/{subcategory}', [StorefrontController::class, 'subcategory'])->name('storefront.subcategory');
+Route::get('/products/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
+Route::get('/search', [StorefrontController::class, 'search'])->name('storefront.search');
+Route::get('/cart', [StorefrontController::class, 'cart'])->name('storefront.cart');
+Route::post('/location', [StorefrontController::class, 'setLocation'])->name('storefront.location');
+Route::get('/location/cities', [StorefrontController::class, 'cities'])->name('storefront.location.cities');
+Route::get('/location/zones', [StorefrontController::class, 'zones'])->name('storefront.location.zones');
+Route::post('/cart/items/{product}', [StorefrontController::class, 'addToCart'])->name('storefront.cart.add');
+Route::patch('/cart/items/{product}', [StorefrontController::class, 'updateCart'])->name('storefront.cart.update');
+Route::delete('/cart/items/{product}', [StorefrontController::class, 'removeFromCart'])->name('storefront.cart.remove');
+Route::post('/cart/clear', [StorefrontController::class, 'clearCart'])->name('storefront.cart.clear');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
