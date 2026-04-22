@@ -101,6 +101,7 @@ body.admin-shell {
 
 .content {
     margin-left: 280px;
+    padding-top: 96px !important;
 }
 
 .topbar.full,
@@ -204,5 +205,9 @@ body.admin-shell {
     .topbar.full,
     .content.full {
         margin-left: 0;
+    }
+
+    .content {
+        padding-top: 96px !important;
     }
 }
