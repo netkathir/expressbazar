@@ -18,14 +18,18 @@ use App\Models\Tax;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DemoCatalogSeeder extends Seeder
 {
+    private array $assetPools = [];
+
     public function run(): void
     {
+        $this->assetPools = $this->prepareSeedAssets();
+
         $admin = User::where('email', 'admin@expressbazar.local')->first();
 
         $country = Country::where('country_code', 'UK')->first();
@@ -107,6 +111,7 @@ class DemoCatalogSeeder extends Seeder
                     'vendor_name' => $vendorData['name'],
                     'phone' => $vendorData['phone'],
                     'address' => $vendorData['address'],
+                    'logo_path' => $vendorData['logo'],
                     'country_id' => $country?->id,
                     'city_id' => $city?->id,
                     'region_zone_id' => $zoneModel?->id,
@@ -257,55 +262,170 @@ class DemoCatalogSeeder extends Seeder
         }
     }
 
+    private function prepareSeedAssets(): array
+    {
+        return [
+            'banner' => $this->publishAssetGroup('banner', 10),
+            'category' => $this->publishAssetGroup('category', 18),
+            'category_banner' => $this->publishAssetGroup('category_banner', 3),
+            'item' => $this->publishAssetGroup('item', 40),
+            'coupon' => $this->publishAssetGroup('coupon', 6),
+            'offer' => $this->publishAssetGroup('OFFER', 10),
+            'branch' => $this->publishAssetGroup('branch', 6),
+        ];
+    }
+
+    private function publishAssetGroup(string $group, int $limit): array
+    {
+        $sourceDir = $this->sampleImagesRoot() . DIRECTORY_SEPARATOR . $group;
+
+        if (! File::isDirectory($sourceDir)) {
+            return [];
+        }
+
+        $targetDir = public_path('sample-assets/' . strtolower($group));
+        File::ensureDirectoryExists($targetDir);
+
+        $files = collect(File::files($sourceDir))
+            ->filter(function ($file) {
+                return in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'webp'], true);
+            })
+            ->sortBy(fn ($file) => $file->getFilename())
+            ->values()
+            ->take($limit);
+
+        $published = [];
+
+        foreach ($files as $file) {
+            $targetPath = $targetDir . DIRECTORY_SEPARATOR . $file->getFilename();
+
+            if (! file_exists($targetPath)) {
+                copy($file->getPathname(), $targetPath);
+            }
+
+            $published[] = '/sample-assets/' . strtolower($group) . '/' . rawurlencode($file->getFilename());
+        }
+
+        return $published;
+    }
+
+    private function sampleImagesRoot(): string
+    {
+        return dirname(base_path()) . DIRECTORY_SEPARATOR . 'sample images';
+    }
+
+    private function assetUrl(string $group, int $index): string
+    {
+        $assets = $this->assetPools[$group] ?? [];
+
+        if ($assets === []) {
+            return '';
+        }
+
+        return $assets[$index % count($assets)];
+    }
+
+    private function productImages(int $startIndex): array
+    {
+        $images = [
+            $this->assetUrl('item', $startIndex),
+            $this->assetUrl('item', $startIndex + 1),
+        ];
+
+        return array_values(array_filter(array_unique($images)));
+    }
+
     private function categories(): array
     {
         return [
             [
                 'name' => 'Fruits & Vegetables',
-                'image' => '/admin-theme/assets/images/product-1.png',
+                'image' => $this->assetUrl('category', 0),
                 'subcategories' => [
-                    ['name' => 'Fresh Fruits', 'image' => '/admin-theme/assets/images/product-2.png'],
-                    ['name' => 'Fresh Vegetables', 'image' => '/admin-theme/assets/images/product-3.png'],
+                    ['name' => 'Fresh Fruits', 'image' => $this->assetUrl('category', 1)],
+                    ['name' => 'Fresh Vegetables', 'image' => $this->assetUrl('category', 2)],
+                    ['name' => 'Exotic & Premium', 'image' => $this->assetUrl('category', 3)],
                 ],
             ],
             [
                 'name' => 'Dairy, Bread & Eggs',
-                'image' => '/admin-theme/assets/images/product-4.png',
+                'image' => $this->assetUrl('category', 4),
                 'subcategories' => [
-                    ['name' => 'Milk & Curd', 'image' => '/admin-theme/assets/images/product-5.png'],
-                    ['name' => 'Bread & Buns', 'image' => '/admin-theme/assets/images/product-6.png'],
-                ],
-            ],
-            [
-                'name' => 'Cleaning Essentials',
-                'image' => '/admin-theme/assets/images/product-7.png',
-                'subcategories' => [
-                    ['name' => 'Floor Cleaners', 'image' => '/admin-theme/assets/images/product-8.png'],
-                    ['name' => 'Laundry Care', 'image' => '/admin-theme/assets/images/product-9.png'],
-                ],
-            ],
-            [
-                'name' => 'Hair Care',
-                'image' => '/admin-theme/assets/images/product-10.png',
-                'subcategories' => [
-                    ['name' => 'Hair Serum', 'image' => '/admin-theme/assets/images/product-1.png'],
-                    ['name' => 'Hair Oil', 'image' => '/admin-theme/assets/images/product-2.png'],
+                    ['name' => 'Milk & Curd', 'image' => $this->assetUrl('category', 5)],
+                    ['name' => 'Bread & Buns', 'image' => $this->assetUrl('category', 6)],
+                    ['name' => 'Eggs & Paneer', 'image' => $this->assetUrl('category', 7)],
                 ],
             ],
             [
                 'name' => 'Rice & Grains',
-                'image' => '/admin-theme/assets/images/product-3.png',
+                'image' => $this->assetUrl('category', 8),
                 'subcategories' => [
-                    ['name' => 'Basmati Rice', 'image' => '/admin-theme/assets/images/product-4.png'],
-                    ['name' => 'Staples', 'image' => '/admin-theme/assets/images/product-5.png'],
+                    ['name' => 'Basmati Rice', 'image' => $this->assetUrl('category', 9)],
+                    ['name' => 'Staples & Pulses', 'image' => $this->assetUrl('category', 10)],
+                    ['name' => 'Flour & Poha', 'image' => $this->assetUrl('category', 11)],
                 ],
             ],
             [
-                'name' => 'Snacks & Drinks',
-                'image' => '/admin-theme/assets/images/product-6.png',
+                'name' => 'Snacks & Beverages',
+                'image' => $this->assetUrl('category', 12),
                 'subcategories' => [
-                    ['name' => 'Beverages', 'image' => '/admin-theme/assets/images/product-7.png'],
-                    ['name' => 'Chips & Snacks', 'image' => '/admin-theme/assets/images/product-8.png'],
+                    ['name' => 'Chips & Namkeen', 'image' => $this->assetUrl('category', 13)],
+                    ['name' => 'Soft Drinks', 'image' => $this->assetUrl('category', 14)],
+                    ['name' => 'Biscuits & Cookies', 'image' => $this->assetUrl('category', 15)],
+                ],
+            ],
+            [
+                'name' => 'Cleaning Essentials',
+                'image' => $this->assetUrl('category', 16),
+                'subcategories' => [
+                    ['name' => 'Laundry Care', 'image' => $this->assetUrl('category', 17)],
+                    ['name' => 'Dishwash & Scrub', 'image' => $this->assetUrl('category', 0)],
+                    ['name' => 'Floor & Bath Cleaners', 'image' => $this->assetUrl('category', 1)],
+                ],
+            ],
+            [
+                'name' => 'Hair Care',
+                'image' => $this->assetUrl('category', 2),
+                'subcategories' => [
+                    ['name' => 'Hair Serum', 'image' => $this->assetUrl('category', 3)],
+                    ['name' => 'Hair Oil', 'image' => $this->assetUrl('category', 4)],
+                    ['name' => 'Shampoo & Conditioner', 'image' => $this->assetUrl('category', 5)],
+                ],
+            ],
+            [
+                'name' => 'Personal Care',
+                'image' => $this->assetUrl('category', 6),
+                'subcategories' => [
+                    ['name' => 'Face Wash', 'image' => $this->assetUrl('category', 7)],
+                    ['name' => 'Soaps & Body Wash', 'image' => $this->assetUrl('category', 8)],
+                    ['name' => 'Oral Care', 'image' => $this->assetUrl('category', 9)],
+                ],
+            ],
+            [
+                'name' => 'Baby Care',
+                'image' => $this->assetUrl('category', 10),
+                'subcategories' => [
+                    ['name' => 'Baby Food', 'image' => $this->assetUrl('category', 11)],
+                    ['name' => 'Diapers & Wipes', 'image' => $this->assetUrl('category', 12)],
+                    ['name' => 'Baby Bath', 'image' => $this->assetUrl('category', 13)],
+                ],
+            ],
+            [
+                'name' => 'Kitchen & Home',
+                'image' => $this->assetUrl('category', 14),
+                'subcategories' => [
+                    ['name' => 'Cookware', 'image' => $this->assetUrl('category', 15)],
+                    ['name' => 'Storage & Containers', 'image' => $this->assetUrl('category', 16)],
+                    ['name' => 'Air Fresheners', 'image' => $this->assetUrl('category', 17)],
+                ],
+            ],
+            [
+                'name' => 'Offer Zone',
+                'image' => $this->assetUrl('category', 1),
+                'subcategories' => [
+                    ['name' => 'Combo Deals', 'image' => $this->assetUrl('category', 0)],
+                    ['name' => 'Top Offers', 'image' => $this->assetUrl('category', 2)],
+                    ['name' => 'New Launches', 'image' => $this->assetUrl('category', 4)],
                 ],
             ],
         ];
@@ -321,6 +441,7 @@ class DemoCatalogSeeder extends Seeder
                 'address' => '73 Colby Street, Southampton',
                 'zone_code' => 'SO16',
                 'inventory_mode' => 'internal',
+                'logo' => $this->assetUrl('branch', 0),
             ],
             [
                 'name' => 'Daily Pantry',
@@ -329,6 +450,7 @@ class DemoCatalogSeeder extends Seeder
                 'address' => '12 Dock Road, Southampton',
                 'zone_code' => 'SO14',
                 'inventory_mode' => 'epos',
+                'logo' => $this->assetUrl('branch', 1),
             ],
             [
                 'name' => 'Green Valley Store',
@@ -337,6 +459,7 @@ class DemoCatalogSeeder extends Seeder
                 'address' => '44 Market Street, Southampton',
                 'zone_code' => 'SO15',
                 'inventory_mode' => 'internal',
+                'logo' => $this->assetUrl('branch', 2),
             ],
             [
                 'name' => 'Quick Home Mart',
@@ -345,6 +468,7 @@ class DemoCatalogSeeder extends Seeder
                 'address' => '8 High Street, Southampton',
                 'zone_code' => 'SO16',
                 'inventory_mode' => 'epos',
+                'logo' => $this->assetUrl('branch', 3),
             ],
         ];
     }
@@ -355,20 +479,38 @@ class DemoCatalogSeeder extends Seeder
             [
                 'title' => 'Fresh essentials delivered fast',
                 'subtitle' => 'Fruit, dairy, and daily groceries for quick shopping.',
-                'image' => '/admin-theme/assets/images/product-1.png',
+                'image' => $this->assetUrl('banner', 0),
                 'link' => '/categories/1',
             ],
             [
-                'title' => 'Home care and cleaning offers',
-                'subtitle' => 'Keep your home stocked with trusted brands.',
-                'image' => '/admin-theme/assets/images/product-7.png',
-                'link' => '/categories/3',
+                'title' => 'Big savings on daily offers',
+                'subtitle' => 'New user coupons and app-only offers live now.',
+                'image' => $this->assetUrl('banner', 1),
+                'link' => '/categories/10',
             ],
             [
-                'title' => 'Hair care favorites',
-                'subtitle' => 'Top picks from quick commerce style shelves.',
-                'image' => '/admin-theme/assets/images/product-10.png',
-                'link' => '/categories/4',
+                'title' => 'Fresh vegetables and greens',
+                'subtitle' => 'Stock your kitchen with daily produce.',
+                'image' => $this->assetUrl('category_banner', 0),
+                'link' => '/categories/1',
+            ],
+            [
+                'title' => 'Cleaning essentials for the home',
+                'subtitle' => 'Laundry, floor care, and kitchen cleaning deals.',
+                'image' => $this->assetUrl('category_banner', 1),
+                'link' => '/categories/5',
+            ],
+            [
+                'title' => 'Hair care and personal care',
+                'subtitle' => 'Serums, shampoos, and grooming basics.',
+                'image' => $this->assetUrl('banner', 2),
+                'link' => '/categories/6',
+            ],
+            [
+                'title' => 'Weekend combo offers',
+                'subtitle' => 'Offer-zone products with curated savings.',
+                'image' => $this->assetUrl('offer', 0),
+                'link' => '/categories/10',
             ],
         ];
     }
@@ -397,205 +539,73 @@ class DemoCatalogSeeder extends Seeder
                 'phone' => '09876543210',
                 'avatar' => '/admin-theme/assets/images/avatar/avatar-3.jpg',
             ],
+            [
+                'name' => 'Sara Khan',
+                'email' => 'sara.khan@example.com',
+                'username' => 'sarakhan',
+                'phone' => '09770011223',
+                'avatar' => '/admin-theme/assets/images/avatar/avatar-4.jpg',
+            ],
+            [
+                'name' => 'Vikram Patel',
+                'email' => 'vikram.patel@example.com',
+                'username' => 'vikrampatel',
+                'phone' => '09881112223',
+                'avatar' => '/admin-theme/assets/images/avatar/avatar-5.jpg',
+            ],
         ];
     }
 
     private function products(): array
     {
-        return [
-            [
-                'name' => 'Fresh Apples 1 kg',
-                'category' => 'Fruits & Vegetables',
-                'subcategory' => 'Fresh Fruits',
-                'vendor_email' => 'vendor1@expressbazar.local',
-                'description' => 'Sweet and crisp apples packed for quick delivery.',
-                'price' => 149,
-                'discount_type' => 'percentage',
-                'discount_value' => 12,
-                'stock' => 42,
-                'unit' => '1 kg',
-                'images' => [
-                    '/admin-theme/assets/images/product-1.png',
-                    '/admin-theme/assets/images/product-2.png',
-                ],
-            ],
-            [
-                'name' => 'Banana Bunch',
-                'category' => 'Fruits & Vegetables',
-                'subcategory' => 'Fresh Fruits',
-                'vendor_email' => 'vendor1@expressbazar.local',
-                'description' => 'Farm fresh bananas for everyday use.',
-                'price' => 59,
-                'discount_type' => 'fixed',
-                'discount_value' => 5,
-                'stock' => 60,
-                'unit' => '1 bunch',
-                'images' => [
-                    '/admin-theme/assets/images/product-2.png',
-                    '/admin-theme/assets/images/product-3.png',
-                ],
-            ],
-            [
-                'name' => 'Carrot Local',
-                'category' => 'Fruits & Vegetables',
-                'subcategory' => 'Fresh Vegetables',
-                'vendor_email' => 'vendor3@expressbazar.local',
-                'description' => 'Crunchy local carrots for daily cooking.',
-                'price' => 39,
-                'discount_type' => 'percentage',
-                'discount_value' => 10,
-                'stock' => 80,
-                'unit' => '500 g',
-                'images' => [
-                    '/admin-theme/assets/images/product-3.png',
-                    '/admin-theme/assets/images/product-4.png',
-                ],
-            ],
-            [
-                'name' => 'Milk 1 L',
-                'category' => 'Dairy, Bread & Eggs',
-                'subcategory' => 'Milk & Curd',
-                'vendor_email' => 'vendor2@expressbazar.local',
-                'description' => 'Fresh milk for breakfast and cooking.',
-                'price' => 62,
-                'discount_type' => 'fixed',
-                'discount_value' => 2,
-                'stock' => 120,
-                'unit' => '1 L',
-                'images' => [
-                    '/admin-theme/assets/images/product-4.png',
-                    '/admin-theme/assets/images/product-5.png',
-                ],
-            ],
-            [
-                'name' => 'Whole Wheat Bread',
-                'category' => 'Dairy, Bread & Eggs',
-                'subcategory' => 'Bread & Buns',
-                'vendor_email' => 'vendor2@expressbazar.local',
-                'description' => 'Soft whole wheat bread sliced for families.',
-                'price' => 45,
-                'discount_type' => 'percentage',
-                'discount_value' => 8,
-                'stock' => 55,
-                'unit' => '1 pack',
-                'images' => [
-                    '/admin-theme/assets/images/product-5.png',
-                    '/admin-theme/assets/images/product-6.png',
-                ],
-            ],
-            [
-                'name' => 'Lavender Floor Cleaner',
-                'category' => 'Cleaning Essentials',
-                'subcategory' => 'Floor Cleaners',
-                'vendor_email' => 'vendor4@expressbazar.local',
-                'description' => 'Powerful floor cleaner with a fresh fragrance.',
-                'price' => 189,
-                'discount_type' => 'percentage',
-                'discount_value' => 15,
-                'stock' => 34,
-                'unit' => '1 L',
-                'images' => [
-                    '/admin-theme/assets/images/product-7.png',
-                    '/admin-theme/assets/images/product-8.png',
-                ],
-            ],
-            [
-                'name' => 'Laundry Liquid',
-                'category' => 'Cleaning Essentials',
-                'subcategory' => 'Laundry Care',
-                'vendor_email' => 'vendor4@expressbazar.local',
-                'description' => 'Gentle laundry liquid for everyday washing.',
-                'price' => 249,
-                'discount_type' => 'fixed',
-                'discount_value' => 25,
-                'stock' => 28,
-                'unit' => '2 L',
-                'images' => [
-                    '/admin-theme/assets/images/product-8.png',
-                    '/admin-theme/assets/images/product-9.png',
-                ],
-            ],
-            [
-                'name' => 'Hair Serum 50 ml',
-                'category' => 'Hair Care',
-                'subcategory' => 'Hair Serum',
-                'vendor_email' => 'vendor3@expressbazar.local',
-                'description' => 'Smooth frizz control serum for quick styling.',
-                'price' => 199,
-                'discount_type' => 'percentage',
-                'discount_value' => 10,
-                'stock' => 25,
-                'unit' => '50 ml',
-                'images' => [
-                    '/admin-theme/assets/images/product-10.png',
-                    '/admin-theme/assets/images/product-1.png',
-                ],
-            ],
-            [
-                'name' => 'Coconut Hair Oil',
-                'category' => 'Hair Care',
-                'subcategory' => 'Hair Oil',
-                'vendor_email' => 'vendor3@expressbazar.local',
-                'description' => 'Nourishing coconut oil for soft hair.',
-                'price' => 175,
-                'discount_type' => 'fixed',
-                'discount_value' => 20,
-                'stock' => 31,
-                'unit' => '100 ml',
-                'images' => [
-                    '/admin-theme/assets/images/product-2.png',
-                    '/admin-theme/assets/images/product-10.png',
-                ],
-            ],
-            [
-                'name' => 'Basmati Rice 5 kg',
-                'category' => 'Rice & Grains',
-                'subcategory' => 'Basmati Rice',
-                'vendor_email' => 'vendor1@expressbazar.local',
-                'description' => 'Long grain basmati rice for everyday meals.',
-                'price' => 499,
-                'discount_type' => 'percentage',
-                'discount_value' => 6,
-                'stock' => 18,
-                'unit' => '5 kg',
-                'images' => [
-                    '/admin-theme/assets/images/product-3.png',
-                    '/admin-theme/assets/images/product-4.png',
-                ],
-            ],
-            [
-                'name' => 'Tonic Water',
-                'category' => 'Snacks & Drinks',
-                'subcategory' => 'Beverages',
-                'vendor_email' => 'vendor2@expressbazar.local',
-                'description' => 'Refreshing beverage for everyday consumption.',
-                'price' => 89,
-                'discount_type' => 'fixed',
-                'discount_value' => 9,
-                'stock' => 64,
-                'unit' => '1 bottle',
-                'images' => [
-                    '/admin-theme/assets/images/product-6.png',
-                    '/admin-theme/assets/images/product-7.png',
-                ],
-            ],
-            [
-                'name' => 'Masala Chips',
-                'category' => 'Snacks & Drinks',
-                'subcategory' => 'Chips & Snacks',
-                'vendor_email' => 'vendor2@expressbazar.local',
-                'description' => 'Spicy and crunchy snacks for quick bites.',
-                'price' => 35,
-                'discount_type' => 'percentage',
-                'discount_value' => 10,
-                'stock' => 90,
-                'unit' => '1 pack',
-                'images' => [
-                    '/admin-theme/assets/images/product-8.png',
-                    '/admin-theme/assets/images/product-9.png',
-                ],
-            ],
+        $items = [
+            ['name' => 'Fresh Apples 1 kg', 'category' => 'Fruits & Vegetables', 'subcategory' => 'Fresh Fruits', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Sweet and crisp apples packed for quick delivery.', 'price' => 149, 'discount_type' => 'percentage', 'discount_value' => 12, 'stock' => 42, 'unit' => '1 kg'],
+            ['name' => 'Banana Bunch', 'category' => 'Fruits & Vegetables', 'subcategory' => 'Fresh Fruits', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Farm fresh bananas for everyday use.', 'price' => 59, 'discount_type' => 'fixed', 'discount_value' => 5, 'stock' => 60, 'unit' => '1 bunch'],
+            ['name' => 'Mango Alphonso', 'category' => 'Fruits & Vegetables', 'subcategory' => 'Fresh Fruits', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Premium mangoes with a rich seasonal taste.', 'price' => 199, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 24, 'unit' => '1 kg'],
+            ['name' => 'Carrot Local', 'category' => 'Fruits & Vegetables', 'subcategory' => 'Fresh Vegetables', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Crunchy local carrots for daily cooking.', 'price' => 39, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 80, 'unit' => '500 g'],
+            ['name' => 'Tomato Local', 'category' => 'Fruits & Vegetables', 'subcategory' => 'Fresh Vegetables', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Juicy tomatoes for curries and salads.', 'price' => 29, 'discount_type' => 'fixed', 'discount_value' => 3, 'stock' => 90, 'unit' => '500 g'],
+            ['name' => 'Milk 1 L', 'category' => 'Dairy, Bread & Eggs', 'subcategory' => 'Milk & Curd', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Fresh milk for breakfast and cooking.', 'price' => 62, 'discount_type' => 'fixed', 'discount_value' => 2, 'stock' => 120, 'unit' => '1 L'],
+            ['name' => 'Curd Family Pack', 'category' => 'Dairy, Bread & Eggs', 'subcategory' => 'Milk & Curd', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Fresh curd for daily meal prep.', 'price' => 54, 'discount_type' => 'percentage', 'discount_value' => 6, 'stock' => 72, 'unit' => '500 g'],
+            ['name' => 'Whole Wheat Bread', 'category' => 'Dairy, Bread & Eggs', 'subcategory' => 'Bread & Buns', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Soft whole wheat bread sliced for families.', 'price' => 45, 'discount_type' => 'percentage', 'discount_value' => 8, 'stock' => 55, 'unit' => '1 pack'],
+            ['name' => 'Egg Tray 6 pcs', 'category' => 'Dairy, Bread & Eggs', 'subcategory' => 'Eggs & Paneer', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Farm eggs packed for breakfast needs.', 'price' => 48, 'discount_type' => 'fixed', 'discount_value' => 4, 'stock' => 80, 'unit' => '6 pcs'],
+            ['name' => 'Paneer Block 200 g', 'category' => 'Dairy, Bread & Eggs', 'subcategory' => 'Eggs & Paneer', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Fresh paneer for home-style cooking.', 'price' => 79, 'discount_type' => 'percentage', 'discount_value' => 5, 'stock' => 40, 'unit' => '200 g'],
+            ['name' => 'Basmati Rice 5 kg', 'category' => 'Rice & Grains', 'subcategory' => 'Basmati Rice', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Long grain basmati rice for everyday meals.', 'price' => 499, 'discount_type' => 'percentage', 'discount_value' => 6, 'stock' => 18, 'unit' => '5 kg'],
+            ['name' => 'Sona Masoori Rice', 'category' => 'Rice & Grains', 'subcategory' => 'Basmati Rice', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Light everyday rice for home kitchens.', 'price' => 329, 'discount_type' => 'fixed', 'discount_value' => 20, 'stock' => 26, 'unit' => '5 kg'],
+            ['name' => 'Moong Dal 1 kg', 'category' => 'Rice & Grains', 'subcategory' => 'Staples & Pulses', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Protein-rich pulses for daily cooking.', 'price' => 129, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 35, 'unit' => '1 kg'],
+            ['name' => 'Atta 5 kg', 'category' => 'Rice & Grains', 'subcategory' => 'Flour & Poha', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Whole wheat flour for soft rotis.', 'price' => 219, 'discount_type' => 'fixed', 'discount_value' => 15, 'stock' => 44, 'unit' => '5 kg'],
+            ['name' => 'Masala Chips', 'category' => 'Snacks & Beverages', 'subcategory' => 'Chips & Namkeen', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Spicy and crunchy snacks for quick bites.', 'price' => 35, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 90, 'unit' => '1 pack'],
+            ['name' => 'Mixture Namkeen', 'category' => 'Snacks & Beverages', 'subcategory' => 'Chips & Namkeen', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Classic tea-time namkeen mix.', 'price' => 49, 'discount_type' => 'fixed', 'discount_value' => 5, 'stock' => 66, 'unit' => '1 pack'],
+            ['name' => 'Cola Drink', 'category' => 'Snacks & Beverages', 'subcategory' => 'Soft Drinks', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Refreshing carbonated drink for every meal.', 'price' => 79, 'discount_type' => 'percentage', 'discount_value' => 8, 'stock' => 72, 'unit' => '1 bottle'],
+            ['name' => 'Orange Juice', 'category' => 'Snacks & Beverages', 'subcategory' => 'Soft Drinks', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Citrus juice packed for quick refreshment.', 'price' => 99, 'discount_type' => 'fixed', 'discount_value' => 10, 'stock' => 58, 'unit' => '1 bottle'],
+            ['name' => 'Butter Cookies', 'category' => 'Snacks & Beverages', 'subcategory' => 'Biscuits & Cookies', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Tea-time cookies with a buttery finish.', 'price' => 65, 'discount_type' => 'percentage', 'discount_value' => 5, 'stock' => 88, 'unit' => '1 pack'],
+            ['name' => 'Laundry Liquid', 'category' => 'Cleaning Essentials', 'subcategory' => 'Laundry Care', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Gentle laundry liquid for everyday washing.', 'price' => 249, 'discount_type' => 'fixed', 'discount_value' => 25, 'stock' => 28, 'unit' => '2 L'],
+            ['name' => 'Floor Cleaner', 'category' => 'Cleaning Essentials', 'subcategory' => 'Floor & Bath Cleaners', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Powerful floor cleaner with a fresh fragrance.', 'price' => 189, 'discount_type' => 'percentage', 'discount_value' => 15, 'stock' => 34, 'unit' => '1 L'],
+            ['name' => 'Dishwash Liquid', 'category' => 'Cleaning Essentials', 'subcategory' => 'Dishwash & Scrub', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Cuts grease and cleans dishes quickly.', 'price' => 109, 'discount_type' => 'fixed', 'discount_value' => 9, 'stock' => 56, 'unit' => '500 ml'],
+            ['name' => 'Shampoo 650 ml', 'category' => 'Hair Care', 'subcategory' => 'Shampoo & Conditioner', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Nourishing shampoo for everyday hair care.', 'price' => 199, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 50, 'unit' => '650 ml'],
+            ['name' => 'Hair Conditioner', 'category' => 'Hair Care', 'subcategory' => 'Shampoo & Conditioner', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Smooth conditioning for soft hair.', 'price' => 219, 'discount_type' => 'fixed', 'discount_value' => 20, 'stock' => 48, 'unit' => '650 ml'],
+            ['name' => 'Hair Serum 50 ml', 'category' => 'Hair Care', 'subcategory' => 'Hair Serum', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Smooth frizz control serum for quick styling.', 'price' => 199, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 25, 'unit' => '50 ml'],
+            ['name' => 'Coconut Hair Oil', 'category' => 'Hair Care', 'subcategory' => 'Hair Oil', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Nourishing coconut oil for soft hair.', 'price' => 175, 'discount_type' => 'fixed', 'discount_value' => 20, 'stock' => 31, 'unit' => '100 ml'],
+            ['name' => 'Face Wash Gel', 'category' => 'Personal Care', 'subcategory' => 'Face Wash', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Refreshing face wash for daily cleansing.', 'price' => 149, 'discount_type' => 'percentage', 'discount_value' => 12, 'stock' => 40, 'unit' => '100 ml'],
+            ['name' => 'Soap Pack', 'category' => 'Personal Care', 'subcategory' => 'Soaps & Body Wash', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Everyday bathing soap family pack.', 'price' => 119, 'discount_type' => 'fixed', 'discount_value' => 10, 'stock' => 64, 'unit' => '4 pcs'],
+            ['name' => 'Toothpaste', 'category' => 'Personal Care', 'subcategory' => 'Oral Care', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Fresh breath toothpaste for daily use.', 'price' => 89, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 77, 'unit' => '150 g'],
+            ['name' => 'Baby Diapers Large', 'category' => 'Baby Care', 'subcategory' => 'Diapers & Wipes', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Comfort-fit diapers for babies.', 'price' => 399, 'discount_type' => 'fixed', 'discount_value' => 30, 'stock' => 22, 'unit' => '1 pack'],
+            ['name' => 'Baby Food Porridge', 'category' => 'Baby Care', 'subcategory' => 'Baby Food', 'vendor_email' => 'vendor2@expressbazar.local', 'description' => 'Nutrition-rich baby food for early meals.', 'price' => 179, 'discount_type' => 'percentage', 'discount_value' => 8, 'stock' => 30, 'unit' => '200 g'],
+            ['name' => 'Cookware Pan', 'category' => 'Kitchen & Home', 'subcategory' => 'Cookware', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Everyday non-stick pan for home cooking.', 'price' => 599, 'discount_type' => 'fixed', 'discount_value' => 50, 'stock' => 14, 'unit' => '1 pc'],
+            ['name' => 'Storage Container Set', 'category' => 'Kitchen & Home', 'subcategory' => 'Storage & Containers', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Airtight containers for kitchen storage.', 'price' => 329, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 20, 'unit' => '3 pcs'],
+            ['name' => 'Air Freshener Spray', 'category' => 'Kitchen & Home', 'subcategory' => 'Air Fresheners', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Fresh fragrance for rooms and living spaces.', 'price' => 149, 'discount_type' => 'fixed', 'discount_value' => 15, 'stock' => 54, 'unit' => '250 ml'],
+            ['name' => 'Combo Deal Basket', 'category' => 'Offer Zone', 'subcategory' => 'Combo Deals', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Curated combo basket with daily essentials.', 'price' => 799, 'discount_type' => 'percentage', 'discount_value' => 15, 'stock' => 12, 'unit' => '1 combo'],
+            ['name' => 'Top Offer Shampoo', 'category' => 'Offer Zone', 'subcategory' => 'Top Offers', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Featured shampoo offer for this week.', 'price' => 229, 'discount_type' => 'fixed', 'discount_value' => 25, 'stock' => 18, 'unit' => '1 bottle'],
         ];
+
+        $products = [];
+
+        foreach ($items as $index => $item) {
+            $products[] = array_merge($item, [
+                'images' => $this->productImages($index * 2),
+            ]);
+        }
+
+        return $products;
     }
 
     private function seedOrders(User $customer, Vendor $vendor, $products): void

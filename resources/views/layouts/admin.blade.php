@@ -56,10 +56,7 @@
     <aside id="sidebar" class="sidebar">
         <div class="logo-area">
             <a href="{{ route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
-                <img src="{{ asset('admin-theme/assets/images/logo-icon.svg') }}" alt="Logo" width="24" height="24">
-                <span class="logo-text">
-                    <img src="{{ asset('admin-theme/assets/images/logo.svg') }}" alt="Express Bazar" height="24">
-                </span>
+                <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="admin-brand-logo">
             </a>
         </div>
 

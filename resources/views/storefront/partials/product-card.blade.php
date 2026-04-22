@@ -14,7 +14,7 @@
         @else
             <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart sf-card-add">
                 @csrf
-                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">ADD</button>
+                <button type="submit" class="btn btn-sm rounded-pill px-3">ADD</button>
             </form>
         @endif
     </div>

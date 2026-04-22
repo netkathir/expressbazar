@@ -55,6 +55,23 @@
             </section>
         @endif
 
+        @if (($discountedProducts ?? collect())->isNotEmpty())
+            <section class="container-fluid px-3 px-lg-4 mt-4">
+                <div class="sf-section-header">
+                    <div>
+                        <h3>Top offers today</h3>
+                        <p class="text-secondary mb-0">Discounted products picked from the live sample catalog.</p>
+                    </div>
+                    <a href="{{ route('storefront.category', $categories->first()) }}">See all</a>
+                </div>
+                <div class="sf-product-rail">
+                    @foreach ($discountedProducts as $product)
+                        @include('storefront.partials.product-card', ['product' => $product])
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         <section class="container-fluid px-3 px-lg-4 mt-4">
             <div class="sf-section-header">
                 <div>

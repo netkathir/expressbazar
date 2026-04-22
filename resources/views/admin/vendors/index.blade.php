@@ -59,7 +59,21 @@
                 <tbody>
                     @forelse ($vendors as $vendor)
                         <tr>
-                            <td class="fw-semibold">{{ $vendor->vendor_name }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="sf-avatar sf-avatar-sm">
+                                        @if ($vendor->logo_path)
+                                            <img src="{{ asset($vendor->logo_path) }}" alt="{{ $vendor->vendor_name }}">
+                                        @else
+                                            {{ strtoupper(substr($vendor->vendor_name, 0, 1)) }}
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ $vendor->vendor_name }}</div>
+                                        <div class="text-secondary small">{{ $vendor->country?->country_code ?: 'UK' }}</div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $vendor->email }}</td>
                             <td>{{ $vendor->phone ?: '-' }}</td>
                             <td>

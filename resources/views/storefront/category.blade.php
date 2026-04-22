@@ -9,12 +9,12 @@
                 <aside class="sf-sidepanel sf-category-sidebar">
                     <h4 class="mb-3">{{ $category->category_name }}</h4>
                     <div class="sf-side-links">
-                        <a href="{{ route('storefront.category', $category) }}" class="d-flex align-items-center gap-2 {{ request()->routeIs('storefront.category') ? 'active' : '' }}">
+                        <a href="{{ route('storefront.category', $category) }}" class="d-flex align-items-center gap-2 {{ empty($selectedSubcategory) ? 'active' : '' }}">
                             <img src="{{ asset($category->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
                             <span>All</span>
                         </a>
                         @foreach ($category->subcategories as $subcategory)
-                            <a href="{{ route('storefront.subcategory', $subcategory) }}" class="d-flex align-items-center gap-2">
+                            <a href="{{ route('storefront.category', $category) }}?subcategory={{ $subcategory->id }}" class="d-flex align-items-center gap-2 {{ ($selectedSubcategory?->id ?? null) === $subcategory->id ? 'active' : '' }}">
                                 <img src="{{ asset($subcategory->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $subcategory->subcategory_name }}">
                                 <span>{{ $subcategory->subcategory_name }}</span>
                             </a>
@@ -26,14 +26,20 @@
                     <div class="sf-page-title">
                         <div>
                             <h2>Buy {{ $category->category_name }} Online</h2>
-                            <p>Browse products across all subcategories in this category.</p>
+                            <p>
+                                @if ($selectedSubcategory)
+                                    Showing only {{ $selectedSubcategory->subcategory_name }} products.
+                                @else
+                                    Browse products across all subcategories in this category.
+                                @endif
+                            </p>
                         </div>
                     </div>
 
                     <div class="sf-filter-row">
-                        <button type="button" class="sf-filter-pill active">All</button>
+                        <a href="{{ route('storefront.category', $category) }}" class="sf-filter-pill {{ empty($selectedSubcategory) ? 'active' : '' }}">All</a>
                         @foreach ($category->subcategories as $subcategory)
-                            <a href="{{ route('storefront.subcategory', $subcategory) }}" class="sf-filter-pill d-inline-flex align-items-center gap-2">
+                            <a href="{{ route('storefront.category', $category) }}?subcategory={{ $subcategory->id }}" class="sf-filter-pill d-inline-flex align-items-center gap-2 {{ ($selectedSubcategory?->id ?? null) === $subcategory->id ? 'active' : '' }}">
                                 <img src="{{ asset($subcategory->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $subcategory->subcategory_name }}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;">
                                 <span>{{ $subcategory->subcategory_name }}</span>
                             </a>

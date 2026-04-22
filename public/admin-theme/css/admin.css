@@ -1,6 +1,6 @@
 :root {
-    --admin-brand: #e66239;
-    --admin-brand-dark: #bc4f2d;
+    --admin-brand: #ff7a18;
+    --admin-brand-dark: #0b1f44;
     --admin-bg: #f6f7fb;
     --admin-surface: #ffffff;
     --admin-border: #e5e7eb;
@@ -52,9 +52,18 @@ body.admin-shell {
     height: 60px;
     display: flex;
     align-items: center;
-    padding-left: 1rem;
+    justify-content: center;
+    padding: 0 .75rem;
     border-bottom: 1px solid var(--admin-border);
     background: #fff;
+}
+
+.admin-brand-logo {
+    display: block;
+    height: 34px;
+    width: auto;
+    max-width: 210px;
+    object-fit: contain;
 }
 
 .sidebar .nav-link {
@@ -72,7 +81,7 @@ body.admin-shell {
 .sidebar .nav-link:hover,
 .sidebar .nav-link.active {
     color: var(--admin-brand);
-    background: rgba(230, 98, 57, .09);
+    background: rgba(255, 122, 24, .12);
 }
 
 .sidebar .nav-link .ti {
@@ -91,6 +100,15 @@ body.admin-shell {
 .sidebar.collapsed .nav-link {
     justify-content: center;
     margin: 2px 10px;
+}
+
+.sidebar.collapsed .logo-area {
+    padding: 0;
+}
+
+.sidebar.collapsed .admin-brand-logo {
+    height: 30px;
+    max-width: 56px;
 }
 
 .topbar {
@@ -132,8 +150,8 @@ body.admin-shell {
 
 .badge-soft {
     color: var(--admin-brand-dark);
-    background: rgba(230, 98, 57, .12);
-    border: 1px solid rgba(230, 98, 57, .16);
+    background: rgba(255, 122, 24, .12);
+    border: 1px solid rgba(255, 122, 24, .16);
 }
 
 .hero-card,
@@ -150,7 +168,7 @@ body.admin-shell {
 
 .hero-card {
     background:
-        radial-gradient(circle at top right, rgba(230, 98, 57, .12), transparent 30%),
+        radial-gradient(circle at top right, rgba(255, 122, 24, .12), transparent 30%),
         linear-gradient(135deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
 }
 
@@ -158,8 +176,8 @@ body.admin-shell {
     min-width: 220px;
     padding: 1.25rem;
     border-radius: 20px;
-    border: 1px solid rgba(230, 98, 57, .14);
-    background: rgba(230, 98, 57, .06);
+    border: 1px solid rgba(255, 122, 24, .14);
+    background: rgba(255, 122, 24, .06);
 }
 
 .metric-card {

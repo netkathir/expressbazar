@@ -34,9 +34,21 @@ class StorefrontController extends Controller
 
     public function category(Request $request, Category $category)
     {
+        $selectedSubcategory = null;
+
+        if ($request->filled('subcategory')) {
+            $selectedSubcategory = $category->subcategories()
+                ->where(function ($query) use ($request) {
+                    $query->where('id', $request->integer('subcategory'))
+                        ->orWhere('subcategory_name', $request->string('subcategory'));
+                })
+                ->first();
+        }
+
         return view('storefront.category', $this->storefrontData($request, $category->category_name, [
             'category' => $category->loadMissing('subcategories'),
-            'products' => $this->categoryProducts($category),
+            'selectedSubcategory' => $selectedSubcategory,
+            'products' => $this->categoryProducts($category, $selectedSubcategory),
         ]));
     }
 
@@ -577,6 +589,7 @@ class StorefrontController extends Controller
             'cartTotals' => $this->cartTotals(),
             'categories' => $categories,
             'featuredSections' => $featuredSections,
+            'discountedProducts' => $this->discountedProducts($location),
             'banners' => Banner::query()
                 ->where('status', 'active')
                 ->orderBy('sort_order')
@@ -649,12 +662,27 @@ class StorefrontController extends Controller
             ->get();
     }
 
-    private function categoryProducts(Category $category)
+    private function discountedProducts(?array $location)
     {
-        return $this->productsQuery($this->browsingLocation())
-            ->where('category_id', $category->id)
-            ->limit(60)
+        return $this->productsQuery($location)
+            ->whereNotNull('discount_type')
+            ->whereNotNull('discount_value')
+            ->whereColumn('final_price', '<', 'price')
+            ->orderBy('discount_value', 'desc')
+            ->limit(12)
             ->get();
+    }
+
+    private function categoryProducts(Category $category, ?Subcategory $subcategory = null)
+    {
+        $query = $this->productsQuery($this->browsingLocation())
+            ->where('category_id', $category->id);
+
+        if ($subcategory) {
+            $query->where('subcategory_id', $subcategory->id);
+        }
+
+        return $query->limit(60)->get();
     }
 
     private function subcategoryProducts(Subcategory $subcategory)

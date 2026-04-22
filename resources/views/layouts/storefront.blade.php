@@ -18,8 +18,7 @@
         <div class="container-fluid px-3 px-lg-4">
             <div class="sf-searchbar">
                 <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
-                    <span class="sf-logo-mark">e</span>
-                    <span class="sf-logo-text">Express Bazar</span>
+                    <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="sf-brand-logo">
                 </a>
 
                 <button class="sf-location-btn js-open-location" type="button">
@@ -110,8 +109,7 @@
             <div class="sf-footer-grid">
                 <div class="sf-footer-brand">
                     <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
-                        <span class="sf-logo-mark">e</span>
-                        <span class="sf-logo-text">Express Bazaar</span>
+                        <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
                     </a>
                     <p class="sf-footer-address mb-3">
                         AMAZE FARMS LIMITED,<br>
@@ -153,23 +151,10 @@
                     @endforeach
                     <a href="{{ route('user.home') }}#featured-sections">View All Categories</a>
                 </div>
-
-                <div class="sf-footer-col">
-                    <h6>Download App</h6>
-                    <a href="#" class="sf-store-badge">Get it on Google Play</a>
-                    <a href="#" class="sf-store-badge">Download on the App Store</a>
-                </div>
             </div>
 
             <div class="sf-footer-bottom">
                 <div>© {{ date('Y') }} Express Bazaar. All rights reserved.</div>
-                <div class="sf-payment-logos">
-                    <span>VISA</span>
-                    <span>Mastercard</span>
-                    <span>PayPal</span>
-                    <span>Apple Pay</span>
-                    <span>G Pay</span>
-                </div>
             </div>
         </div>
     </footer>

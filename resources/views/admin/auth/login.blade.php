@@ -17,7 +17,7 @@
             <div class="col-12 col-md-8 col-lg-5">
                 <div class="card shell-card p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <img src="{{ asset('admin-theme/assets/images/logo.svg') }}" alt="Express Bazar" class="mb-3" style="max-width: 220px;">
+                        <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="mb-3" style="max-width: 260px; width: 100%; height: auto; object-fit: contain;">
                         <h1 class="h3 mb-2">Admin Login</h1>
                         <p class="text-secondary mb-0">Sign in to manage the ecommerce admin panel.</p>
                     </div>
