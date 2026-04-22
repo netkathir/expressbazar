@@ -17,6 +17,34 @@
                 </div>
                 <div class="col-12 col-xl-8">
                     <div class="sf-info-card mb-4">
+                        <h4 class="mb-3">Recent orders</h4>
+                        <div class="d-grid gap-3">
+                            @forelse ($orders as $order)
+                                @php($latestPayment = $order->payments->last())
+                                <div class="sf-sidepanel p-3">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                                        <div>
+                                            <div class="fw-semibold">{{ $order->order_number }}</div>
+                                            <div class="small text-secondary">{{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
+                                            <div class="small text-secondary">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-semibold">₹{{ number_format((float) $order->total_amount, 0) }}</div>
+                                            <span class="badge rounded-pill text-bg-light">{{ ucfirst($order->order_status) }}</span>
+                                            <span class="badge rounded-pill text-bg-warning">{{ ucfirst($latestPayment?->status ?? $order->payment_status) }}</span>
+                                            <div class="mt-2">
+                                                <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-sm btn-outline-dark rounded-pill">View</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="sf-empty-state">No orders yet.</div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="sf-info-card mb-4">
                         <h4 class="mb-3">Saved addresses</h4>
                         <div class="d-grid gap-3">
                             @forelse ($addresses as $address)

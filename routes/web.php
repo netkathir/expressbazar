@@ -37,7 +37,10 @@ Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storef
 Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
 Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
+Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
+Route::post('/account/orders/{order}/retry-payment', [CustomerAccountController::class, 'retryPayment'])->middleware('auth')->name('storefront.orders.retry-payment');
 Route::get('/checkout', [StorefrontController::class, 'checkout'])->middleware('auth')->name('storefront.checkout');
+Route::post('/checkout/place-order', [StorefrontController::class, 'placeOrder'])->middleware('auth')->name('storefront.checkout.place');
 Route::get('/categories/{category}', [StorefrontController::class, 'category'])->name('storefront.category');
 Route::get('/subcategories/{subcategory}', [StorefrontController::class, 'subcategory'])->name('storefront.subcategory');
 Route::get('/products/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
@@ -50,6 +53,7 @@ Route::post('/cart/items/{product}', [StorefrontController::class, 'addToCart'])
 Route::patch('/cart/items/{product}', [StorefrontController::class, 'updateCart'])->name('storefront.cart.update');
 Route::delete('/cart/items/{product}', [StorefrontController::class, 'removeFromCart'])->name('storefront.cart.remove');
 Route::post('/cart/clear', [StorefrontController::class, 'clearCart'])->name('storefront.cart.clear');
+Route::post('/cart/merge', [StorefrontController::class, 'mergeGuestCart'])->middleware('auth')->name('storefront.cart.merge');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -61,6 +65,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [PanelController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', fn () => redirect()->route('admin.dashboard'))->name('dashboard.alias');
         Route::get('/modules/{module}', [PanelController::class, 'module'])->name('module');
 
         Route::resource('countries', CountryController::class)->except(['show']);

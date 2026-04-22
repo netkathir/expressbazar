@@ -73,6 +73,27 @@
         </div>
     </header>
 
+    <div class="container-fluid px-3 px-lg-4 pt-3">
+        @if (session('success'))
+            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-3">{{ session('success') }}</div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-3">{{ session('error') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-3">
+                <div class="fw-semibold mb-1">Please fix the following:</div>
+                <ul class="mb-0 ps-3">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+    </div>
+
     @yield('content')
 
     <footer class="sf-footer">
@@ -206,15 +227,15 @@
             cartUpdateUrlTemplate: @json(route('storefront.cart.update', ['product' => '__ID__'])),
             cartRemoveUrlTemplate: @json(route('storefront.cart.remove', ['product' => '__ID__'])),
             cartClearUrl: @json(route('storefront.cart.clear')),
+            cartMergeUrl: @json(route('storefront.cart.merge')),
             locationUrl: @json(route('storefront.location')),
             locationCitiesUrl: @json(route('storefront.location.cities')),
             locationZonesUrl: @json(route('storefront.location.zones')),
             initialLocation: @json($location ?? null),
+            initialCartState: @json($cartState ?? []),
+            currentUserRole: @json(auth()->user()->role ?? null),
             csrfToken: @json(csrf_token()),
         };
-    </script>
-    <script>
-        window.storefrontConfig.initialLocation = @json($location ?? null);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('storefront/js/storefront.js') }}"></script>

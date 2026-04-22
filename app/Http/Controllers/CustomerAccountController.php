@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
+use App\Models\Order;
+use App\Models\Payment;
 use App\Models\RegionZone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CustomerAccountController extends Controller
 {
@@ -20,7 +23,66 @@ class CustomerAccountController extends Controller
             'title' => 'My Account',
             'user' => $user,
             'addresses' => $user->addresses()->with(['country', 'city', 'zone'])->latest()->get(),
+            'orders' => Order::query()
+                ->where('customer_id', $user->id)
+                ->with(['vendor', 'items', 'payments'])
+                ->latest('placed_at')
+                ->latest('id')
+                ->limit(5)
+                ->get(),
         ]);
+    }
+
+    public function showOrder(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        return view('storefront.orders.show', [
+            'title' => 'Order Details',
+            'order' => $order->load(['vendor', 'items', 'payments']),
+            'user' => $user,
+        ]);
+    }
+
+    public function retryPayment(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        $latestPayment = $order->payments()->latest()->first();
+        if (! $latestPayment || $latestPayment->payment_method !== 'online') {
+            return back()->withErrors(['payment' => 'Online payment retry is not available for this order.']);
+        }
+
+        if (in_array($latestPayment->status, ['pending', 'failed'], true)) {
+            $latestPayment->update([
+                'status' => 'failed',
+                'gateway_response' => json_encode([
+                    'status' => 'retry_initiated',
+                    'requested_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+        }
+
+        Payment::create([
+            'order_id' => $order->id,
+            'transaction_id' => $this->generateTransactionId(),
+            'payment_method' => 'online',
+            'amount' => (float) $order->total_amount,
+            'status' => 'pending',
+            'gateway_response' => json_encode([
+                'status' => 'retry_pending',
+                'order_number' => $order->order_number,
+            ]),
+        ]);
+
+        $order->update([
+            'payment_status' => 'pending',
+            'updated_by' => $user->id,
+        ]);
+
+        return redirect()->route('storefront.orders.show', $order)->with('success', 'Payment retry initiated.');
     }
 
     public function storeAddress(Request $request)
@@ -90,5 +152,14 @@ class CustomerAccountController extends Controller
         $address->delete();
 
         return back()->with('success', 'Address removed.');
+    }
+
+    private function generateTransactionId(): string
+    {
+        do {
+            $transactionId = 'PAY-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
+        } while (Payment::query()->where('transaction_id', $transactionId)->exists());
+
+        return $transactionId;
     }
 }

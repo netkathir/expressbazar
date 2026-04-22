@@ -3,17 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\DeliveryConfig;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
+use App\Models\InventoryLog;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Product;
+use App\Models\ProductInventory;
 use App\Models\RegionZone;
 use App\Models\Subcategory;
 use App\Models\Vendor;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class StorefrontController extends Controller
 {
@@ -68,15 +77,272 @@ class StorefrontController extends Controller
         $user = $request->user();
         abort_if(! $user || $user->role !== 'customer', 403);
 
+        $addresses = CustomerAddress::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->with(['country', 'city', 'zone'])
+            ->latest()
+            ->get();
+
+        $selectedAddressId = (int) old('address_id', $addresses->firstWhere('is_default')?->id ?? $addresses->first()?->id ?? 0);
+        $selectedAddress = $selectedAddressId
+            ? $addresses->firstWhere('id', $selectedAddressId)
+            : null;
+
+        $deliveryChargeByAddress = $addresses->mapWithKeys(function (CustomerAddress $address) {
+            return [$address->id => $this->deliveryChargeForZone($address->zone_id) ?? 0];
+        });
+
+        $deliveryCharge = $selectedAddress?->zone_id ? (float) $deliveryChargeByAddress->get($selectedAddress->id, 0) : 0;
+
         return view('storefront.checkout', $this->storefrontData($request, 'Checkout', [
             'user' => $user,
-            'addresses' => CustomerAddress::query()
-                ->where('user_id', $user->id)
-                ->where('status', 'active')
-                ->with(['country', 'city', 'zone'])
-                ->latest()
-                ->get(),
+            'addresses' => $addresses,
+            'selectedAddress' => $selectedAddress,
+            'selectedAddressId' => $selectedAddressId ?: null,
+            'deliveryChargeByAddress' => $deliveryChargeByAddress,
+            'cartTotals' => $this->cartTotals($deliveryCharge),
+            'checkoutPaymentMethod' => old('payment_method', 'cod'),
         ]));
+    }
+
+    public function placeOrder(Request $request)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        $cartItems = $this->cartItems();
+
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('storefront.cart')->with('error', 'Your cart is empty.');
+        }
+
+        $data = $request->validate([
+            'address_id' => ['required', 'integer'],
+            'payment_method' => ['required', Rule::in(['cod', 'online'])],
+        ]);
+
+        $address = CustomerAddress::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->with(['country', 'city', 'zone'])
+            ->findOrFail($data['address_id']);
+
+        if (! $address->zone_id || ! $address->zone || $address->zone->status !== 'active' || ! $address->zone->delivery_available) {
+            throw ValidationException::withMessages([
+                'address_id' => 'Delivery is not available in your area.',
+            ]);
+        }
+
+        $deliveryCharge = $this->deliveryChargeForZone($address->zone_id);
+
+        if ($deliveryCharge === null) {
+            throw ValidationException::withMessages([
+                'address_id' => 'Delivery is not available in your area.',
+            ]);
+        }
+
+        $location = [
+            'country_id' => (int) $address->country_id,
+            'city_id' => (int) $address->city_id,
+            'zone_id' => (int) $address->zone_id,
+        ];
+
+        $vendorId = $this->cartVendorId();
+        if (! $vendorId) {
+            return redirect()->route('storefront.cart')->with('error', 'Please add items to your cart first.');
+        }
+
+        $orderItems = [];
+        $itemTotal = 0.0;
+        $order = null;
+
+        DB::transaction(function () use ($cartItems, $address, $user, $vendorId, $deliveryCharge, $location, $request, &$orderItems, &$itemTotal, &$order) {
+            $orderNumber = $this->generateOrderNumber();
+
+            $freshProducts = Product::query()
+                ->with(['vendor', 'inventory'])
+                ->whereIn('id', $cartItems->pluck('product.id')->all())
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($cartItems as $item) {
+                $product = $freshProducts->get($item['product']->id);
+
+                if (! $product) {
+                    throw ValidationException::withMessages([
+                        'cart' => 'One or more cart items are no longer available.',
+                    ]);
+                }
+
+                if ($product->status !== 'active') {
+                    throw ValidationException::withMessages([
+                        'cart' => "{$product->product_name} is currently unavailable.",
+                    ]);
+                }
+
+                if ((int) $product->vendor_id !== (int) $vendorId || $product->vendor?->status !== 'active') {
+                    throw ValidationException::withMessages([
+                        'cart' => 'Your cart contains an unavailable vendor item.',
+                    ]);
+                }
+
+                if ((int) $product->vendor?->region_zone_id !== (int) $address->zone_id) {
+                    throw ValidationException::withMessages([
+                        'address_id' => 'Selected address does not match the vendor delivery zone.',
+                    ]);
+                }
+
+                $inventory = ProductInventory::query()
+                    ->where('product_id', $product->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $inventory) {
+                    throw ValidationException::withMessages([
+                        'cart' => "{$product->product_name} inventory is missing.",
+                    ]);
+                }
+
+                $quantity = (int) $item['quantity'];
+                $available = (int) $inventory->stock_quantity;
+
+                if ($available < $quantity) {
+                    throw ValidationException::withMessages([
+                        'cart' => "{$product->product_name} only has {$available} item(s) left.",
+                    ]);
+                }
+
+                $price = (float) ($product->final_price ?: $product->price);
+                $subtotal = $price * $quantity;
+                $itemTotal += $subtotal;
+
+                $previousStock = $available;
+                $newStock = $available - $quantity;
+                $inventory->stock_quantity = $newStock;
+                $inventory->sync_status = $inventory->inventory_mode === 'epos' ? 'pending' : $inventory->sync_status;
+                $inventory->last_synced_at = now();
+                $inventory->save();
+
+                InventoryLog::create([
+                    'product_id' => $product->id,
+                    'product_inventory_id' => $inventory->id,
+                    'change_type' => 'order_placed',
+                    'quantity' => $quantity,
+                    'previous_stock' => $previousStock,
+                    'new_stock' => $newStock,
+                    'source' => $inventory->inventory_mode,
+                    'reason' => 'Customer checkout order placement',
+                ]);
+
+                $orderItems[] = [
+                    'product_id' => $product->id,
+                    'item_name' => $product->product_name,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                ];
+            }
+
+            $grandTotal = $itemTotal + $deliveryCharge;
+
+            $order = Order::create([
+                'order_number' => $orderNumber,
+                'customer_id' => $user->id,
+                'vendor_id' => $vendorId,
+                'total_amount' => $grandTotal,
+                'delivery_charge' => $deliveryCharge,
+                'payment_status' => 'pending',
+                'order_status' => 'pending',
+                'placed_at' => now(),
+                'notes' => 'Placed from storefront checkout. Delivery to zone '.$location['zone_id'],
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ]);
+
+            foreach ($orderItems as $orderItem) {
+                $order->items()->create($orderItem);
+            }
+
+            Payment::create([
+                'order_id' => $order->id,
+                'transaction_id' => $this->generateTransactionId(),
+                'payment_method' => $request->string('payment_method')->toString(),
+                'amount' => $grandTotal,
+                'status' => 'pending',
+                'gateway_response' => json_encode([
+                    'source' => 'checkout',
+                    'payment_method' => $request->string('payment_method')->toString(),
+                    'payment_status' => 'pending',
+                ]),
+            ]);
+        });
+
+        session()->put('storefront.location', $location);
+        session()->forget('storefront.soft_location');
+        $this->clearCartState();
+
+        return redirect()
+            ->route('storefront.orders.show', $order)
+            ->with('success', 'Order '.$order->order_number.' placed successfully. Payment is pending.');
+    }
+
+    public function mergeGuestCart(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        $data = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.product_id' => ['required', 'integer', 'distinct', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        $cart = session()->get('storefront.cart', []);
+        $currentVendorId = $this->cartVendorId();
+
+        $products = Product::query()
+            ->with(['vendor', 'inventory'])
+            ->whereIn('id', collect($data['items'])->pluck('product_id')->all())
+            ->get()
+            ->keyBy('id');
+
+        foreach ($data['items'] as $item) {
+            $product = $products->get((int) $item['product_id']);
+
+            if (! $product) {
+                continue;
+            }
+
+            $this->ensureAddable($product);
+
+            if (! empty($cart) && $currentVendorId && (int) $product->vendor_id !== $currentVendorId) {
+                throw ValidationException::withMessages([
+                    'items' => 'Your guest cart contains items from another vendor. Please clear cart to continue.',
+                ]);
+            }
+
+            $currentQuantity = (int) ($cart[$product->id]['quantity'] ?? 0);
+            $cart[$product->id] = [
+                'quantity' => $currentQuantity + (int) $item['quantity'],
+            ];
+
+            $currentVendorId = (int) $product->vendor_id;
+        }
+
+        session()->put('storefront.cart', $cart);
+        if ($currentVendorId) {
+            session()->put('storefront.cart_vendor_id', $currentVendorId);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Guest cart merged successfully.',
+            'cartCount' => $this->cartCount(),
+            'drawerHtml' => $this->renderCartDrawer(),
+            'cartState' => $this->cartState(),
+        ]);
     }
 
     public function setLocation(Request $request)
@@ -223,6 +489,7 @@ class StorefrontController extends Controller
             'message' => 'Added to cart',
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
+            'cartState' => $this->cartState(),
         ]);
     }
 
@@ -253,6 +520,7 @@ class StorefrontController extends Controller
             'success' => true,
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
+            'cartState' => $this->cartState(),
         ]);
     }
 
@@ -270,6 +538,7 @@ class StorefrontController extends Controller
             'success' => true,
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
+            'cartState' => $this->cartState(),
         ]);
     }
 
@@ -281,6 +550,7 @@ class StorefrontController extends Controller
             'success' => true,
             'cartCount' => 0,
             'drawerHtml' => $this->renderCartDrawer(),
+            'cartState' => [],
         ]);
     }
 
@@ -302,6 +572,7 @@ class StorefrontController extends Controller
             'cartCount' => $this->cartCount(),
             'cartItems' => $cartItems,
             'cartMap' => $cartItems->keyBy(fn ($item) => $item['product']->id),
+            'cartState' => $this->cartState(),
             'cartTotals' => $this->cartTotals(),
             'categories' => $categories,
             'featuredSections' => $featuredSections,
@@ -505,6 +776,19 @@ class StorefrontController extends Controller
         })->filter()->values();
     }
 
+    private function cartState(): array
+    {
+        return collect(session()->get('storefront.cart', []))
+            ->map(function (array $item, int $productId) {
+                return [
+                    'product_id' => $productId,
+                    'quantity' => (int) ($item['quantity'] ?? 0),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     private function cartCount(): int
     {
         return collect(session()->get('storefront.cart', []))->sum('quantity');
@@ -517,17 +801,54 @@ class StorefrontController extends Controller
         return $vendorId ? (int) $vendorId : null;
     }
 
-    private function cartTotals(): array
+    private function cartTotals(?float $deliveryCharge = null): array
     {
         $items = $this->cartItems();
         $itemTotal = $items->sum('subtotal');
-        $delivery = $this->hardLocation() ? 0 : 0;
+        $delivery = $deliveryCharge ?? 0;
 
         return [
             'itemTotal' => $itemTotal,
             'delivery' => $delivery,
             'grandTotal' => $itemTotal + $delivery,
         ];
+    }
+
+    private function deliveryChargeForZone(?int $zoneId): ?float
+    {
+        if (! $zoneId) {
+            return null;
+        }
+
+        $config = DeliveryConfig::query()
+            ->where('zone_id', $zoneId)
+            ->where('status', 'active')
+            ->where('delivery_available', true)
+            ->first();
+
+        if (! $config) {
+            return null;
+        }
+
+        return (float) $config->delivery_charge;
+    }
+
+    private function generateOrderNumber(): string
+    {
+        do {
+            $orderNumber = 'ORD-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
+        } while (Order::query()->where('order_number', $orderNumber)->exists());
+
+        return $orderNumber;
+    }
+
+    private function generateTransactionId(): string
+    {
+        do {
+            $transactionId = 'PAY-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
+        } while (Payment::query()->where('transaction_id', $transactionId)->exists());
+
+        return $transactionId;
     }
 
     private function ensureAddable(Product $product): void

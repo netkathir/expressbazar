@@ -10,6 +10,63 @@ const locationForm = document.querySelector('.js-location-form');
 const countrySelect = document.querySelector('.js-country-select');
 const citySelect = document.querySelector('.js-city-select');
 const zoneSelect = document.querySelector('.js-zone-select');
+const guestCartKey = 'expressbazar.guestCart';
+
+function getGuestCartState() {
+    try {
+        const raw = localStorage.getItem(guestCartKey);
+        return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function setGuestCartState(state) {
+    try {
+        localStorage.setItem(guestCartKey, JSON.stringify(Array.isArray(state) ? state : []));
+    } catch (error) {
+        // Ignore storage errors.
+    }
+}
+
+function clearGuestCartState() {
+    try {
+        localStorage.removeItem(guestCartKey);
+    } catch (error) {
+        // Ignore storage errors.
+    }
+}
+
+function shouldMirrorGuestCart() {
+    return config.currentUserRole !== 'customer';
+}
+
+function normalizeCartState(state) {
+    if (!Array.isArray(state)) {
+        return [];
+    }
+
+    return state
+        .map((item) => ({
+            product_id: Number(item.product_id || 0),
+            quantity: Number(item.quantity || 0),
+        }))
+        .filter((item) => item.product_id > 0 && item.quantity > 0)
+        .sort((left, right) => left.product_id - right.product_id);
+}
+
+function cartStatesEqual(left, right) {
+    const a = normalizeCartState(left);
+    const b = normalizeCartState(right);
+
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    return a.every((item, index) => {
+        return item.product_id === b[index].product_id && item.quantity === b[index].quantity;
+    });
+}
 
 function openCart() {
     cartDrawer?.classList.add('open');
@@ -31,6 +88,10 @@ function updateCartUi(payload = {}) {
 
     if (payload.drawerHtml && cartDrawerContent) {
         cartDrawerContent.innerHTML = payload.drawerHtml;
+    }
+
+    if (payload.cartState && shouldMirrorGuestCart()) {
+        setGuestCartState(payload.cartState);
     }
 
     if (payload.locationLabel) {
@@ -56,6 +117,35 @@ async function fetchJson(url) {
         },
     });
     return response.json();
+}
+
+async function mergeGuestCartIfNeeded() {
+    if (config.currentUserRole !== 'customer') {
+        return;
+    }
+
+    const guestCart = getGuestCartState();
+    if (!Array.isArray(guestCart) || guestCart.length === 0) {
+        return;
+    }
+
+    if (cartStatesEqual(guestCart, config.initialCartState || [])) {
+        clearGuestCartState();
+        return;
+    }
+
+    const { response, payload } = await sendCartAction(config.cartMergeUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items: guestCart }),
+    });
+
+    if (response.ok) {
+        updateCartUi(payload);
+        clearGuestCartState();
+    }
 }
 
 async function loadCities(countryId, selectedCityId = null) {
@@ -316,4 +406,10 @@ document.querySelectorAll('.js-open-location').forEach((button) => {
 
 if (config.initialLocation) {
     syncLocationInputs(config.initialLocation);
+}
+
+if (config.currentUserRole === 'customer') {
+    mergeGuestCartIfNeeded().catch(() => {});
+} else if (Array.isArray(config.initialCartState) && config.initialCartState.length > 0) {
+    setGuestCartState(config.initialCartState);
 }
