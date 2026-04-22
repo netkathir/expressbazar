@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Banner;
 use App\Models\DeliveryConfig;
 use App\Models\City;
 use App\Models\Country;
@@ -576,6 +577,11 @@ class StorefrontController extends Controller
             'cartTotals' => $this->cartTotals(),
             'categories' => $categories,
             'featuredSections' => $featuredSections,
+            'banners' => Banner::query()
+                ->where('status', 'active')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get(),
             'allSubcategories' => Subcategory::query()
                 ->where('status', 'active')
                 ->with('category')

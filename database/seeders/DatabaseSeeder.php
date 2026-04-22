@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             AdminRoleSeeder::class,
             AdminUserSeeder::class,
             LocationMasterSeeder::class,
+            DemoCatalogSeeder::class,
         ]);
     }
 }

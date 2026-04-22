@@ -9,7 +9,10 @@
 
             <div class="sf-page-title">
                 <div>
-                    <h2>Buy {{ $subcategory->subcategory_name }} Online</h2>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <img src="{{ asset($subcategory->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $subcategory->subcategory_name }}" style="width:54px;height:54px;border-radius:18px;border:1px solid var(--sf-border);object-fit:cover;">
+                        <h2 class="mb-0">Buy {{ $subcategory->subcategory_name }} Online</h2>
+                    </div>
                     <p>All products from this subcategory are shown here.</p>
                 </div>
             </div>

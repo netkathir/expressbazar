@@ -35,6 +35,16 @@
             </span>
             <a href="{{ route('user.home') }}" class="btn btn-outline-secondary btn-sm">User panel</a>
             @auth
+                <a href="{{ route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none text-dark">
+                    <span class="sf-avatar sf-avatar-sm">
+                        @if (auth()->user()->avatar_path)
+                            <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                        @else
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        @endif
+                    </span>
+                    <span class="small fw-semibold">{{ auth()->user()->name }}</span>
+                </a>
                 <form method="POST" action="{{ route('admin.logout') }}" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-dark btn-sm">Logout</button>

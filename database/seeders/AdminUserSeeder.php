@@ -15,6 +15,7 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Express Bazar Admin',
                 'username' => 'admin',
+                'avatar_path' => '/admin-theme/assets/images/avatar/avatar-1.jpg',
                 'password' => Hash::make('Admin@1234'),
                 'role' => 'admin',
                 'status' => 'active',

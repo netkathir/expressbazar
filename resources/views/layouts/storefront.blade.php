@@ -36,6 +36,15 @@
                 <div class="sf-actions">
                     @auth
                         @if (auth()->user()->role === 'customer')
+                            <a href="{{ route('storefront.account') }}" class="sf-avatar-link text-decoration-none">
+                                <span class="sf-avatar">
+                                    @if (auth()->user()->avatar_path)
+                                        <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                                    @else
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    @endif
+                                </span>
+                            </a>
                             <a href="{{ route('storefront.account') }}" class="sf-action-link">
                                 <i class="ti ti-user-circle"></i>
                                 <span>Account</span>
@@ -234,6 +243,7 @@
             initialLocation: @json($location ?? null),
             initialCartState: @json($cartState ?? []),
             currentUserRole: @json(auth()->user()->role ?? null),
+            currentUserAvatar: @json(auth()->user()->avatar_path ?? null),
             csrfToken: @json(csrf_token()),
         };
     </script>
