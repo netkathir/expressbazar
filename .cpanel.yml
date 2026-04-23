@@ -1,5 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH= /home2/whyceffy/expressbazar
-    - /bin/cp -R * $DEPLOYPATH
+    - export DEPLOYPATH=/home2/whyceffy/expressbazar
+    - mkdir -p "$DEPLOYPATH"
+    - /bin/rsync -a --delete --exclude=".git" ./ "$DEPLOYPATH"/
