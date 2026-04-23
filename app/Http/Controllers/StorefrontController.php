@@ -635,6 +635,7 @@ class StorefrontController extends Controller
         if (empty($sections)) {
             $sections[] = [
                 'title' => 'Trending Near You',
+                'subcategory' => null,
                 'category' => null,
                 'products' => $this->productsQuery($location)->limit(8)->get(),
             ];
