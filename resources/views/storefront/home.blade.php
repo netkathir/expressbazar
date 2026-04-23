@@ -95,7 +95,7 @@
                         <h3>{{ $section['title'] }}</h3>
                         <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'City level discovery' : 'Deliverable to your area' }}</p>
                     </div>
-                    @if ($section['subcategory'])
+                    @if (!empty($section['subcategory'] ?? null))
                         <a href="{{ route('storefront.subcategory', $section['subcategory']) }}">See all</a>
                     @endif
                 </div>

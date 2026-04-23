@@ -80,11 +80,15 @@
                             </td>
                             <td><span class="badge text-bg-{{ $zone->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($zone->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.zones.edit', $zone) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.zones.edit', $zone) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit zone" title="Edit zone">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.zones.destroy', $zone) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this zone?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete zone" title="Delete zone">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

@@ -68,11 +68,15 @@
                             <td><span class="badge text-bg-{{ $payment->status === 'paid' ? 'success' : 'secondary' }}">{{ ucfirst($payment->status) }}</span></td>
                             <td>{{ $payment->paid_at?->format('M d, Y h:i A') ?? '-' }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.payments.edit', $payment) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.payments.edit', $payment) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit payment" title="Edit payment">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this payment?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete payment" title="Delete payment">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

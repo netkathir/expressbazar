@@ -84,11 +84,15 @@
                             <td>{{ $vendor->country?->country_name }} / {{ $vendor->city?->city_name }} / {{ $vendor->zone?->zone_name }}</td>
                             <td><span class="badge text-bg-{{ $vendor->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($vendor->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit vendor" title="Edit vendor">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.vendors.destroy', $vendor) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this vendor?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete vendor" title="Delete vendor">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

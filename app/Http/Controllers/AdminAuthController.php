@@ -10,7 +10,7 @@ class AdminAuthController extends Controller
     public function create()
     {
         return view('admin.auth.login', [
-            'title' => 'Admin Login',
+            'title' => 'Sign in to manage the ecommerce admin panel.',
         ]);
     }
 

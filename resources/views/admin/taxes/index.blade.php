@@ -65,11 +65,15 @@
                             <td>{{ $tax->region_name ?: '-' }}</td>
                             <td><span class="badge text-bg-{{ $tax->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($tax->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.taxes.edit', $tax) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.taxes.edit', $tax) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit tax" title="Edit tax">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.taxes.destroy', $tax) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this tax?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete tax" title="Delete tax">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

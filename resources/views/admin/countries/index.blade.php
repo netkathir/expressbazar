@@ -58,11 +58,15 @@
                             <td><span class="badge text-bg-{{ $country->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($country->status) }}</span></td>
                             <td>{{ $country->cities_count }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.countries.edit', $country) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.countries.edit', $country) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit country" title="Edit country">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.countries.destroy', $country) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this country?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete country" title="Delete country">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

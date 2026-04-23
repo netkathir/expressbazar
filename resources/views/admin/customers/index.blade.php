@@ -57,7 +57,9 @@
                             <td>{{ optional($customer->created_at)->format('d M Y') }}</td>
                             <td class="text-end">
                                 <a href="{{ route('admin.customers.show', $customer) }}" class="btn btn-sm btn-outline-secondary">View</a>
-                                <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit customer" title="Edit customer">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.customers.toggle-status', $customer) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-outline-warning">Toggle</button>
@@ -65,7 +67,9 @@
                                 <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this customer?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete customer" title="Delete customer">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
