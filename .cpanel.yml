@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH= /home2/whyceffy/public_html/expressbazar
+    - export DEPLOYPATH= /home2/whyceffy/expressbazar
     - /bin/cp -R * $DEPLOYPATH
