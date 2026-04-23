@@ -1,6 +1,19 @@
 :root {
-    --admin-brand: #ff7a18;
+    --admin-brand: #ff9a3d;
+    --admin-brand-rgb: 255, 154, 61;
     --admin-brand-dark: #0b1f44;
+    --admin-brand-dark-rgb: 11, 31, 68;
+    --admin-brand-soft: rgba(var(--admin-brand-rgb), .12);
+    --admin-brand-soft-border: rgba(var(--admin-brand-rgb), .16);
+    --admin-brand-soft-strong: rgba(var(--admin-brand-rgb), .18);
+    --admin-brand-soft-weak: rgba(var(--admin-brand-rgb), .06);
+    --admin-brand-glow: rgba(var(--admin-brand-rgb), .14);
+    --admin-brand-dark-soft: rgba(var(--admin-brand-dark-rgb), .10);
+    --admin-brand-dark-soft-border: rgba(var(--admin-brand-dark-rgb), .22);
+    --bs-primary: var(--admin-brand);
+    --bs-primary-rgb: var(--admin-brand-rgb);
+    --bs-link-color: var(--admin-brand);
+    --bs-link-hover-color: #e98218;
     --admin-bg: #f6f7fb;
     --admin-surface: #ffffff;
     --admin-border: #e5e7eb;
@@ -81,7 +94,7 @@ body.admin-shell {
 .sidebar .nav-link:hover,
 .sidebar .nav-link.active {
     color: var(--admin-brand);
-    background: rgba(255, 122, 24, .12);
+    background: var(--admin-brand-soft);
 }
 
 .sidebar .nav-link .ti {
@@ -122,8 +135,8 @@ body.admin-shell {
     height: 42px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid rgba(230, 98, 57, .16);
-    background: linear-gradient(135deg, rgba(230, 98, 57, .12), rgba(79, 70, 229, .12));
+    border: 2px solid var(--admin-brand-soft-border);
+    background: linear-gradient(135deg, var(--admin-brand-soft), rgba(79, 70, 229, .10));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -150,8 +163,8 @@ body.admin-shell {
 
 .badge-soft {
     color: var(--admin-brand-dark);
-    background: rgba(255, 122, 24, .12);
-    border: 1px solid rgba(255, 122, 24, .16);
+    background: var(--admin-brand-soft);
+    border: 1px solid var(--admin-brand-soft-border);
 }
 
 .hero-card,
@@ -168,7 +181,7 @@ body.admin-shell {
 
 .hero-card {
     background:
-        radial-gradient(circle at top right, rgba(255, 122, 24, .12), transparent 30%),
+        radial-gradient(circle at top right, var(--admin-brand-glow), transparent 30%),
         linear-gradient(135deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
 }
 
@@ -176,8 +189,8 @@ body.admin-shell {
     min-width: 220px;
     padding: 1.25rem;
     border-radius: 20px;
-    border: 1px solid rgba(255, 122, 24, .14);
-    background: rgba(255, 122, 24, .06);
+    border: 1px solid var(--admin-brand-soft-border);
+    background: var(--admin-brand-soft-weak);
 }
 
 .metric-card {
@@ -217,6 +230,38 @@ body.admin-shell {
     height: .45rem;
     border-radius: 999px;
     background: var(--admin-brand);
+}
+
+.admin-shell .btn-outline-primary {
+    color: var(--admin-brand-dark);
+    border-color: var(--admin-brand-dark-soft-border);
+}
+
+.admin-shell .btn-outline-primary:hover,
+.admin-shell .btn-outline-primary:focus,
+.admin-shell .btn-outline-primary:active,
+.admin-shell .btn-outline-primary.active,
+.admin-shell .btn-check:checked + .btn-outline-primary,
+.admin-shell .btn-outline-primary.dropdown-toggle.show {
+    color: #fff;
+    background-color: var(--admin-brand-dark);
+    border-color: var(--admin-brand-dark);
+}
+
+.admin-shell .btn-outline-danger {
+    color: var(--admin-brand);
+    border-color: var(--admin-brand-soft-border);
+}
+
+.admin-shell .btn-outline-danger:hover,
+.admin-shell .btn-outline-danger:focus,
+.admin-shell .btn-outline-danger:active,
+.admin-shell .btn-outline-danger.active,
+.admin-shell .btn-check:checked + .btn-outline-danger,
+.admin-shell .btn-outline-danger.dropdown-toggle.show {
+    color: #fff;
+    background-color: var(--admin-brand);
+    border-color: var(--admin-brand);
 }
 
 .workflow-list {
