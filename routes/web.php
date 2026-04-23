@@ -91,6 +91,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('system-config', [SystemConfigController::class, 'edit'])->name('system-config.edit');
         Route::put('system-config', [SystemConfigController::class, 'update'])->name('system-config.update');
         Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [ReportsController::class, 'export'])->name('reports.export');
         Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
         Route::get('vendors/options/cities', [VendorController::class, 'cities'])->name('vendors.cities');
         Route::get('vendors/options/zones', [VendorController::class, 'zones'])->name('vendors.zones');

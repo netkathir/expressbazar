@@ -41,6 +41,7 @@ class LocationMasterSeeder extends Seeder
             ['country_code' => 'IN', 'city_code' => 'BLR', 'name' => 'Bengaluru', 'state' => 'Karnataka'],
             ['country_code' => 'IN', 'city_code' => 'DEL', 'name' => 'Delhi', 'state' => 'Delhi'],
             ['country_code' => 'IN', 'city_code' => 'CHE', 'name' => 'Chennai', 'state' => 'Tamil Nadu'],
+            ['country_code' => 'IN', 'city_code' => 'PUD', 'name' => 'Puducherry', 'state' => 'Puducherry'],
             ['country_code' => 'IN', 'city_code' => 'HYD', 'name' => 'Hyderabad', 'state' => 'Telangana'],
             ['country_code' => 'IN', 'city_code' => 'KOL', 'name' => 'Kolkata', 'state' => 'West Bengal'],
         ];
@@ -79,6 +80,7 @@ class LocationMasterSeeder extends Seeder
             ['city_code' => 'BLR', 'zone_code' => 'BLR2', 'name' => 'Whitefield'],
             ['city_code' => 'DEL', 'zone_code' => 'DEL1', 'name' => 'New Delhi'],
             ['city_code' => 'CHE', 'zone_code' => 'CHE1', 'name' => 'Chennai Central'],
+            ['city_code' => 'PUD', 'zone_code' => 'PUD1', 'name' => 'Puducherry Central'],
             ['city_code' => 'HYD', 'zone_code' => 'HYD1', 'name' => 'Hyderabad Central'],
             ['city_code' => 'KOL', 'zone_code' => 'KOL1', 'name' => 'Kolkata Central'],
         ];
