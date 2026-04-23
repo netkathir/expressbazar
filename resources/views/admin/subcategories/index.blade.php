@@ -61,11 +61,15 @@
                             <td>{{ $subcategory->category?->category_name }}</td>
                             <td><span class="badge text-bg-{{ $subcategory->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($subcategory->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.subcategories.edit', $subcategory) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.subcategories.edit', $subcategory) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit subcategory" title="Edit subcategory">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.subcategories.destroy', $subcategory) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this subcategory?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete subcategory" title="Delete subcategory">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

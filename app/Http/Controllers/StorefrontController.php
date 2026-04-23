@@ -737,11 +737,7 @@ class StorefrontController extends Controller
             return $stored;
         }
 
-        $city = City::query()
-            ->where('status', 'active')
-            ->with('country')
-            ->orderBy('city_name')
-            ->first();
+        $city = $this->defaultCityFromIp();
 
         if (! $city) {
             return null;
@@ -757,6 +753,57 @@ class StorefrontController extends Controller
         session()->put('storefront.soft_location', $soft);
 
         return $soft;
+    }
+
+    private function defaultCityFromIp(): ?City
+    {
+        $request = request();
+        $ip = $request?->ip();
+        $countryCode = strtoupper((string) ($request?->header('CF-IPCountry')
+            ?? $request?->header('X-AppEngine-Country')
+            ?? $request?->header('X-Vercel-IP-Country')
+            ?? ''));
+
+        $preferredCityCode = match ($countryCode) {
+            'GB', 'UK' => 'SOU',
+            'IN' => 'MUM',
+            default => null,
+        };
+
+        if ($this->isLocalIp($ip)) {
+            $preferredCityCode = 'SOU';
+        }
+
+        if ($preferredCityCode) {
+            $city = City::query()
+                ->where('status', 'active')
+                ->where('city_code', $preferredCityCode)
+                ->with('country')
+                ->first();
+
+            if ($city) {
+                return $city;
+            }
+        }
+
+        return City::query()
+            ->where('status', 'active')
+            ->with('country')
+            ->orderBy('city_name')
+            ->first();
+    }
+
+    private function isLocalIp(?string $ip): bool
+    {
+        if (! $ip) {
+            return true;
+        }
+
+        return $ip === '127.0.0.1'
+            || $ip === '::1'
+            || str_starts_with($ip, '10.')
+            || str_starts_with($ip, '192.168.')
+            || preg_match('/^172\.(1[6-9]|2[0-9]|3[0-1])\./', $ip) === 1;
     }
 
     private function browsingLocation(): ?array

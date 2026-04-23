@@ -71,11 +71,15 @@
                             <td>{{ $order->placed_at?->format('M d, Y') ?? '-' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary">View</a>
-                                <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit order" title="Edit order">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this order?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete order" title="Delete order">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

@@ -35,11 +35,15 @@
                                 <td>{{ strtoupper($template->channel) }}</td>
                                 <td><span class="badge text-bg-{{ $template->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($template->status) }}</span></td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.notifications.edit', $template) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a href="{{ route('admin.notifications.edit', $template) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit notification template" title="Edit notification template">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
                                     <form action="{{ route('admin.notifications.destroy', $template) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this template?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete notification template" title="Delete notification template">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>

@@ -32,32 +32,8 @@ class DemoCatalogSeeder extends Seeder
 
         $admin = User::where('email', 'admin@expressbazar.local')->first();
 
-        $country = Country::where('country_code', 'UK')->first();
-        $city = City::where('city_name', 'Southampton')->first();
-        $zone = RegionZone::where('zone_code', 'SO16')->first();
-
-        if ($country && $city && $zone) {
-            RegionZone::updateOrCreate(
-                ['zone_code' => 'SO14', 'city_id' => $city->id],
-                [
-                    'country_id' => $country->id,
-                    'zone_name' => 'SO14 Area',
-                    'delivery_available' => true,
-                    'status' => 'active',
-                ]
-            );
-
-            RegionZone::updateOrCreate(
-                ['zone_code' => 'SO15', 'city_id' => $city->id],
-                [
-                    'country_id' => $country->id,
-                    'zone_name' => 'SO15 Area',
-                    'delivery_available' => true,
-                    'status' => 'active',
-                ]
-            );
-        }
-
+        $countries = Country::query()->where('status', 'active')->get()->keyBy('country_code');
+        $cities = City::query()->where('status', 'active')->get()->keyBy('city_code');
         $zones = RegionZone::query()->where('status', 'active')->get()->keyBy('zone_code');
 
         foreach ($zones as $zoneItem) {
@@ -65,7 +41,7 @@ class DemoCatalogSeeder extends Seeder
                 ['country_id' => $zoneItem->country_id, 'city_id' => $zoneItem->city_id, 'zone_id' => $zoneItem->id],
                 [
                     'delivery_available' => true,
-                    'delivery_charge' => $zoneItem->zone_code === 'SO16' ? 0.00 : 20.00,
+                    'delivery_charge' => $this->deliveryChargeForZone($zoneItem->zone_code),
                     'status' => 'active',
                     'created_by' => $admin?->id,
                     'updated_by' => $admin?->id,
@@ -102,7 +78,9 @@ class DemoCatalogSeeder extends Seeder
             }
         }
 
-        foreach ($this->vendors($country, $city, $zones) as $vendorData) {
+        foreach ($this->vendors() as $vendorData) {
+            $country = $countries[$vendorData['country_code']] ?? null;
+            $city = $cities[$vendorData['city_code']] ?? null;
             $zoneModel = $zones[$vendorData['zone_code']] ?? null;
 
             Vendor::updateOrCreate(
@@ -157,17 +135,21 @@ class DemoCatalogSeeder extends Seeder
                 'email_verified_at' => now(),
             ])->save();
 
-            if (! $customer->addresses()->exists() && $country && $city && $zone) {
+            $sampleCountry = $countries['UK'] ?? $countries->first();
+            $sampleCity = $cities['SOU'] ?? $cities->first();
+            $sampleZone = $zones['SO16'] ?? $zones->first();
+
+            if (! $customer->addresses()->exists() && $sampleCountry && $sampleCity && $sampleZone) {
                 CustomerAddress::create([
                     'user_id' => $customer->id,
                     'label' => 'Home',
                     'recipient_name' => $customer->name,
                     'phone' => $customer->phone,
                     'address_line_1' => '73 Colby Street',
-                    'address_line_2' => 'Southampton',
-                    'country_id' => $country->id,
-                    'city_id' => $city->id,
-                    'zone_id' => $zone->id,
+                    'address_line_2' => 'Demo district',
+                    'country_id' => $sampleCountry->id,
+                    'city_id' => $sampleCity->id,
+                    'zone_id' => $sampleZone->id,
                     'postcode' => 'SO16 9RU',
                     'is_default' => true,
                     'status' => 'active',
@@ -179,7 +161,7 @@ class DemoCatalogSeeder extends Seeder
             ['tax_name' => 'VAT'],
             [
                 'tax_percentage' => 20,
-                'country_id' => $country?->id,
+                'country_id' => $countries->get('UK')?->id,
                 'region_name' => 'United Kingdom',
                 'status' => 'active',
                 'created_by' => $admin?->id,
@@ -325,6 +307,16 @@ class DemoCatalogSeeder extends Seeder
         return $assets[$index % count($assets)];
     }
 
+    private function deliveryChargeForZone(string $zoneCode): float
+    {
+        return match ($zoneCode) {
+            'SO16' => 0.00,
+            'SO14', 'SW1', 'MU01', 'BLR1', 'MCR1', 'LIV1', 'BIR1', 'LEE1', 'DEL1', 'CHE1', 'HYD1', 'KOL1' => 15.00,
+            'E1', 'MU02', 'BLR2' => 20.00,
+            default => 20.00,
+        };
+    }
+
     private function productImages(int $startIndex): array
     {
         $images = [
@@ -431,7 +423,7 @@ class DemoCatalogSeeder extends Seeder
         ];
     }
 
-    private function vendors(?Country $country, ?City $city, $zones): array
+    private function vendors(): array
     {
         return [
             [
@@ -439,6 +431,8 @@ class DemoCatalogSeeder extends Seeder
                 'email' => 'vendor1@expressbazar.local',
                 'phone' => '020 1111 1111',
                 'address' => '73 Colby Street, Southampton',
+                'country_code' => 'UK',
+                'city_code' => 'SOU',
                 'zone_code' => 'SO16',
                 'inventory_mode' => 'internal',
                 'logo' => $this->assetUrl('branch', 0),
@@ -447,8 +441,10 @@ class DemoCatalogSeeder extends Seeder
                 'name' => 'Daily Pantry',
                 'email' => 'vendor2@expressbazar.local',
                 'phone' => '020 2222 2222',
-                'address' => '12 Dock Road, Southampton',
-                'zone_code' => 'SO14',
+                'address' => '12 Dock Road, London',
+                'country_code' => 'UK',
+                'city_code' => 'LON',
+                'zone_code' => 'SW1',
                 'inventory_mode' => 'epos',
                 'logo' => $this->assetUrl('branch', 1),
             ],
@@ -456,8 +452,10 @@ class DemoCatalogSeeder extends Seeder
                 'name' => 'Green Valley Store',
                 'email' => 'vendor3@expressbazar.local',
                 'phone' => '020 3333 3333',
-                'address' => '44 Market Street, Southampton',
-                'zone_code' => 'SO15',
+                'address' => '44 Market Street, Mumbai',
+                'country_code' => 'IN',
+                'city_code' => 'MUM',
+                'zone_code' => 'MU01',
                 'inventory_mode' => 'internal',
                 'logo' => $this->assetUrl('branch', 2),
             ],
@@ -465,10 +463,56 @@ class DemoCatalogSeeder extends Seeder
                 'name' => 'Quick Home Mart',
                 'email' => 'vendor4@expressbazar.local',
                 'phone' => '020 4444 4444',
-                'address' => '8 High Street, Southampton',
-                'zone_code' => 'SO16',
+                'address' => '8 High Street, Bengaluru',
+                'country_code' => 'IN',
+                'city_code' => 'BLR',
+                'zone_code' => 'BLR1',
                 'inventory_mode' => 'epos',
                 'logo' => $this->assetUrl('branch', 3),
+            ],
+            [
+                'name' => 'Northern Grocer',
+                'email' => 'vendor5@expressbazar.local',
+                'phone' => '0161 555 5555',
+                'address' => '18 King Street, Manchester',
+                'country_code' => 'UK',
+                'city_code' => 'MAN',
+                'zone_code' => 'MCR1',
+                'inventory_mode' => 'internal',
+                'logo' => $this->assetUrl('branch', 4),
+            ],
+            [
+                'name' => 'Capital Fresh Market',
+                'email' => 'vendor6@expressbazar.local',
+                'phone' => '011 6666 6666',
+                'address' => '22 Connaught Place, Delhi',
+                'country_code' => 'IN',
+                'city_code' => 'DEL',
+                'zone_code' => 'DEL1',
+                'inventory_mode' => 'epos',
+                'logo' => $this->assetUrl('branch', 5),
+            ],
+            [
+                'name' => 'Midlands Daily',
+                'email' => 'vendor7@expressbazar.local',
+                'phone' => '0121 777 7777',
+                'address' => '14 Broad Street, Birmingham',
+                'country_code' => 'UK',
+                'city_code' => 'BIR',
+                'zone_code' => 'BIR1',
+                'inventory_mode' => 'internal',
+                'logo' => $this->assetUrl('branch', 0),
+            ],
+            [
+                'name' => 'Heritage Market',
+                'email' => 'vendor8@expressbazar.local',
+                'phone' => '040 888 8888',
+                'address' => '9 Banjara Hills, Hyderabad',
+                'country_code' => 'IN',
+                'city_code' => 'HYD',
+                'zone_code' => 'HYD1',
+                'inventory_mode' => 'epos',
+                'logo' => $this->assetUrl('branch', 1),
             ],
         ];
     }
@@ -593,6 +637,12 @@ class DemoCatalogSeeder extends Seeder
             ['name' => 'Cookware Pan', 'category' => 'Kitchen & Home', 'subcategory' => 'Cookware', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Everyday non-stick pan for home cooking.', 'price' => 599, 'discount_type' => 'fixed', 'discount_value' => 50, 'stock' => 14, 'unit' => '1 pc'],
             ['name' => 'Storage Container Set', 'category' => 'Kitchen & Home', 'subcategory' => 'Storage & Containers', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Airtight containers for kitchen storage.', 'price' => 329, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 20, 'unit' => '3 pcs'],
             ['name' => 'Air Freshener Spray', 'category' => 'Kitchen & Home', 'subcategory' => 'Air Fresheners', 'vendor_email' => 'vendor4@expressbazar.local', 'description' => 'Fresh fragrance for rooms and living spaces.', 'price' => 149, 'discount_type' => 'fixed', 'discount_value' => 15, 'stock' => 54, 'unit' => '250 ml'],
+            ['name' => 'Tea Bags Family Pack', 'category' => 'Snacks & Beverages', 'subcategory' => 'Soft Drinks', 'vendor_email' => 'vendor5@expressbazar.local', 'description' => 'Classic tea bags for Manchester households.', 'price' => 189, 'discount_type' => 'fixed', 'discount_value' => 15, 'stock' => 36, 'unit' => '100 bags'],
+            ['name' => 'Whole Grain Pasta', 'category' => 'Rice & Grains', 'subcategory' => 'Flour & Poha', 'vendor_email' => 'vendor5@expressbazar.local', 'description' => 'Healthy pasta for quick weeknight meals.', 'price' => 139, 'discount_type' => 'percentage', 'discount_value' => 10, 'stock' => 28, 'unit' => '500 g'],
+            ['name' => 'Basmati Rice Mini Pack', 'category' => 'Rice & Grains', 'subcategory' => 'Basmati Rice', 'vendor_email' => 'vendor6@expressbazar.local', 'description' => 'Small pack of premium rice for Delhi customers.', 'price' => 159, 'discount_type' => 'percentage', 'discount_value' => 8, 'stock' => 40, 'unit' => '1 kg'],
+            ['name' => 'Spice Mix Box', 'category' => 'Offer Zone', 'subcategory' => 'Combo Deals', 'vendor_email' => 'vendor6@expressbazar.local', 'description' => 'Useful spice mix bundle for everyday cooking.', 'price' => 249, 'discount_type' => 'fixed', 'discount_value' => 20, 'stock' => 22, 'unit' => '1 box'],
+            ['name' => 'Biscuit Value Pack', 'category' => 'Snacks & Beverages', 'subcategory' => 'Biscuits & Cookies', 'vendor_email' => 'vendor7@expressbazar.local', 'description' => 'Affordable biscuit pack for Birmingham shoppers.', 'price' => 79, 'discount_type' => 'fixed', 'discount_value' => 5, 'stock' => 48, 'unit' => '1 pack'],
+            ['name' => 'Green Tea Box', 'category' => 'Snacks & Beverages', 'subcategory' => 'Soft Drinks', 'vendor_email' => 'vendor8@expressbazar.local', 'description' => 'Light green tea box for Hyderabad households.', 'price' => 219, 'discount_type' => 'percentage', 'discount_value' => 12, 'stock' => 30, 'unit' => '1 box'],
             ['name' => 'Combo Deal Basket', 'category' => 'Offer Zone', 'subcategory' => 'Combo Deals', 'vendor_email' => 'vendor1@expressbazar.local', 'description' => 'Curated combo basket with daily essentials.', 'price' => 799, 'discount_type' => 'percentage', 'discount_value' => 15, 'stock' => 12, 'unit' => '1 combo'],
             ['name' => 'Top Offer Shampoo', 'category' => 'Offer Zone', 'subcategory' => 'Top Offers', 'vendor_email' => 'vendor3@expressbazar.local', 'description' => 'Featured shampoo offer for this week.', 'price' => 229, 'discount_type' => 'fixed', 'discount_value' => 25, 'stock' => 18, 'unit' => '1 bottle'],
         ];

@@ -66,11 +66,15 @@
                             <td>{{ $inventory->low_stock_threshold ?? '-' }}</td>
                             <td>{{ $inventory->updated_at?->format('M d, Y h:i A') }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.inventory.edit', $inventory) }}" class="btn btn-sm btn-outline-primary">Adjust</a>
+                                <a href="{{ route('admin.inventory.edit', $inventory) }}" class="btn btn-sm btn-outline-primary" aria-label="Adjust stock" title="Adjust stock">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.inventory.destroy', $inventory) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove this inventory record?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete inventory record" title="Delete inventory record">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

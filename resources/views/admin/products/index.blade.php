@@ -111,11 +111,15 @@
                             </td>
                             <td><span class="badge text-bg-{{ $product->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($product->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit product" title="Edit product">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this product?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete product" title="Delete product">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
