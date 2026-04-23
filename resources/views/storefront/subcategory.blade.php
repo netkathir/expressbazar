@@ -5,7 +5,7 @@
         <section class="container-fluid px-3 px-lg-4 py-3">
             <nav class="sf-breadcrumbs">
                 Home <span>›</span> {{ $subcategory->category?->category_name ?? 'Category' }} <span>›</span> {{ $subcategory->subcategory_name }}
-            </nav>
+            </nav> 
 
             <div class="sf-page-title">
                 <div>
