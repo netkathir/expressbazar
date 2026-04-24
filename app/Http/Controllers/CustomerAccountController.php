@@ -70,10 +70,6 @@ class CustomerAccountController extends Controller
         $user = $request->user();
         abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
 
-        if ($request->filled('session_id')) {
-            session()->flash('success', 'Stripe payment received. Confirmation is being processed.');
-        }
-
         return view('storefront.orders.success', [
             'title' => 'Order Confirmed',
             'order' => $order->load(['vendor', 'items', 'payments']),
