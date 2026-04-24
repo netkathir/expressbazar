@@ -15,8 +15,10 @@
                     </div>
                     <div class="text-end">
                         <div class="fw-semibold fs-4">₹{{ number_format((float) $order->total_amount, 0) }}</div>
-                        <span class="badge rounded-pill text-bg-light">{{ ucfirst($order->order_status) }}</span>
-                        <span class="badge rounded-pill text-bg-warning">{{ ucfirst($latestPayment?->status ?? $order->payment_status) }}</span>
+                        <span class="badge rounded-pill text-bg-{{ ($latestPayment?->status ?? $order->payment_status) === 'paid' ? 'success' : 'warning' }}">
+                            {{ ucfirst($latestPayment?->status ?? $order->payment_status) }}
+                        </span>
+                        <div class="small text-secondary mt-1">Order status: {{ ucfirst($order->order_status) }}</div>
                     </div>
                 </div>
             </div>
@@ -49,11 +51,11 @@
                         <dt>Order Status</dt><dd>{{ ucfirst($order->order_status) }}</dd>
                     </dl>
 
-                    @if (($latestPayment?->payment_method ?? null) === 'online')
+                    @if (($latestPayment?->payment_method ?? null) === 'online' && in_array($latestPayment?->status, ['pending', 'failed'], true))
                         <form method="POST" action="{{ route('storefront.orders.retry-payment', $order) }}" class="mt-4">
                             @csrf
-                            <button class="btn btn-danger w-100 rounded-pill">Retry Payment</button>
-                            <div class="small text-secondary mt-2">A new payment attempt will be created for this order.</div>
+                            <button class="btn btn-danger w-100 rounded-pill">Pay with Stripe</button>
+                            <div class="small text-secondary mt-2">A new Stripe checkout session will be created for this order.</div>
                         </form>
                     @endif
 

@@ -70,11 +70,42 @@ class CustomerAccountController extends Controller
         $user = $request->user();
         abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
 
+        if ($request->filled('session_id')) {
+            session()->flash('success', 'Stripe payment received. Confirmation is being processed.');
+        }
+
         return view('storefront.orders.success', [
             'title' => 'Order Confirmed',
             'order' => $order->load(['vendor', 'items', 'payments']),
             'user' => $user,
         ]);
+    }
+
+    public function cancelPayment(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        $payment = $order->payments()->latest()->first();
+        if ($payment && $payment->payment_method === 'online' && in_array($payment->status, ['pending', 'failed'], true)) {
+            $payment->update([
+                'status' => 'failed',
+                'gateway_response' => json_encode([
+                    'source' => 'stripe_checkout',
+                    'status' => 'cancelled',
+                    'requested_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+        }
+
+        $order->update([
+            'payment_status' => 'failed',
+            'updated_by' => $user->id,
+        ]);
+
+        return redirect()
+            ->route('storefront.orders.show', $order)
+            ->with('error', 'Stripe payment was cancelled. You can retry it from your order details.');
     }
 
     public function retryPayment(Request $request, Order $order)
@@ -87,23 +118,23 @@ class CustomerAccountController extends Controller
             return back()->withErrors(['payment' => 'Online payment retry is not available for this order.']);
         }
 
-        if (in_array($latestPayment->status, ['pending', 'failed'], true)) {
-            $latestPayment->update([
-                'status' => 'failed',
-                'gateway_response' => json_encode([
-                    'status' => 'retry_initiated',
-                    'requested_at' => now()->toDateTimeString(),
-                ]),
-            ]);
-        }
+        $latestPayment->update([
+            'status' => 'failed',
+            'gateway_response' => json_encode([
+                'source' => 'stripe_checkout',
+                'status' => 'retry_initiated',
+                'requested_at' => now()->toDateTimeString(),
+            ]),
+        ]);
 
-        Payment::create([
+        $payment = Payment::create([
             'order_id' => $order->id,
             'transaction_id' => $this->generateTransactionId(),
             'payment_method' => 'online',
             'amount' => (float) $order->total_amount,
             'status' => 'pending',
             'gateway_response' => json_encode([
+                'source' => 'stripe_checkout',
                 'status' => 'retry_pending',
                 'order_number' => $order->order_number,
             ]),
@@ -114,7 +145,9 @@ class CustomerAccountController extends Controller
             'updated_by' => $user->id,
         ]);
 
-        return redirect()->route('storefront.orders.show', $order)->with('success', 'Payment retry initiated.');
+        $order->loadMissing(['items', 'customer']);
+
+        return redirect()->route('payments.checkout', $order);
     }
 
     public function storeAddress(Request $request)

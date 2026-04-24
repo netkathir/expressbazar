@@ -169,8 +169,9 @@ class StorefrontController extends Controller
         $orderItems = [];
         $itemTotal = 0.0;
         $order = null;
+        $payment = null;
 
-        DB::transaction(function () use ($cartItems, $address, $user, $vendorId, $deliveryCharge, $location, $request, &$orderItems, &$itemTotal, &$order) {
+        DB::transaction(function () use ($cartItems, $address, $user, $vendorId, $deliveryCharge, $location, $request, &$orderItems, &$itemTotal, &$order, &$payment) {
             $orderNumber = $this->generateOrderNumber();
 
             $freshProducts = Product::query()
@@ -278,7 +279,7 @@ class StorefrontController extends Controller
                 $order->items()->create($orderItem);
             }
 
-            Payment::create([
+            $payment = Payment::create([
                 'order_id' => $order->id,
                 'transaction_id' => $this->generateTransactionId(),
                 'payment_method' => $request->string('payment_method')->toString(),
@@ -292,8 +293,16 @@ class StorefrontController extends Controller
             ]);
         });
 
+        $order->loadMissing(['items', 'customer']);
+
         session()->put('storefront.location', $location);
         session()->forget('storefront.soft_location');
+
+        if ($request->string('payment_method')->toString() === 'online') {
+            $this->clearCartState();
+            return redirect()->route('payments.checkout', $order);
+        }
+
         $this->clearCartState();
 
         return redirect()

@@ -31,14 +31,16 @@
                                             <div class="small text-secondary">{{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
                                             <div class="small text-secondary">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
                                         </div>
-                                        <div class="text-end">
-                                            <div class="fw-semibold">₹{{ number_format((float) $order->total_amount, 0) }}</div>
-                                            <span class="badge rounded-pill text-bg-light">{{ ucfirst($order->order_status) }}</span>
-                                            <span class="badge rounded-pill text-bg-warning">{{ ucfirst($latestPayment?->status ?? $order->payment_status) }}</span>
-                                            <div class="mt-2">
-                                                <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-sm btn-outline-dark rounded-pill">View</a>
-                                            </div>
-                                        </div>
+                                <div class="text-end">
+                                    <div class="fw-semibold">₹{{ number_format((float) $order->total_amount, 0) }}</div>
+                                    <span class="badge rounded-pill text-bg-{{ ($latestPayment?->status ?? $order->payment_status) === 'paid' ? 'success' : 'warning' }}">
+                                        {{ ucfirst($latestPayment?->status ?? $order->payment_status) }}
+                                    </span>
+                                    <div class="small text-secondary mt-1">Order status: {{ ucfirst($order->order_status) }}</div>
+                                    <div class="mt-2">
+                                        <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-sm btn-outline-dark rounded-pill">View</a>
+                                    </div>
+                                </div>
                                     </div>
                                 </div>
                             @empty

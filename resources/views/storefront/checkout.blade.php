@@ -68,7 +68,7 @@
                                     >
                                     <div>
                                         <div class="fw-semibold">Online Payment</div>
-                                        <div class="small text-secondary">Gateway integration will be connected in the next step.</div>
+                                        <div class="small text-secondary">Stripe test checkout will open after you place the order.</div>
                                     </div>
                                 </div>
                             </label>
@@ -96,7 +96,7 @@
                                 <strong class="fs-5" data-grand-total>₹{{ number_format($cartTotals['grandTotal'], 0) }}</strong>
                             </div>
 
-                            <button class="btn btn-danger w-100 rounded-pill mt-3" type="submit" {{ $addresses->isEmpty() ? 'disabled' : '' }}>
+                            <button id="checkoutSubmit" class="btn btn-danger w-100 rounded-pill mt-3" type="submit" {{ $addresses->isEmpty() ? 'disabled' : '' }}>
                                 Place Order
                             </button>
                             <div class="text-secondary small mt-2">
@@ -113,11 +113,16 @@
 @push('scripts')
     <script>
         window.checkoutDeliveryCharges = @json($deliveryChargeByAddress ?? []);
+        const checkoutSubmit = document.getElementById('checkoutSubmit');
 
         document.addEventListener('change', (event) => {
             const radio = event.target.closest('input[name="address_id"]');
+            const paymentMethod = event.target.closest('input[name="payment_method"]');
 
             if (!radio) {
+                if (paymentMethod && checkoutSubmit) {
+                    checkoutSubmit.textContent = paymentMethod.value === 'online' ? 'Pay Now' : 'Place Order';
+                }
                 return;
             }
 
@@ -137,5 +142,10 @@
                 grandNode.textContent = `₹${grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             }
         });
+
+        const activePaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (activePaymentMethod && checkoutSubmit) {
+            checkoutSubmit.textContent = activePaymentMethod.value === 'online' ? 'Pay Now' : 'Place Order';
+        }
     </script>
 @endpush

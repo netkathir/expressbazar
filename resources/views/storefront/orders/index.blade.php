@@ -28,16 +28,16 @@
                             </div>
                             <div class="text-end">
                                 <div class="fw-semibold fs-4">₹{{ number_format((float) $order->total_amount, 0) }}</div>
-                                <div class="d-flex flex-wrap justify-content-end gap-2 mt-1">
-                                    <span class="badge rounded-pill text-bg-light">{{ ucfirst($order->order_status) }}</span>
-                                    <span class="badge rounded-pill text-bg-warning">{{ ucfirst($latestPayment?->status ?? $order->payment_status) }}</span>
-                                </div>
+                                <span class="badge rounded-pill text-bg-{{ ($latestPayment?->status ?? $order->payment_status) === 'paid' ? 'success' : 'warning' }}">
+                                    {{ ucfirst($latestPayment?->status ?? $order->payment_status) }}
+                                </span>
+                                <div class="small text-secondary mt-1">Order status: {{ ucfirst($order->order_status) }}</div>
                                 <div class="mt-3 d-flex flex-wrap justify-content-end gap-2">
                                     <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-outline-dark btn-sm rounded-pill">View Details</a>
                                     @if (($latestPayment?->payment_method ?? null) === 'online' && in_array($latestPayment?->status, ['pending', 'failed'], true))
                                         <form method="POST" action="{{ route('storefront.orders.retry-payment', $order) }}">
                                             @csrf
-                                            <button class="btn btn-danger btn-sm rounded-pill">Retry Payment</button>
+                                            <button class="btn btn-danger btn-sm rounded-pill">Pay with Stripe</button>
                                         </form>
                                     @endif
                                 </div>

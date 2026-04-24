@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\DeliveryController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\RoleController;
@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\RegionZoneController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CustomerAuthController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\StorefrontController;
 use Illuminate\Support\Facades\Route;
@@ -37,12 +38,17 @@ Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storef
 Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
 Route::get('/account/orders', [CustomerAccountController::class, 'orders'])->middleware('auth')->name('storefront.orders.index');
 Route::get('/account/orders/{order}/success', [CustomerAccountController::class, 'showOrderSuccess'])->middleware('auth')->name('storefront.orders.success');
+Route::get('/account/orders/{order}/payment-cancelled', [CustomerAccountController::class, 'cancelPayment'])->middleware('auth')->name('storefront.orders.cancel');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
 Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
 Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
 Route::post('/account/orders/{order}/retry-payment', [CustomerAccountController::class, 'retryPayment'])->middleware('auth')->name('storefront.orders.retry-payment');
 Route::get('/checkout', [StorefrontController::class, 'checkout'])->middleware('auth')->name('storefront.checkout');
 Route::post('/checkout/place-order', [StorefrontController::class, 'placeOrder'])->middleware('auth')->name('storefront.checkout.place');
+Route::get('/payments/checkout/{order}', [PaymentController::class, 'checkout'])->middleware('auth')->name('payments.checkout');
+Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+    ->name('stripe.webhook');
 Route::get('/categories/{category}', [StorefrontController::class, 'category'])->name('storefront.category');
 Route::get('/subcategories/{subcategory}', [StorefrontController::class, 'subcategory'])->name('storefront.subcategory');
 Route::get('/products/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
@@ -82,7 +88,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('products/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::resource('inventory', InventoryController::class)->except(['show']);
         Route::resource('orders', OrderController::class);
-        Route::resource('payments', PaymentController::class)->except(['show']);
+        Route::resource('payments', AdminPaymentController::class)->except(['show']);
         Route::resource('delivery', DeliveryController::class)->except(['show']);
         Route::resource('notifications', NotificationController::class)->except(['show']);
         Route::get('notifications/logs', [NotificationController::class, 'logs'])->name('notifications.logs');
