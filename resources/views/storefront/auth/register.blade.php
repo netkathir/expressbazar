@@ -24,11 +24,21 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <div class="input-group">
+                                    <input type="password" name="password" class="form-control" id="customer-register-password" required>
+                                    <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-register-password" aria-label="Show password">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Confirm password</label>
-                                <input type="password" name="password_confirmation" class="form-control" required>
+                                <div class="input-group">
+                                    <input type="password" name="password_confirmation" class="form-control" id="customer-register-password-confirmation" required>
+                                    <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-register-password-confirmation" aria-label="Show password">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12 d-grid">
                                 <button class="btn btn-danger rounded-pill">Register</button>

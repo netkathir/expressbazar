@@ -236,6 +236,31 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('storefront/js/storefront.js') }}"></script>
+    <script>
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest('.js-password-toggle');
+            if (!button) {
+                return;
+            }
+
+            const targetId = button.dataset.target;
+            const input = targetId ? document.getElementById(targetId) : null;
+            if (!input) {
+                return;
+            }
+
+            const shouldShow = input.type === 'password';
+            input.type = shouldShow ? 'text' : 'password';
+
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('ti-eye', !shouldShow);
+                icon.classList.toggle('ti-eye-off', shouldShow);
+            }
+
+            button.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

@@ -14,11 +14,21 @@
                             <input type="hidden" name="email" value="{{ $email }}">
                             <div class="col-12">
                                 <label class="form-label">New Password</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <div class="input-group">
+                                    <input type="password" name="password" class="form-control" id="customer-reset-password" required>
+                                    <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-reset-password" aria-label="Show password">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Confirm Password</label>
-                                <input type="password" name="password_confirmation" class="form-control" required>
+                                <div class="input-group">
+                                    <input type="password" name="password_confirmation" class="form-control" id="customer-reset-password-confirmation" required>
+                                    <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-reset-password-confirmation" aria-label="Show password">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12 d-grid">
                                 <button class="btn btn-danger rounded-pill">Update Password</button>

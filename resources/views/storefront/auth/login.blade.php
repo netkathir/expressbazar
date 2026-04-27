@@ -16,7 +16,12 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <div class="input-group">
+                                    <input type="password" name="password" class="form-control" id="customer-login-password" required>
+                                    <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-login-password" aria-label="Show password">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12 d-grid">
                                 <button class="btn btn-danger rounded-pill">Login</button>

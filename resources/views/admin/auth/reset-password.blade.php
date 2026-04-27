@@ -32,11 +32,21 @@
                         <input type="hidden" name="email" value="{{ $email }}">
                         <div>
                             <label class="form-label">New Password</label>
-                            <input type="password" name="password" class="form-control" required autofocus>
+                            <div class="input-group">
+                                <input type="password" name="password" class="form-control" id="admin-reset-password" required autofocus>
+                                <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="admin-reset-password" aria-label="Show password">
+                                    <i class="ti ti-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label class="form-label">Confirm Password</label>
-                            <input type="password" name="password_confirmation" class="form-control" required>
+                            <div class="input-group">
+                                <input type="password" name="password_confirmation" class="form-control" id="admin-reset-password-confirmation" required>
+                                <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="admin-reset-password-confirmation" aria-label="Show password">
+                                    <i class="ti ti-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Update Password</button>
                     </form>
@@ -44,6 +54,31 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest('.js-password-toggle');
+            if (!button) {
+                return;
+            }
+
+            const targetId = button.dataset.target;
+            const input = targetId ? document.getElementById(targetId) : null;
+            if (!input) {
+                return;
+            }
+
+            const shouldShow = input.type === 'password';
+            input.type = shouldShow ? 'text' : 'password';
+
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('ti-eye', !shouldShow);
+                icon.classList.toggle('ti-eye-off', shouldShow);
+            }
+
+            button.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
