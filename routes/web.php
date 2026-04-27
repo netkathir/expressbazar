@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\TaxController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\RegionZoneController;
+use App\Http\Controllers\AdminPasswordResetController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CustomerAuthController;
 use App\Http\Controllers\CustomerPasswordResetController;
@@ -78,6 +79,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AdminAuthController::class, 'create'])->name('login');
         Route::post('/login', [AdminAuthController::class, 'store'])->name('login.store');
+        Route::get('/forgot-password', [AdminPasswordResetController::class, 'create'])->name('password.request');
+        Route::post('/forgot-password/send-otp', [AdminPasswordResetController::class, 'sendOtp'])->name('password.send-otp');
+        Route::get('/forgot-password/otp', [AdminPasswordResetController::class, 'otpForm'])->name('password.otp.form');
+        Route::post('/forgot-password/verify-otp', [AdminPasswordResetController::class, 'verifyOtp'])->name('password.verify-otp');
+        Route::get('/forgot-password/reset', [AdminPasswordResetController::class, 'createResetForm'])->name('password.reset.form');
+        Route::post('/forgot-password/reset', [AdminPasswordResetController::class, 'resetPassword'])->name('password.reset');
     });
 
     Route::post('/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('logout');
