@@ -9,12 +9,6 @@
                         <h1 class="h3 fw-bold mb-2">Verify OTP</h1>
                         <p class="text-secondary mb-4">Enter the code sent to <strong>{{ $email }}</strong>.</p>
 
-                        @if ($otpPreview)
-                            <div class="alert alert-warning">
-                                Dev OTP preview: <strong>{{ $otpPreview }}</strong>
-                            </div>
-                        @endif
-
                         <form method="POST" action="{{ route('storefront.otp.verify') }}" class="row g-3">
                             @csrf
                             <input type="hidden" name="email" value="{{ $email }}">
