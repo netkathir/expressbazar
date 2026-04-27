@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SendOtpMail;
 use App\Models\OtpVerification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class CustomerAuthController extends Controller
 {
@@ -172,11 +173,10 @@ class CustomerAuthController extends Controller
         ]);
 
         try {
-            Mail::raw("Your EXPRESS BAZAAR OTP is {$otp}. It expires in 5 minutes.", function ($message) use ($user) {
-                $message->to($user->email)->subject('EXPRESS BAZAAR OTP');
-            });
-        } catch (\Throwable $throwable) {
-            report($throwable);
+            Mail::to($user->email)->send(new SendOtpMail($otp));
+        } catch (\Exception $e) {
+            report($e);
+            Log::error('OTP Mail Error: '.$e->getMessage());
         }
 
         return $otp;

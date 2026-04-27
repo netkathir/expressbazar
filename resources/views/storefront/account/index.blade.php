@@ -9,7 +9,7 @@
                         <h3 class="mb-3">My Account</h3>
                         <dl class="sf-specs">
                             <dt>Name</dt><dd>{{ $user->name }}</dd>
-                            <dt>Email</dt><dd>{{ $user->email }}</dd>
+                            <dt>Email</dt><dd class="text-break">{{ $user->email }}</dd>
                             <dt>Phone</dt><dd>{{ $user->phone ?: '-' }}</dd>
                             <dt>Status</dt><dd>{{ ucfirst($user->status) }}</dd>
                         </dl>
