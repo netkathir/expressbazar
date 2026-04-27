@@ -23,6 +23,9 @@
                             </div>
                         </form>
                         <div class="mt-3 small text-secondary">
+                            <a href="{{ route('storefront.password.request') }}">Forgot password?</a>
+                        </div>
+                        <div class="mt-3 small text-secondary">
                             New here? <a href="{{ route('storefront.register') }}">Create an account</a>
                         </div>
                     </div>
