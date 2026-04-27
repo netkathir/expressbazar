@@ -1,8 +1,13 @@
 @php($image = $product->images->first())
 @php($cartEntry = $cartMap[$product->id] ?? null)
+@php($currentPincode = request('pincode') ?: request('postcode'))
+@php($pincodeQuery = array_filter([
+    'pincode' => $currentPincode,
+    'vendor_id' => request('vendor_id'),
+], fn ($value) => filled($value)))
 <article class="sf-product-card">
     <div class="sf-product-media">
-        <a href="{{ route('storefront.product', $product) }}" class="sf-product-image">
+        <a href="{{ route('storefront.product', array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-image">
             <img src="{{ $image ? asset($image->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $product->product_name }}">
         </a>
         @if ($cartEntry)
@@ -19,7 +24,7 @@
         @endif
     </div>
     <div class="sf-product-body">
-        <a href="{{ route('storefront.product', $product) }}" class="sf-product-name">{{ $product->product_name }}</a>
+        <a href="{{ route('storefront.product', array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-name">{{ $product->product_name }}</a>
         <div class="sf-product-meta">{{ $product->inventory?->unit ? $product->inventory->unit : '1 pc' }}</div>
         <div class="sf-product-price-row">
             <div>

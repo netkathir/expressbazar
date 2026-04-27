@@ -14,7 +14,7 @@
                 @forelse ($searchResults as $product)
                     @include('storefront.partials.product-card', ['product' => $product])
                 @empty
-                    <div class="sf-empty-state">No products found.</div>
+                    <div class="sf-empty-state">{{ !empty($pincode ?? null) ? 'No data available for this pincode' : 'No products found.' }}</div>
                 @endforelse
             </div>
         </section>

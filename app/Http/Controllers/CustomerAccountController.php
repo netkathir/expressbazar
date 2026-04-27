@@ -10,6 +10,8 @@ use App\Models\Payment;
 use App\Models\RegionZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CustomerAccountController extends Controller
 {
@@ -31,6 +33,39 @@ class CustomerAccountController extends Controller
                 ->limit(5)
                 ->get(),
         ]);
+    }
+
+    public function editProfile(Request $request)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        return view('storefront.account.profile-edit', [
+            'title' => 'Edit Profile',
+            'user' => $user,
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $user->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+        ]);
+
+        return redirect()->route('storefront.account')->with('success', 'Profile updated successfully.');
     }
 
     public function orders(Request $request)
@@ -152,37 +187,7 @@ class CustomerAccountController extends Controller
 
         abort_if(! $user || $user->role !== 'customer', 403);
 
-        $data = $request->validate([
-            'label' => ['nullable', 'string', 'max:50'],
-            'recipient_name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'address_line_1' => ['required', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'country_id' => ['required', 'exists:countries,id'],
-            'city_id' => ['required', 'exists:cities,id'],
-            'zone_id' => ['nullable', 'exists:regions_zones,id'],
-            'postcode' => ['required', 'string', 'max:32'],
-            'is_default' => ['nullable'],
-        ]);
-
-        $city = City::findOrFail($data['city_id']);
-        if ((int) $city->country_id !== (int) $data['country_id']) {
-            return back()->withErrors(['city_id' => 'Selected city must belong to the selected country.'])->withInput();
-        }
-
-        if (! empty($data['zone_id'])) {
-            $zone = RegionZone::query()
-                ->where('id', $data['zone_id'])
-                ->where('country_id', $data['country_id'])
-                ->where('city_id', $data['city_id'])
-                ->where('status', 'active')
-                ->where('delivery_available', true)
-                ->first();
-
-            if (! $zone) {
-                return back()->withErrors(['zone_id' => 'Delivery is not available in your area.'])->withInput();
-            }
-        }
+        $data = $this->validateAddressPayload($request);
 
         if ($request->boolean('is_default')) {
             $user->addresses()->update(['is_default' => false]);
@@ -206,6 +211,59 @@ class CustomerAccountController extends Controller
         return redirect()->route('storefront.account')->with('success', 'Address saved successfully.');
     }
 
+    public function editAddress(Request $request, CustomerAddress $address)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer' || (int) $address->user_id !== (int) $user->id, 403);
+
+        return view('storefront.account.address-edit', [
+            'title' => 'Edit Address',
+            'user' => $user,
+            'address' => $address->load(['country', 'city', 'zone']),
+            'countries' => Country::query()->where('status', 'active')->orderBy('country_name')->get(),
+            'cities' => City::query()
+                ->where('country_id', $address->country_id)
+                ->orderBy('city_name')
+                ->get(),
+            'zones' => RegionZone::query()
+                ->where('country_id', $address->country_id)
+                ->where('city_id', $address->city_id)
+                ->where('status', 'active')
+                ->where('delivery_available', true)
+                ->orderBy('zone_name')
+                ->get(),
+        ]);
+    }
+
+    public function updateAddress(Request $request, CustomerAddress $address)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer' || (int) $address->user_id !== (int) $user->id, 403);
+
+        $data = $this->validateAddressPayload($request);
+
+        if ($request->boolean('is_default')) {
+            $user->addresses()->update(['is_default' => false]);
+        }
+
+        $address->update([
+            'label' => $data['label'] ?? null,
+            'recipient_name' => $data['recipient_name'],
+            'phone' => $data['phone'] ?? null,
+            'address_line_1' => $data['address_line_1'],
+            'address_line_2' => $data['address_line_2'] ?? null,
+            'country_id' => $data['country_id'],
+            'city_id' => $data['city_id'],
+            'zone_id' => $data['zone_id'] ?? null,
+            'postcode' => $data['postcode'],
+            'is_default' => $request->boolean('is_default'),
+        ]);
+
+        return redirect()->route('storefront.account')->with('success', 'Address updated successfully.');
+    }
+
     public function destroyAddress(Request $request, CustomerAddress $address)
     {
         abort_if($address->user_id !== $request->user()?->id, 403);
@@ -222,5 +280,46 @@ class CustomerAccountController extends Controller
         } while (Payment::query()->where('transaction_id', $transactionId)->exists());
 
         return $transactionId;
+    }
+
+    private function validateAddressPayload(Request $request): array
+    {
+        $data = $request->validate([
+            'label' => ['nullable', 'string', 'max:50'],
+            'recipient_name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'address_line_1' => ['required', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'country_id' => ['required', 'exists:countries,id'],
+            'city_id' => ['required', 'exists:cities,id'],
+            'zone_id' => ['nullable', 'exists:regions_zones,id'],
+            'postcode' => ['required', 'string', 'max:32'],
+            'is_default' => ['nullable'],
+        ]);
+
+        $city = City::findOrFail($data['city_id']);
+        if ((int) $city->country_id !== (int) $data['country_id']) {
+            throw ValidationException::withMessages([
+                'city_id' => 'Selected city must belong to the selected country.',
+            ]);
+        }
+
+        if (! empty($data['zone_id'])) {
+            $zone = RegionZone::query()
+                ->where('id', $data['zone_id'])
+                ->where('country_id', $data['country_id'])
+                ->where('city_id', $data['city_id'])
+                ->where('status', 'active')
+                ->where('delivery_available', true)
+                ->first();
+
+            if (! $zone) {
+                throw ValidationException::withMessages([
+                    'zone_id' => 'Delivery is not available in your area.',
+                ]);
+            }
+        }
+
+        return $data;
     }
 }

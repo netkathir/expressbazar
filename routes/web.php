@@ -36,10 +36,14 @@ Route::post('/otp/verify', [CustomerAuthController::class, 'verifyOtp'])->name('
 Route::post('/otp/resend', [CustomerAuthController::class, 'resendOtp'])->name('storefront.otp.resend');
 Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storefront.logout');
 Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
+Route::get('/account/profile/edit', [CustomerAccountController::class, 'editProfile'])->middleware('auth')->name('storefront.profile.edit');
+Route::put('/account/profile', [CustomerAccountController::class, 'updateProfile'])->middleware('auth')->name('storefront.profile.update');
 Route::get('/account/orders', [CustomerAccountController::class, 'orders'])->middleware('auth')->name('storefront.orders.index');
 Route::get('/account/orders/{order}/success', [CustomerAccountController::class, 'showOrderSuccess'])->middleware('auth')->name('storefront.orders.success');
 Route::get('/account/orders/{order}/payment-cancelled', [CustomerAccountController::class, 'cancelPayment'])->middleware('auth')->name('storefront.orders.cancel');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
+Route::get('/account/addresses/{address}/edit', [CustomerAccountController::class, 'editAddress'])->middleware('auth')->name('storefront.addresses.edit');
+Route::put('/account/addresses/{address}', [CustomerAccountController::class, 'updateAddress'])->middleware('auth')->name('storefront.addresses.update');
 Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
 Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
 Route::post('/account/orders/{order}/retry-payment', [CustomerAccountController::class, 'retryPayment'])->middleware('auth')->name('storefront.orders.retry-payment');

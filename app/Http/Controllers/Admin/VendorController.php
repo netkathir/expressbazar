@@ -137,6 +137,7 @@ class VendorController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('vendors', 'email')->ignore($vendor?->id)],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string'],
+            'pincode' => ['nullable', 'string', 'max:10'],
             'country_id' => ['required', 'exists:countries,id'],
             'city_id' => ['required', 'exists:cities,id'],
             'region_zone_id' => ['required', 'exists:regions_zones,id'],
@@ -160,6 +161,8 @@ class VendorController extends Controller
                 'region_zone_id' => 'Selected zone must belong to the selected city and country.',
             ]);
         }
+
+        $data['pincode'] = mb_strtoupper(trim((string) ($data['pincode'] ?? ''))) ?: null;
 
         return $data;
     }

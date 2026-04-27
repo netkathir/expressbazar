@@ -6,7 +6,10 @@
             <div class="row g-4">
                 <div class="col-12 col-xl-4">
                     <div class="sf-info-card">
-                        <h3 class="mb-3">My Account</h3>
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                            <h3 class="mb-0">My Account</h3>
+                            <a href="{{ route('storefront.profile.edit') }}" class="btn btn-outline-dark rounded-pill btn-sm">Edit Profile</a>
+                        </div>
                         <dl class="sf-specs">
                             <dt>Name</dt><dd>{{ $user->name }}</dd>
                             <dt>Email</dt><dd class="text-break">{{ $user->email }}</dd>
@@ -60,11 +63,14 @@
                                             <div class="small text-secondary">{{ $address->address_line_1 }}, {{ $address->city?->city_name }}</div>
                                             <div class="small text-secondary">{{ $address->zone?->zone_name ?? '-' }} | {{ $address->postcode }}</div>
                                         </div>
-                                        <form method="POST" action="{{ route('storefront.addresses.destroy', $address) }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                        </form>
+                                        <div class="d-flex flex-column gap-2">
+                                            <a href="{{ route('storefront.addresses.edit', $address) }}" class="btn btn-sm btn-outline-dark">Edit</a>
+                                            <form method="POST" action="{{ route('storefront.addresses.destroy', $address) }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger w-100">Delete</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             @empty

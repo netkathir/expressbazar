@@ -15,6 +15,7 @@ class Vendor extends Model
         'email',
         'phone',
         'address',
+        'pincode',
         'logo_path',
         'country_id',
         'city_id',

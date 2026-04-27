@@ -2,10 +2,15 @@
 
 @section('content')
     <main class="sf-page">
+        @php($filterQuery = array_filter([
+            'pincode' => $pincode ?? null,
+            'vendor_id' => $selectedVendorId ?? request('vendor_id'),
+        ], fn ($value) => filled($value)))
+        @php($showNoPincodeData = !empty($pincode ?? null) && !($hasPincodeProducts ?? true))
         <section class="container-fluid px-3 px-lg-4 pt-3">
             <div class="sf-chip-row">
                 @foreach ($categories->take(10) as $category)
-                    <a href="{{ route('storefront.category', $category) }}" class="sf-chip">
+                    <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
                         <img src="{{ $category->image_path ? asset($category->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
                         <span>{{ $category->category_name }}</span>
                     </a>
@@ -55,57 +60,63 @@
             </section>
         @endif
 
-        @if (($discountedProducts ?? collect())->isNotEmpty())
+        @if ($showNoPincodeData)
+            <section class="container-fluid px-3 px-lg-4 mt-4">
+                <div class="sf-empty-state">No data available for this pincode</div>
+            </section>
+        @else
+            @if (($discountedProducts ?? collect())->isNotEmpty())
+                <section class="container-fluid px-3 px-lg-4 mt-4">
+                    <div class="sf-section-header">
+                        <div>
+                            <h3>Top offers today</h3>
+                            <p class="text-secondary mb-0">Discounted products picked from the live sample catalog.</p>
+                        </div>
+                        <a href="{{ route('storefront.category', array_merge(['category' => $categories->first()], $filterQuery)) }}">See all</a>
+                    </div>
+                    <div class="sf-product-rail">
+                        @foreach ($discountedProducts as $product)
+                            @include('storefront.partials.product-card', ['product' => $product])
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <div class="sf-section-header">
                     <div>
-                        <h3>Top offers today</h3>
-                        <p class="text-secondary mb-0">Discounted products picked from the live sample catalog.</p>
+                        <h3>Trending near you</h3>
+                        <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'Browse popular products' : 'Showing results near '.$locationLabel }}</p>
                     </div>
-                    <a href="{{ route('storefront.category', $categories->first()) }}">See all</a>
                 </div>
                 <div class="sf-product-rail">
-                    @foreach ($discountedProducts as $product)
-                        @include('storefront.partials.product-card', ['product' => $product])
+                    @foreach ($featuredSections as $section)
+                        @foreach ($section['products']->take(8) as $product)
+                            @include('storefront.partials.product-card', ['product' => $product])
+                        @endforeach
                     @endforeach
                 </div>
             </section>
-        @endif
 
-        <section class="container-fluid px-3 px-lg-4 mt-4">
-            <div class="sf-section-header">
-                <div>
-                    <h3>Trending near you</h3>
-                    <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'Browse popular products' : 'Showing results near '.$locationLabel }}</p>
-                </div>
-            </div>
-            <div class="sf-product-rail">
+            <section id="featured-sections" class="container-fluid px-3 px-lg-4 mt-5">
                 @foreach ($featuredSections as $section)
-                    @foreach ($section['products']->take(8) as $product)
-                        @include('storefront.partials.product-card', ['product' => $product])
-                    @endforeach
-                @endforeach
-            </div>
-        </section>
-
-        <section id="featured-sections" class="container-fluid px-3 px-lg-4 mt-5">
-            @foreach ($featuredSections as $section)
-                <div class="sf-section-header">
-                    <div>
-                        <h3>{{ $section['title'] }}</h3>
-                        <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'City level discovery' : 'Deliverable to your area' }}</p>
+                    <div class="sf-section-header">
+                        <div>
+                            <h3>{{ $section['title'] }}</h3>
+                            <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'City level discovery' : 'Deliverable to your area' }}</p>
+                        </div>
+                        @if (!empty($section['subcategory'] ?? null))
+                            <a href="{{ route('storefront.subcategory', array_merge(['subcategory' => $section['subcategory']], $filterQuery)) }}">See all</a>
+                        @endif
                     </div>
-                    @if (!empty($section['subcategory'] ?? null))
-                        <a href="{{ route('storefront.subcategory', $section['subcategory']) }}">See all</a>
-                    @endif
-                </div>
-                <div class="sf-product-rail mb-4">
-                    @foreach ($section['products'] as $product)
-                        @include('storefront.partials.product-card', ['product' => $product])
-                    @endforeach
-                </div>
-            @endforeach
-        </section>
+                    <div class="sf-product-rail mb-4">
+                        @foreach ($section['products'] as $product)
+                            @include('storefront.partials.product-card', ['product' => $product])
+                        @endforeach
+                    </div>
+                @endforeach
+            </section>
+        @endif
 
         <section class="container-fluid px-3 px-lg-4 mt-5">
             <div class="sf-info-card">
@@ -152,7 +163,7 @@
                 </div>
                 <div class="sf-category-cloud">
                     @foreach ($categories as $category)
-                        <a href="{{ route('storefront.category', $category) }}">{{ $category->category_name }}</a>
+                        <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}">{{ $category->category_name }}</a>
                     @endforeach
                 </div>
             </div>

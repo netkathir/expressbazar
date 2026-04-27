@@ -40,6 +40,10 @@
                     <input type="text" name="phone" value="{{ old('phone', $vendor->phone) }}" class="form-control">
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">Pincode</label>
+                    <input type="text" name="pincode" value="{{ old('pincode', $vendor->pincode) }}" class="form-control" maxlength="10">
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Inventory Mode</label>
                     <select name="inventory_mode" class="form-select" required>
                         <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode ?: 'internal') === 'internal')>Internal</option>

@@ -147,13 +147,7 @@ class StorefrontController extends Controller
             ]);
         }
 
-        $deliveryCharge = $this->deliveryChargeForZone($address->zone_id);
-
-        if ($deliveryCharge === null) {
-            throw ValidationException::withMessages([
-                'address_id' => 'Delivery is not available in your area.',
-            ]);
-        }
+        $deliveryCharge = $this->deliveryChargeForZone($address->zone_id) ?? 0.0;
 
         $location = [
             'country_id' => (int) $address->country_id,
@@ -202,7 +196,7 @@ class StorefrontController extends Controller
                     ]);
                 }
 
-                if ((int) $product->vendor?->region_zone_id !== (int) $address->zone_id) {
+                if (! empty($product->vendor?->region_zone_id) && (int) $product->vendor->region_zone_id !== (int) $address->zone_id) {
                     throw ValidationException::withMessages([
                         'address_id' => 'Selected address does not match the vendor delivery zone.',
                     ]);
@@ -579,6 +573,8 @@ class StorefrontController extends Controller
     private function storefrontData(Request $request, string $title, array $extra = []): array
     {
         $location = $this->browsingLocation();
+        $pincode = $this->activePincode();
+        $selectedVendorId = $request->filled('vendor_id') ? $request->integer('vendor_id') : null;
         $featuredSections = $this->featuredSections($location);
         $categories = Category::query()
             ->where('status', 'active')
@@ -591,6 +587,10 @@ class StorefrontController extends Controller
             'title' => $title,
             'location' => $location,
             'locationLabel' => $this->locationLabel(),
+            'pincode' => $pincode,
+            'selectedVendorId' => $selectedVendorId,
+            'vendors' => $this->vendorsForPincode($pincode),
+            'hasPincodeProducts' => ! $pincode || $this->productsQuery($location)->exists(),
             'cartCount' => $this->cartCount(),
             'cartItems' => $cartItems,
             'cartMap' => $cartItems->keyBy(fn ($item) => $item['product']->id),
@@ -618,11 +618,13 @@ class StorefrontController extends Controller
     private function featuredSections(?array $location): array
     {
         $sections = [];
+        $pincode = $this->activePincode();
 
         $subcategories = Subcategory::query()
             ->where('status', 'active')
-            ->with(['category', 'products' => function ($query) use ($location) {
+            ->with(['category', 'products' => function ($query) use ($location, $pincode) {
                 $this->applyProductScope($query, $location);
+                $this->applyPincodeScope($query, $pincode);
             }])
             ->orderBy('subcategory_name')
             ->limit(6)
@@ -710,6 +712,15 @@ class StorefrontController extends Controller
             ->where('status', 'active');
 
         $this->applyProductScope($query, $location);
+        $this->applyPincodeScope($query, $this->activePincode());
+
+        if (request()->filled('vendor_id')) {
+            $vendorId = request()->integer('vendor_id');
+
+            if ($vendorId > 0) {
+                $query->where('vendor_id', $vendorId);
+            }
+        }
 
         return $query;
     }
@@ -733,6 +744,65 @@ class StorefrontController extends Controller
                 $inventoryQuery->where('inventory_mode', 'internal')->where('stock_quantity', '>', 0);
             });
         });
+    }
+
+    private function applyPincodeScope($query, ?string $pincode): void
+    {
+        if (! $pincode) {
+            return;
+        }
+
+        $vendorIds = $this->vendorIdsForPincode($pincode);
+
+        if ($vendorIds->isEmpty()) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->whereIn('vendor_id', $vendorIds->all());
+    }
+
+    private function activePincode(): ?string
+    {
+        $pincode = trim((string) request()->input('pincode', request()->input('postcode', '')));
+
+        return $pincode !== '' ? mb_strtoupper($pincode) : null;
+    }
+
+    private function vendorIdsForPincode(string $pincode)
+    {
+        static $cache = [];
+
+        if (isset($cache[$pincode])) {
+            return $cache[$pincode];
+        }
+
+        $cache[$pincode] = Vendor::query()
+            ->where('status', 'active')
+            ->where(function ($vendorQuery) use ($pincode) {
+                $vendorQuery->where('pincode', $pincode)
+                    ->orWhereNull('pincode');
+            })
+            ->pluck('id');
+
+        return $cache[$pincode];
+    }
+
+    private function vendorsForPincode(?string $pincode)
+    {
+        $query = Vendor::query()
+            ->where('status', 'active')
+            ->orderBy('vendor_name');
+
+        if ($pincode) {
+            $query->where(function ($vendorQuery) use ($pincode) {
+                $vendorQuery->where('pincode', $pincode)
+                    ->orWhereNull('pincode');
+            });
+        }
+
+        return $query->get(['id', 'vendor_name', 'pincode']);
     }
 
     private function hardLocation(): ?array

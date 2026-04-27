@@ -21,6 +21,19 @@
                 <button type="button" class="sf-filter-pill">Brand</button>
                 <button type="button" class="sf-filter-pill">Price</button>
                 <button type="button" class="sf-filter-pill active">All products</button>
+                <form method="GET" action="{{ route('storefront.subcategory', $subcategory) }}" class="d-inline-flex align-items-center gap-2">
+                    @if (!empty($pincode ?? null))
+                        <input type="hidden" name="pincode" value="{{ $pincode }}">
+                    @endif
+                    <select name="vendor_id" class="form-select form-select-sm rounded-pill" style="min-width: 220px;" onchange="this.form.submit()">
+                        <option value="">All Vendors</option>
+                        @forelse (($vendors ?? collect()) as $vendor)
+                            <option value="{{ $vendor->id }}" @selected((string) ($selectedVendorId ?? request('vendor_id')) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
+                        @empty
+                            <option disabled>No vendors available</option>
+                        @endforelse
+                    </select>
+                </form>
             </div>
 
             <div class="sf-grid sf-product-grid">
