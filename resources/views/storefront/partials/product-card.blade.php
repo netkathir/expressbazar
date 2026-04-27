@@ -25,6 +25,7 @@
     </div>
     <div class="sf-product-body">
         <a href="{{ route('storefront.product', array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-name">{{ $product->product_name }}</a>
+        <small class="text-secondary d-block">Sold by: {{ $product->vendor?->vendor_name ?? 'Vendor not available' }}</small>
         <div class="sf-product-meta">{{ $product->inventory?->unit ? $product->inventory->unit : '1 pc' }}</div>
         <div class="sf-product-price-row">
             <div>
