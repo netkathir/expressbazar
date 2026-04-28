@@ -27,6 +27,8 @@
                         <div class="d-grid gap-3">
                             @forelse ($orders as $order)
                                 @php($latestPayment = $order->payments->last())
+                                @php($orderStatus = mb_strtolower((string) $order->order_status))
+                                @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
                                 <div class="sf-sidepanel p-3">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                                         <div>
@@ -36,8 +38,8 @@
                                         </div>
                                 <div class="text-end">
                                     <div class="fw-semibold">₹{{ number_format((float) $order->total_amount, 0) }}</div>
-                                    <span class="badge rounded-pill text-bg-{{ ($latestPayment?->status ?? $order->payment_status) === 'paid' ? 'success' : 'warning' }}">
-                                        {{ ucfirst($latestPayment?->status ?? $order->payment_status) }}
+                                    <span class="badge rounded-pill text-bg-{{ $displayPaymentStatus === 'paid' ? 'success' : ($displayPaymentStatus === 'cancelled' ? 'secondary' : 'warning') }}">
+                                        {{ ucfirst($displayPaymentStatus) }}
                                     </span>
                                     <div class="small text-secondary mt-1">Order status: {{ ucfirst($order->order_status) }}</div>
                                     <div class="mt-2">

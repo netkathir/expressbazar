@@ -29,9 +29,10 @@
                     <i class="ti ti-chevron-down ms-1"></i>
                 </button>
 
-                <form action="{{ route('storefront.search') }}" method="GET" class="sf-search-form">
+                <form action="{{ route('storefront.search') }}" method="GET" class="sf-search-form js-search-form">
                     <i class="ti ti-search"></i>
-                    <input type="search" name="q" placeholder="Search for products, categories or brands" value="{{ request('q') }}">
+                    <input type="search" id="search-box" class="js-search-input" name="q" placeholder="Search for products, categories or brands" value="{{ request('q') }}" autocomplete="off">
+                    <div class="sf-search-suggestions js-search-suggestions" hidden></div>
                 </form>
 
                 <div class="sf-actions">
@@ -227,6 +228,7 @@
             locationUrl: @json(route('storefront.location')),
             locationCitiesUrl: @json(route('storefront.location.cities')),
             locationZonesUrl: @json(route('storefront.location.zones')),
+            searchSuggestionsUrl: @json(route('storefront.search.suggestions')),
             initialLocation: @json($location ?? null),
             initialCartState: @json($cartState ?? []),
             currentUserRole: @json(auth()->user()->role ?? null),

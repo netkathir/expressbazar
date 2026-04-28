@@ -11,6 +11,7 @@ const countrySelect = document.querySelector('.js-country-select');
 const citySelect = document.querySelector('.js-city-select');
 const zoneSelect = document.querySelector('.js-zone-select');
 const guestCartKey = 'expressbazar.guestCart';
+window.storefrontAjaxFilters = true;
 
 function getGuestCartState() {
     try {
@@ -99,10 +100,62 @@ function updateCartUi(payload = {}) {
             el.textContent = payload.locationLabel;
         });
     }
+
+    updateCartPage(payload);
 }
 
 function cartUrl(template, productId) {
     return String(template || '').replace('__ID__', String(productId));
+}
+
+function formatCartAmount(value) {
+    const amount = Number(value || 0);
+
+    return `\u20b9${Math.round(amount).toLocaleString('en-IN')}`;
+}
+
+function updateCartPage(payload = {}) {
+    const cartItemsEl = document.querySelector('[data-cart-items]');
+    const summaryEls = document.querySelectorAll('.sf-cart-summary .d-flex strong');
+
+    if (payload.cartItem && cartItemsEl) {
+        const productId = String(payload.cartItem.productId);
+        const row = cartItemsEl.querySelector(`[data-cart-row][data-product="${productId}"]`);
+
+        if (row) {
+            const quantity = Number(payload.cartItem.quantity || 0);
+            const quantityLabel = row.querySelector('.flex-grow-1 .text-secondary.small:last-child');
+            const stepperValue = row.querySelector('[data-cart-stepper-value]');
+            const subtotal = row.querySelector('.text-end > .fw-semibold');
+
+            if (quantityLabel) {
+                quantityLabel.textContent = `${quantity} x ${formatCartAmount(payload.cartItem.unitPrice)}`;
+            }
+
+            if (stepperValue) {
+                stepperValue.textContent = String(quantity);
+            }
+
+            if (subtotal) {
+                subtotal.textContent = formatCartAmount(payload.cartItem.subtotal);
+            }
+        }
+    }
+
+    if (payload.removedProductId && cartItemsEl) {
+        const row = cartItemsEl.querySelector(`[data-cart-row][data-product="${payload.removedProductId}"]`);
+        row?.remove();
+    }
+
+    if (cartItemsEl && Number(payload.cartCount || 0) === 0) {
+        cartItemsEl.innerHTML = '<div class="sf-empty-state">Your cart is empty</div>';
+    }
+
+    if (payload.cartTotals && summaryEls.length >= 3) {
+        summaryEls[0].textContent = formatCartAmount(payload.cartTotals.itemTotal);
+        summaryEls[1].textContent = formatCartAmount(payload.cartTotals.delivery);
+        summaryEls[2].textContent = formatCartAmount(payload.cartTotals.grandTotal);
+    }
 }
 
 function showLocationModal() {
@@ -117,6 +170,54 @@ async function fetchJson(url) {
         },
     });
     return response.json();
+}
+
+function updateProductList(html) {
+    const productList = document.querySelector('.js-product-list');
+    if (productList && typeof html === 'string') {
+        productList.innerHTML = html;
+    }
+}
+
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value);
+    return div.innerHTML;
+}
+
+async function loadFilteredProducts(form) {
+    const productList = document.querySelector('.js-product-list');
+    if (!productList || !form) {
+        form?.submit();
+        return;
+    }
+
+    const url = new URL(form.action || window.location.href, window.location.origin);
+    const formData = new FormData(form);
+    formData.forEach((value, key) => {
+        if (value !== '') {
+            url.searchParams.set(key, value);
+        } else {
+            url.searchParams.delete(key);
+        }
+    });
+
+    const response = await fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+    });
+    const payload = await response.json();
+
+    if (payload.require_location) {
+        updateProductList(`<div class="sf-empty-state">${payload.message || 'Enter your delivery location to see exact availability'}</div>`);
+        showLocationModal();
+        return;
+    }
+
+    updateProductList(payload.html);
+    window.history.replaceState({}, '', url);
 }
 
 async function mergeGuestCartIfNeeded() {
@@ -302,11 +403,14 @@ document.addEventListener('click', async (event) => {
             body: formData,
         });
 
-        if (response.ok) {
-            updateCartUi(payload);
-            if (payload.cartCount === 0) {
-                closeCart();
-            }
+        if (!response.ok) {
+            alert(payload?.message || 'Unable to update cart quantity.');
+            return;
+        }
+
+        updateCartUi(payload);
+        if (payload.cartCount === 0) {
+            closeCart();
         }
         return;
     }
@@ -402,6 +506,75 @@ document.querySelectorAll('.js-open-location').forEach((button) => {
         syncLocationInputs(config.initialLocation);
         showLocationModal();
     });
+});
+
+document.querySelectorAll('.js-filter-input').forEach((input) => {
+    input.addEventListener('change', (event) => {
+        event.preventDefault();
+        loadFilteredProducts(input.form).catch(() => {
+            input.form?.submit();
+        });
+    });
+});
+
+const searchInput = document.querySelector('.js-search-input');
+const searchSuggestions = document.querySelector('.js-search-suggestions');
+let searchSuggestionTimer = null;
+
+function hideSearchSuggestions() {
+    if (searchSuggestions) {
+        searchSuggestions.hidden = true;
+        searchSuggestions.innerHTML = '';
+    }
+}
+
+function renderSearchSuggestions(items) {
+    if (!searchSuggestions) {
+        return;
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+        hideSearchSuggestions();
+        return;
+    }
+
+    searchSuggestions.innerHTML = items
+        .map((item) => `<button type="button" class="sf-search-suggestion" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>`)
+        .join('');
+    searchSuggestions.hidden = false;
+}
+
+searchInput?.addEventListener('input', () => {
+    const q = searchInput.value.trim();
+    window.clearTimeout(searchSuggestionTimer);
+
+    if (q.length < 2) {
+        hideSearchSuggestions();
+        return;
+    }
+
+    searchSuggestionTimer = window.setTimeout(async () => {
+        const url = new URL(config.searchSuggestionsUrl, window.location.origin);
+        url.searchParams.set('q', q);
+        renderSearchSuggestions(await fetchJson(url));
+    }, 180);
+});
+
+searchSuggestions?.addEventListener('click', (event) => {
+    const button = event.target.closest('.sf-search-suggestion');
+    if (!button || !searchInput) {
+        return;
+    }
+
+    searchInput.value = button.dataset.value || button.textContent || '';
+    hideSearchSuggestions();
+    searchInput.form?.requestSubmit();
+});
+
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.js-search-form')) {
+        hideSearchSuggestions();
+    }
 });
 
 if (config.initialLocation) {

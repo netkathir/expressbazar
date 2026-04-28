@@ -25,7 +25,7 @@
                     @if (!empty($pincode ?? null))
                         <input type="hidden" name="pincode" value="{{ $pincode }}">
                     @endif
-                    <select name="vendor_id" class="form-select form-select-sm rounded-pill" style="min-width: 220px;" onchange="this.form.submit()">
+                    <select name="vendor_id" class="form-select form-select-sm rounded-pill js-filter-input" style="min-width: 220px;" onchange="if (!window.storefrontAjaxFilters) this.form.submit()">
                         <option value="">All Vendors</option>
                         @forelse (($vendors ?? collect()) as $vendor)
                             <option value="{{ $vendor->id }}" @selected((string) ($selectedVendorId ?? request('vendor_id')) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
@@ -36,12 +36,11 @@
                 </form>
             </div>
 
-            <div class="sf-grid sf-product-grid">
-                @forelse ($products as $product)
-                    @include('storefront.partials.product-card', ['product' => $product])
-                @empty
-                    <div class="sf-empty-state">No products found.</div>
-                @endforelse
+            <div class="sf-grid sf-product-grid js-product-list" id="product-list">
+                @include('storefront.partials.product-grid', [
+                    'products' => $products,
+                    'emptyMessage' => !empty($pincode ?? null) ? 'No products available in your area' : 'No products found.',
+                ])
             </div>
         </section>
     </main>

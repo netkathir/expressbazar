@@ -1,6 +1,6 @@
 @php($image = $product->images->first())
 @php($cartEntry = $cartMap[$product->id] ?? null)
-@php($currentPincode = request('pincode') ?: request('postcode'))
+@php($currentPincode = request('pincode') ?: request('postcode') ?: ($pincode ?? null))
 @php($pincodeQuery = array_filter([
     'pincode' => $currentPincode,
     'vendor_id' => request('vendor_id'),

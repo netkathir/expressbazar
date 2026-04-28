@@ -10,8 +10,9 @@
                         <h3 class="mb-0">Your Cart</h3>
                         <button type="button" class="btn btn-outline-dark rounded-pill btn-sm js-clear-cart">Clear cart</button>
                     </div>
+                    <div data-cart-items>
                     @forelse ($cartItems as $item)
-                        <div class="sf-cart-row">
+                        <div class="sf-cart-row" data-cart-row data-product="{{ $item['product']->id }}">
                             <img src="{{ $item['product']->images->first() ? asset($item['product']->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $item['product']->product_name }}">
                             <div class="flex-grow-1">
                                 <div class="fw-semibold">{{ $item['product']->product_name }}</div>
@@ -22,7 +23,7 @@
                                 <div class="fw-semibold">₹{{ number_format($item['subtotal'], 0) }}</div>
                                 <div class="sf-stepper sf-stepper-sm mt-2">
                                     <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="{{ $item['product']->id }}">−</button>
-                                    <span class="sf-stepper-value">{{ $item['quantity'] }}</span>
+                                    <span class="sf-stepper-value" data-cart-stepper-value>{{ $item['quantity'] }}</span>
                                     <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="1" data-product="{{ $item['product']->id }}">+</button>
                                 </div>
                             </div>
@@ -30,6 +31,7 @@
                     @empty
                         <div class="sf-empty-state">Your cart is empty</div>
                     @endforelse
+                    </div>
                 </div>
                 <div class="sf-info-card sf-cart-summary">
                     <h4 class="mb-3">Bill Summary</h4>

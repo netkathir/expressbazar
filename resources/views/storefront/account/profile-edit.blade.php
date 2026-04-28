@@ -35,7 +35,10 @@
 
                             <div class="col-12">
                                 <label class="form-label">Status</label>
-                                <input type="text" class="form-control" value="{{ ucfirst($user->status) }}" readonly>
+                                <select name="status" class="form-select" required>
+                                    <option value="active" @selected(old('status', $user->status ?: 'active') === 'active')>Active</option>
+                                    <option value="inactive" @selected(old('status', $user->status) === 'inactive')>Inactive</option>
+                                </select>
                             </div>
 
                             <div class="col-12 d-grid d-md-flex justify-content-md-end gap-2 pt-2">

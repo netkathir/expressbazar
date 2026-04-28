@@ -114,12 +114,40 @@ body.storefront-shell {
     align-items: center;
     padding: 0 14px;
     gap: 10px;
+    position: relative;
 }
 
 .sf-search-form input {
     border: 0;
     outline: none;
     width: 100%;
+}
+
+.sf-search-suggestions {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 1050;
+    background: #fff;
+    border: 1px solid var(--sf-border);
+    border-radius: 16px;
+    box-shadow: var(--sf-shadow);
+    overflow: hidden;
+}
+
+.sf-search-suggestion {
+    width: 100%;
+    border: 0;
+    background: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.sf-search-suggestion:hover,
+.sf-search-suggestion:focus {
+    background: #f8fafc;
 }
 
 .sf-actions {

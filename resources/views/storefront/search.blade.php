@@ -7,15 +7,16 @@
             <div class="sf-section-header">
                 <div>
                     <h3>Search Results</h3>
-                    <p class="text-secondary mb-0">{{ $keyword ? 'Results for "'.$keyword.'"' : 'Popular products' }}</p>
+                    <p class="text-secondary mb-0">{{ !empty($requiresLocation ?? false) ? 'Enter your delivery location to see exact availability' : ($keyword ? 'Results for "'.$keyword.'"' : 'Popular products') }}</p>
                 </div>
             </div>
-            <div class="sf-grid">
-                @forelse ($searchResults as $product)
-                    @include('storefront.partials.product-card', ['product' => $product])
-                @empty
-                    <div class="sf-empty-state">{{ !empty($pincode ?? null) ? 'No data available for this pincode' : 'No products found.' }}</div>
-                @endforelse
+            <div class="sf-grid js-product-list" id="product-list">
+                @include('storefront.partials.product-grid', [
+                    'products' => $searchResults,
+                    'emptyMessage' => !empty($requiresLocation ?? false)
+                        ? 'Enter your delivery location to see exact availability'
+                        : (!empty($pincode ?? null) ? 'No products available in your area' : 'No products found for your search'),
+                ])
             </div>
         </section>
     </main>

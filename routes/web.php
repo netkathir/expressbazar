@@ -49,6 +49,9 @@ Route::put('/account/profile', [CustomerAccountController::class, 'updateProfile
 Route::get('/account/orders', [CustomerAccountController::class, 'orders'])->middleware('auth')->name('storefront.orders.index');
 Route::get('/account/orders/{order}/success', [CustomerAccountController::class, 'showOrderSuccess'])->middleware('auth')->name('storefront.orders.success');
 Route::get('/account/orders/{order}/payment-cancelled', [CustomerAccountController::class, 'cancelPayment'])->middleware('auth')->name('storefront.orders.cancel');
+Route::get('/account/orders/{order}/status', [CustomerAccountController::class, 'orderStatus'])->middleware('auth')->name('storefront.orders.status');
+Route::post('/account/orders/{order}/cancel', [CustomerAccountController::class, 'cancelOrder'])->middleware('auth')->name('storefront.orders.cancel-order');
+Route::post('/account/orders/{order}/reorder', [CustomerAccountController::class, 'reorder'])->middleware('auth')->name('storefront.orders.reorder');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
 Route::get('/account/addresses/{address}/edit', [CustomerAccountController::class, 'editAddress'])->middleware('auth')->name('storefront.addresses.edit');
 Route::put('/account/addresses/{address}', [CustomerAccountController::class, 'updateAddress'])->middleware('auth')->name('storefront.addresses.update');
@@ -56,7 +59,7 @@ Route::delete('/account/addresses/{address}', [CustomerAccountController::class,
 Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
 Route::post('/account/orders/{order}/retry-payment', [CustomerAccountController::class, 'retryPayment'])->middleware('auth')->name('storefront.orders.retry-payment');
 Route::get('/checkout', [StorefrontController::class, 'checkout'])->middleware('auth')->name('storefront.checkout');
-Route::post('/checkout/place-order', [StorefrontController::class, 'placeOrder'])->middleware('auth')->name('storefront.checkout.place');
+Route::post('/checkout/place-order', [StorefrontController::class, 'placeOrder'])->middleware(['auth', 'verify.checkout.email'])->name('storefront.checkout.place');
 Route::get('/payments/checkout/{order}', [PaymentController::class, 'checkout'])->middleware('auth')->name('payments.checkout');
 Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
@@ -65,6 +68,7 @@ Route::get('/categories/{category}', [StorefrontController::class, 'category'])-
 Route::get('/subcategories/{subcategory}', [StorefrontController::class, 'subcategory'])->name('storefront.subcategory');
 Route::get('/products/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
 Route::get('/search', [StorefrontController::class, 'search'])->name('storefront.search');
+Route::get('/search-suggestions', [StorefrontController::class, 'searchSuggestions'])->name('storefront.search.suggestions');
 Route::get('/cart', [StorefrontController::class, 'cart'])->name('storefront.cart');
 Route::post('/location', [StorefrontController::class, 'setLocation'])->name('storefront.location');
 Route::get('/location/cities', [StorefrontController::class, 'cities'])->name('storefront.location.cities');

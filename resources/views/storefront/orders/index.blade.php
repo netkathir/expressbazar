@@ -19,6 +19,8 @@
             <div class="d-grid gap-3">
                 @forelse ($orders as $order)
                     @php($latestPayment = $order->payments->last())
+                    @php($orderStatus = mb_strtolower((string) $order->order_status))
+                    @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
                     <div class="sf-info-card">
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                             <div>
@@ -28,13 +30,23 @@
                             </div>
                             <div class="text-end">
                                 <div class="fw-semibold fs-4">₹{{ number_format((float) $order->total_amount, 0) }}</div>
-                                <span class="badge rounded-pill text-bg-{{ ($latestPayment?->status ?? $order->payment_status) === 'paid' ? 'success' : 'warning' }}">
-                                    {{ ucfirst($latestPayment?->status ?? $order->payment_status) }}
+                                <span class="badge rounded-pill text-bg-{{ $displayPaymentStatus === 'paid' ? 'success' : ($displayPaymentStatus === 'cancelled' ? 'secondary' : 'warning') }}">
+                                    {{ ucfirst($displayPaymentStatus) }}
                                 </span>
                                 <div class="small text-secondary mt-1">Order status: {{ ucfirst($order->order_status) }}</div>
                                 <div class="mt-3 d-flex flex-wrap justify-content-end gap-2">
                                     <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-outline-dark btn-sm rounded-pill">View Details</a>
-                                    @if (($latestPayment?->payment_method ?? null) === 'online' && in_array($latestPayment?->status, ['pending', 'failed'], true))
+                                    @if (!in_array($orderStatus, ['dispatched', 'delivered', 'completed', 'cancelled'], true))
+                                        <form method="POST" action="{{ route('storefront.orders.cancel-order', $order) }}" onsubmit="return confirm('Cancel this order?');">
+                                            @csrf
+                                            <button class="btn btn-outline-dark btn-sm rounded-pill">Cancel Order</button>
+                                        </form>
+                                    @endif
+                                    <form method="POST" action="{{ route('storefront.orders.reorder', $order) }}">
+                                        @csrf
+                                        <button class="btn btn-outline-dark btn-sm rounded-pill">Reorder</button>
+                                    </form>
+                                    @if ($orderStatus !== 'cancelled' && ($latestPayment?->payment_method ?? null) === 'online' && in_array($latestPayment?->status, ['pending', 'failed'], true))
                                         <form method="POST" action="{{ route('storefront.orders.retry-payment', $order) }}">
                                             @csrf
                                             <button class="btn btn-danger btn-sm rounded-pill">Pay with Stripe</button>

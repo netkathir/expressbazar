@@ -45,19 +45,31 @@ class StorefrontController extends Controller
                 ->first();
         }
 
-        return view('storefront.category', $this->storefrontData($request, $category->category_name, [
+        $data = $this->storefrontData($request, $category->category_name, [
             'category' => $category->loadMissing('subcategories'),
             'selectedSubcategory' => $selectedSubcategory,
             'products' => $this->categoryProducts($category, $selectedSubcategory),
-        ]));
+        ]);
+
+        if ($request->ajax()) {
+            return $this->productGridResponse($data['products'], ! empty($data['pincode']) ? 'No products available in your area' : 'No products found.');
+        }
+
+        return view('storefront.category', $data);
     }
 
     public function subcategory(Request $request, Subcategory $subcategory)
     {
-        return view('storefront.subcategory', $this->storefrontData($request, $subcategory->subcategory_name, [
+        $data = $this->storefrontData($request, $subcategory->subcategory_name, [
             'subcategory' => $subcategory->loadMissing('category'),
             'products' => $this->subcategoryProducts($subcategory),
-        ]));
+        ]);
+
+        if ($request->ajax()) {
+            return $this->productGridResponse($data['products'], ! empty($data['pincode']) ? 'No products available in your area' : 'No products found.');
+        }
+
+        return view('storefront.subcategory', $data);
     }
 
     public function product(Request $request, Product $product)
@@ -73,11 +85,54 @@ class StorefrontController extends Controller
     public function search(Request $request)
     {
         $keyword = trim((string) $request->string('q'));
+        $requiresLocation = $keyword !== '' && ! $this->hardLocation();
+        $products = $requiresLocation ? collect() : $this->searchResults($keyword);
+
+        if ($keyword !== '') {
+            $this->rememberRecentSearch($keyword);
+        }
+
+        if ($request->ajax()) {
+            if ($requiresLocation) {
+                return response()->json([
+                    'require_location' => true,
+                    'message' => 'Enter your delivery location to see exact availability',
+                    'recent_searches' => $this->recentSearches(),
+                ]);
+            }
+
+            return $this->productGridResponse(
+                $products,
+                ! empty($this->activePincode()) ? 'No products available in your area' : 'No products found for your search',
+                [
+                    'recent_searches' => $this->recentSearches(),
+                ]
+            );
+        }
 
         return view('storefront.search', $this->storefrontData($request, 'Search Results', [
             'keyword' => $keyword,
-            'searchResults' => $this->searchResults($keyword),
+            'searchResults' => $products,
+            'requiresLocation' => $requiresLocation,
+            'recentSearches' => $this->recentSearches(),
         ]));
+    }
+
+    public function searchSuggestions(Request $request): JsonResponse
+    {
+        $keyword = trim((string) $request->string('q'));
+
+        if (mb_strlen($keyword) < 2) {
+            return response()->json([]);
+        }
+
+        $products = $this->productsQuery($this->browsingLocation())
+            ->where('product_name', 'like', "%{$keyword}%")
+            ->orderBy('product_name')
+            ->limit(5)
+            ->pluck('product_name');
+
+        return response()->json($products);
     }
 
     public function cart(Request $request)
@@ -358,6 +413,7 @@ class StorefrontController extends Controller
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
             'cartState' => $this->cartState(),
+            'cartTotals' => $this->cartTotals(),
         ]);
     }
 
@@ -434,6 +490,11 @@ class StorefrontController extends Controller
 
         session()->put('storefront.location', $newLocation);
         session()->forget('storefront.soft_location');
+        if (! empty($data['postcode'])) {
+            session()->put('user_pincode', mb_strtoupper(trim((string) $data['postcode'])));
+        } else {
+            session()->forget('user_pincode');
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -506,6 +567,7 @@ class StorefrontController extends Controller
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
             'cartState' => $this->cartState(),
+            'cartTotals' => $this->cartTotals(),
         ]);
     }
 
@@ -523,6 +585,19 @@ class StorefrontController extends Controller
         if ($newQuantity === 0) {
             unset($cart[$product->id]);
         } else {
+            $product->loadMissing('inventory');
+
+            if ($product->inventory?->inventory_mode === 'internal' && (int) $product->inventory->stock_quantity < $newQuantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Not enough stock available',
+                    'cartCount' => $this->cartCount(),
+                    'drawerHtml' => $this->renderCartDrawer(),
+                    'cartState' => $this->cartState(),
+                    'cartTotals' => $this->cartTotals(),
+                ], 422);
+            }
+
             $cart[$product->id]['quantity'] = $newQuantity;
         }
 
@@ -532,11 +607,22 @@ class StorefrontController extends Controller
             session()->forget('storefront.cart_vendor_id');
         }
 
+        $cartItems = $this->cartItems();
+        $cartItem = $cartItems->first(fn ($item) => (int) $item['product']->id === (int) $product->id);
+
         return response()->json([
             'success' => true,
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
             'cartState' => $this->cartState(),
+            'cartTotals' => $this->cartTotals(),
+            'cartItem' => $cartItem ? [
+                'productId' => $product->id,
+                'quantity' => $cartItem['quantity'],
+                'unitPrice' => $cartItem['unit_price'],
+                'subtotal' => $cartItem['subtotal'],
+            ] : null,
+            'removedProductId' => $cartItem ? null : $product->id,
         ]);
     }
 
@@ -567,6 +653,7 @@ class StorefrontController extends Controller
             'cartCount' => 0,
             'drawerHtml' => $this->renderCartDrawer(),
             'cartState' => [],
+            'cartTotals' => $this->cartTotals(),
         ]);
     }
 
@@ -722,6 +809,14 @@ class StorefrontController extends Controller
             }
         }
 
+        if (request('sort') === 'price_low') {
+            $query->orderByRaw('COALESCE(final_price, price) asc');
+        }
+
+        if (request('sort') === 'price_high') {
+            $query->orderByRaw('COALESCE(final_price, price) desc');
+        }
+
         return $query;
     }
 
@@ -765,9 +860,41 @@ class StorefrontController extends Controller
 
     private function activePincode(): ?string
     {
-        $pincode = trim((string) request()->input('pincode', request()->input('postcode', '')));
+        $pincode = trim((string) request()->input('pincode', request()->input('postcode', session('user_pincode', ''))));
 
         return $pincode !== '' ? mb_strtoupper($pincode) : null;
+    }
+
+    private function rememberRecentSearch(string $keyword): void
+    {
+        $recent = collect(session('recent_searches', []))
+            ->reject(fn ($item) => mb_strtolower((string) $item) === mb_strtolower($keyword))
+            ->push($keyword)
+            ->take(-5)
+            ->values()
+            ->all();
+
+        session()->put('recent_searches', $recent);
+    }
+
+    private function recentSearches(): array
+    {
+        return array_slice(session('recent_searches', []), -5);
+    }
+
+    private function productGridResponse($products, string $emptyMessage, array $extra = []): JsonResponse
+    {
+        $cartItems = $this->cartItems();
+
+        return response()->json(array_merge([
+            'html' => View::make('storefront.partials.product-grid', [
+                'products' => $products,
+                'emptyMessage' => $emptyMessage,
+                'cartMap' => $cartItems->keyBy(fn ($item) => $item['product']->id),
+                'pincode' => $this->activePincode(),
+                'selectedVendorId' => request()->filled('vendor_id') ? request()->integer('vendor_id') : null,
+            ])->render(),
+        ], $extra));
     }
 
     private function vendorIdsForPincode(string $pincode)

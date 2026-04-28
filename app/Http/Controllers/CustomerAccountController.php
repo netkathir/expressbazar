@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
+use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\ProductInventory;
 use App\Models\RegionZone;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -57,12 +62,14 @@ class CustomerAccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:30'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'status' => $data['status'],
         ]);
 
         return redirect()->route('storefront.account')->with('success', 'Profile updated successfully.');
@@ -95,9 +102,145 @@ class CustomerAccountController extends Controller
 
         return view('storefront.orders.show', [
             'title' => 'Order Details',
-            'order' => $order->load(['vendor', 'items', 'payments']),
+            'order' => $order->load(['vendor', 'items.product.vendor', 'items.product.inventory', 'payments']),
             'user' => $user,
         ]);
+    }
+
+    public function orderStatus(Request $request, Order $order): JsonResponse
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        return response()->json([
+            'status' => $order->order_status,
+            'label' => ucfirst($order->order_status),
+        ]);
+    }
+
+    public function cancelOrder(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        DB::transaction(function () use ($order, $user) {
+            $lockedOrder = Order::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->with('items')
+                ->firstOrFail();
+
+            if (! $this->orderCanBeCancelled($lockedOrder->order_status)) {
+                throw ValidationException::withMessages([
+                    'order' => 'Order cannot be cancelled at this stage.',
+                ]);
+            }
+
+            $orderUpdates = [
+                'order_status' => 'cancelled',
+                'updated_by' => $user->id,
+            ];
+
+            if (Schema::hasColumn('orders', 'status')) {
+                $orderUpdates['status'] = 'cancelled';
+            }
+
+            $lockedOrder->update($orderUpdates);
+            $this->syncCancelledTrackingSteps($lockedOrder);
+
+            foreach ($lockedOrder->items as $item) {
+                $inventory = ProductInventory::query()
+                    ->where('product_id', $item->product_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $inventory) {
+                    continue;
+                }
+
+                $previousStock = (int) $inventory->stock_quantity;
+                $newStock = $previousStock + (int) $item->quantity;
+
+                $inventory->update([
+                    'stock_quantity' => $newStock,
+                    'sync_status' => $inventory->inventory_mode === 'epos' ? 'pending' : $inventory->sync_status,
+                    'last_synced_at' => now(),
+                ]);
+
+                InventoryLog::create([
+                    'product_id' => $item->product_id,
+                    'product_inventory_id' => $inventory->id,
+                    'change_type' => 'order_cancelled',
+                    'quantity' => (int) $item->quantity,
+                    'previous_stock' => $previousStock,
+                    'new_stock' => $newStock,
+                    'source' => $inventory->inventory_mode,
+                    'reason' => 'Customer cancelled order '.$lockedOrder->order_number,
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Order cancelled successfully.');
+    }
+
+    public function reorder(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+
+        $order->load(['items.product.vendor', 'items.product.inventory']);
+
+        if ($order->items->isEmpty()) {
+            return back()->withErrors(['order' => 'This order has no items to reorder.']);
+        }
+
+        $currentVendorId = $this->cartVendorId();
+        $targetVendorId = null;
+        $pincode = session('user_pincode');
+        $cart = session()->get('storefront.cart', []);
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+
+            if (! $product || $product->status !== 'active') {
+                return back()->withErrors(['order' => 'Some items are not available for reorder.']);
+            }
+
+            if (! $product->vendor || $product->vendor->status !== 'active') {
+                return back()->withErrors(['order' => 'Some items are not available for reorder.']);
+            }
+
+            if ($pincode && $product->vendor->pincode && mb_strtoupper($product->vendor->pincode) !== mb_strtoupper($pincode)) {
+                return back()->withErrors(['order' => 'Some items are not available for reorder in your area.']);
+            }
+
+            $productVendorId = (int) $product->vendor_id;
+            $targetVendorId ??= $productVendorId;
+
+            if ($targetVendorId !== $productVendorId || ($currentVendorId && $currentVendorId !== $productVendorId)) {
+                return back()->withErrors(['order' => 'Your cart contains items from another vendor. Please clear cart to continue.']);
+            }
+
+            $requestedQuantity = (int) ($cart[$product->id]['quantity'] ?? 0) + (int) $item->quantity;
+
+            if ($product->inventory?->inventory_mode === 'internal' && (int) $product->inventory->stock_quantity < $requestedQuantity) {
+                return back()->withErrors(['order' => 'Some items are not available in the requested quantity.']);
+            }
+        }
+
+        foreach ($order->items as $item) {
+            $productId = (int) $item->product_id;
+            $cart[$productId] = [
+                'quantity' => (int) ($cart[$productId]['quantity'] ?? 0) + (int) $item->quantity,
+            ];
+        }
+
+        session()->put('storefront.cart', $cart);
+        if ($targetVendorId) {
+            session()->put('storefront.cart_vendor_id', $targetVendorId);
+        }
+
+        return redirect()->route('storefront.cart')->with('success', 'Items added to cart.');
     }
 
     public function showOrderSuccess(Request $request, Order $order)
@@ -280,6 +423,36 @@ class CustomerAccountController extends Controller
         } while (Payment::query()->where('transaction_id', $transactionId)->exists());
 
         return $transactionId;
+    }
+
+    private function orderCanBeCancelled(?string $status): bool
+    {
+        return ! in_array(mb_strtolower((string) $status), ['dispatched', 'delivered', 'completed', 'cancelled'], true);
+    }
+
+    private function syncCancelledTrackingSteps(Order $order): void
+    {
+        if (! Schema::hasTable('order_trackings') || ! Schema::hasColumn('order_trackings', 'order_id') || ! Schema::hasColumn('order_trackings', 'status')) {
+            return;
+        }
+
+        $updates = ['status' => 'cancelled'];
+
+        if (Schema::hasColumn('order_trackings', 'updated_at')) {
+            $updates['updated_at'] = now();
+        }
+
+        DB::table('order_trackings')
+            ->where('order_id', $order->id)
+            ->whereIn('status', ['pending', 'incomplete', 'PENDING', 'INCOMPLETE'])
+            ->update($updates);
+    }
+
+    private function cartVendorId(): ?int
+    {
+        $vendorId = session('storefront.cart_vendor_id');
+
+        return $vendorId ? (int) $vendorId : null;
     }
 
     private function validateAddressPayload(Request $request): array
