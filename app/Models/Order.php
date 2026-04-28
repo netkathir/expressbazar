@@ -50,4 +50,9 @@ class Order extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function logs()
+    {
+        return $this->hasMany(OrderLog::class);
+    }
 }

@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
-use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\ProductInventory;
+use App\Services\InventoryService;
+use App\Services\OrderLifecycleService;
 use App\Models\RegionZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,48 +137,12 @@ class CustomerAccountController extends Controller
                 ]);
             }
 
-            $orderUpdates = [
-                'order_status' => 'cancelled',
-                'updated_by' => $user->id,
-            ];
-
+            app(OrderLifecycleService::class)->transition($lockedOrder, 'cancelled', $user->id, 'Customer cancelled order.');
             if (Schema::hasColumn('orders', 'status')) {
-                $orderUpdates['status'] = 'cancelled';
+                $lockedOrder->update(['status' => 'cancelled']);
             }
-
-            $lockedOrder->update($orderUpdates);
             $this->syncCancelledTrackingSteps($lockedOrder);
-
-            foreach ($lockedOrder->items as $item) {
-                $inventory = ProductInventory::query()
-                    ->where('product_id', $item->product_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $inventory) {
-                    continue;
-                }
-
-                $previousStock = (int) $inventory->stock_quantity;
-                $newStock = $previousStock + (int) $item->quantity;
-
-                $inventory->update([
-                    'stock_quantity' => $newStock,
-                    'sync_status' => $inventory->inventory_mode === 'epos' ? 'pending' : $inventory->sync_status,
-                    'last_synced_at' => now(),
-                ]);
-
-                InventoryLog::create([
-                    'product_id' => $item->product_id,
-                    'product_inventory_id' => $inventory->id,
-                    'change_type' => 'order_cancelled',
-                    'quantity' => (int) $item->quantity,
-                    'previous_stock' => $previousStock,
-                    'new_stock' => $newStock,
-                    'source' => $inventory->inventory_mode,
-                    'reason' => 'Customer cancelled order '.$lockedOrder->order_number,
-                ]);
-            }
+            app(InventoryService::class)->restoreForCancelledOrder($lockedOrder);
         });
 
         return back()->with('success', 'Order cancelled successfully.');

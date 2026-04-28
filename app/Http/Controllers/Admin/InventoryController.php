@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\InventoryLog;
 use App\Models\Product;
 use App\Models\ProductInventory;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class InventoryController extends Controller
 {
@@ -56,7 +55,7 @@ class InventoryController extends Controller
             ['inventory_mode' => $product->inventory_mode, 'stock_quantity' => 0]
         );
 
-        $this->applyAdjustment($inventory, $data, $request->input('reason'));
+        app(InventoryService::class)->adjustStock($inventory, (int) $data['quantity'], $data['adjustment_type'], $request->input('reason'));
 
         return redirect()->route('admin.inventory.index')->with('success', 'Inventory updated successfully.');
     }
@@ -75,7 +74,7 @@ class InventoryController extends Controller
     public function update(Request $request, ProductInventory $inventory)
     {
         $data = $this->validateInventory($request, $inventory->product_id);
-        $this->applyAdjustment($inventory, $data, $request->input('reason'));
+        app(InventoryService::class)->adjustStock($inventory, (int) $data['quantity'], $data['adjustment_type'], $request->input('reason'));
 
         return redirect()->route('admin.inventory.index')->with('success', 'Inventory updated successfully.');
     }
@@ -97,34 +96,4 @@ class InventoryController extends Controller
         ]);
     }
 
-    private function applyAdjustment(ProductInventory $inventory, array $data, ?string $reason = null): void
-    {
-        if ($inventory->inventory_mode === 'epos') {
-            throw ValidationException::withMessages(['product_id' => 'Inventory managed via EPOS cannot be manually adjusted.']);
-        }
-
-        $previousStock = (int) $inventory->stock_quantity;
-        $quantity = (int) $data['quantity'];
-        $newStock = $data['adjustment_type'] === 'add' ? $previousStock + $quantity : $previousStock - $quantity;
-
-        if ($newStock < 0) {
-            throw ValidationException::withMessages(['quantity' => 'Stock cannot go below zero.']);
-        }
-
-        $inventory->update([
-            'stock_quantity' => $newStock,
-            'last_synced_at' => now(),
-        ]);
-
-        InventoryLog::create([
-            'product_id' => $inventory->product_id,
-            'product_inventory_id' => $inventory->id,
-            'change_type' => $data['adjustment_type'],
-            'quantity' => $quantity,
-            'previous_stock' => $previousStock,
-            'new_stock' => $newStock,
-            'source' => 'internal',
-            'reason' => $reason,
-        ]);
-    }
 }

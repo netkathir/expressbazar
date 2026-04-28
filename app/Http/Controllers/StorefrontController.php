@@ -10,7 +10,6 @@ use App\Models\DeliveryConfig;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
-use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -19,6 +18,8 @@ use App\Models\ProductInventory;
 use App\Models\RegionZone;
 use App\Models\Subcategory;
 use App\Models\Vendor;
+use App\Services\InventoryService;
+use App\Services\OrderLifecycleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -289,24 +290,6 @@ class StorefrontController extends Controller
                 $subtotal = $price * $quantity;
                 $itemTotal += $subtotal;
 
-                $previousStock = $available;
-                $newStock = $available - $quantity;
-                $inventory->stock_quantity = $newStock;
-                $inventory->sync_status = $inventory->inventory_mode === 'epos' ? 'pending' : $inventory->sync_status;
-                $inventory->last_synced_at = now();
-                $inventory->save();
-
-                InventoryLog::create([
-                    'product_id' => $product->id,
-                    'product_inventory_id' => $inventory->id,
-                    'change_type' => 'order_placed',
-                    'quantity' => $quantity,
-                    'previous_stock' => $previousStock,
-                    'new_stock' => $newStock,
-                    'source' => $inventory->inventory_mode,
-                    'reason' => 'Customer checkout order placement',
-                ]);
-
                 $orderItems[] = [
                     'product_id' => $product->id,
                     'item_name' => $product->product_name,
@@ -337,6 +320,10 @@ class StorefrontController extends Controller
             foreach ($orderItems as $orderItem) {
                 $order->items()->create($orderItem);
             }
+
+            $order->load('items');
+            app(InventoryService::class)->deductForOrder($order);
+            app(OrderLifecycleService::class)->log($order, null, 'pending', $user->id, 'Order placed from storefront checkout.');
 
             $payment = Payment::create([
                 'order_id' => $order->id,

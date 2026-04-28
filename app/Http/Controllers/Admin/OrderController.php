@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\OrderLifecycleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -53,7 +55,8 @@ class OrderController extends Controller
         $data['updated_by'] = $request->user()?->id;
         $data['placed_at'] = $data['placed_at'] ?? now();
 
-        Order::create($data);
+        $order = Order::create($data);
+        app(OrderLifecycleService::class)->log($order, null, $order->order_status, $request->user()?->id, 'Manual order created from admin.');
 
         return redirect()->route('admin.orders.index')->with('success', 'Order created successfully.');
     }
@@ -81,11 +84,21 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order)
     {
-        $data = $this->validateOrder($request, $order);
-        $data['order_number'] = $data['order_number'] ?: $order->order_number;
-        $data['updated_by'] = $request->user()?->id;
+        DB::transaction(function () use ($request, $order) {
+            $data = $this->validateOrder($request, $order);
+            $newStatus = $data['order_status'];
+            unset($data['order_status']);
 
-        $order->update($data);
+            $data['order_number'] = $data['order_number'] ?: $order->order_number;
+            $data['updated_by'] = $request->user()?->id;
+
+            $currentStatus = $order->order_status;
+            $order->update($data);
+
+            if ($newStatus !== $currentStatus) {
+                app(OrderLifecycleService::class)->transition($order->fresh(), $newStatus, $request->user()?->id, 'Admin updated order status.');
+            }
+        });
 
         return redirect()->route('admin.orders.index')->with('success', 'Order updated successfully.');
     }
