@@ -7,7 +7,14 @@
             'vendor_id' => $selectedVendorId ?? request('vendor_id'),
         ], fn ($value) => filled($value)))
         @php($showNoPincodeData = !empty($pincode ?? null) && !($hasPincodeProducts ?? true))
-        <section class="container-fluid px-3 px-lg-4 pt-3">
+        <section class="container-fluid px-3 px-lg-4 pt-0">
+            <div class="sf-category-strip-header">
+                <div>
+                    <h2>Shop by categories</h2>
+                    <p>Find everything you need, all in one place.</p>
+                </div>
+                <a href="#all-categories">See all categories <i class="ti ti-chevron-right"></i></a>
+            </div>
             <div class="sf-chip-row">
                 @foreach ($categories->take(10) as $category)
                     <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
@@ -74,10 +81,18 @@
                         </div>
                         <a href="{{ route('storefront.category', array_merge(['category' => $categories->first()], $filterQuery)) }}">See all</a>
                     </div>
-                    <div class="sf-product-rail">
-                        @foreach ($discountedProducts as $product)
-                            @include('storefront.partials.product-card', ['product' => $product])
-                        @endforeach
+                    <div class="sf-rail-wrap">
+                        <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll offers left">
+                            <i class="ti ti-chevron-left"></i>
+                        </button>
+                        <div class="sf-product-rail">
+                            @foreach ($discountedProducts as $product)
+                                @include('storefront.partials.product-card', ['product' => $product])
+                            @endforeach
+                        </div>
+                        <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll offers right">
+                            <i class="ti ti-chevron-right"></i>
+                        </button>
                     </div>
                 </section>
             @endif
@@ -89,12 +104,20 @@
                         <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'Browse popular products' : 'Showing results near '.$locationLabel }}</p>
                     </div>
                 </div>
-                <div class="sf-product-rail">
-                    @foreach ($featuredSections as $section)
-                        @foreach ($section['products']->take(8) as $product)
-                            @include('storefront.partials.product-card', ['product' => $product])
+                <div class="sf-rail-wrap">
+                    <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll trending products left">
+                        <i class="ti ti-chevron-left"></i>
+                    </button>
+                    <div class="sf-product-rail">
+                        @foreach ($featuredSections as $section)
+                            @foreach ($section['products']->take(8) as $product)
+                                @include('storefront.partials.product-card', ['product' => $product])
+                            @endforeach
                         @endforeach
-                    @endforeach
+                    </div>
+                    <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll trending products right">
+                        <i class="ti ti-chevron-right"></i>
+                    </button>
                 </div>
             </section>
 
@@ -109,10 +132,18 @@
                             <a href="{{ route('storefront.subcategory', array_merge(['subcategory' => $section['subcategory']], $filterQuery)) }}">See all</a>
                         @endif
                     </div>
-                    <div class="sf-product-rail mb-4">
-                        @foreach ($section['products'] as $product)
-                            @include('storefront.partials.product-card', ['product' => $product])
-                        @endforeach
+                    <div class="sf-rail-wrap mb-4">
+                        <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll products left">
+                            <i class="ti ti-chevron-left"></i>
+                        </button>
+                        <div class="sf-product-rail">
+                            @foreach ($section['products'] as $product)
+                                @include('storefront.partials.product-card', ['product' => $product])
+                            @endforeach
+                        </div>
+                        <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll products right">
+                            <i class="ti ti-chevron-right"></i>
+                        </button>
                     </div>
                 @endforeach
             </section>
@@ -153,7 +184,7 @@
             </div>
         </section>
 
-        <section class="container-fluid px-3 px-lg-4 mt-5 mb-5">
+        <section id="all-categories" class="container-fluid px-3 px-lg-4 mt-5 mb-5">
             <div class="sf-info-card">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
                     <div>

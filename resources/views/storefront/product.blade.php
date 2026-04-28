@@ -77,10 +77,18 @@
             <div class="sf-detail-grid mt-4">
                 <div class="sf-info-card">
                     <h4 class="mb-3">Related Items</h4>
-                    <div class="sf-product-rail sf-product-rail-sm">
-                        @foreach ($relatedProducts as $related)
-                            @include('storefront.partials.product-card', ['product' => $related])
-                        @endforeach
+                    <div class="sf-rail-wrap">
+                        <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll related products left">
+                            <i class="ti ti-chevron-left"></i>
+                        </button>
+                        <div class="sf-product-rail sf-product-rail-sm">
+                            @foreach ($relatedProducts as $related)
+                                @include('storefront.partials.product-card', ['product' => $related])
+                            @endforeach
+                        </div>
+                        <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll related products right">
+                            <i class="ti ti-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="sf-info-card">

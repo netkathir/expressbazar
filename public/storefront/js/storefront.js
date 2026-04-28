@@ -335,6 +335,21 @@ function syncLocationInputs(initialLocation) {
 }
 
 document.addEventListener('click', async (event) => {
+    const railButton = event.target.closest('.js-rail-scroll');
+    if (railButton) {
+        event.preventDefault();
+        const rail = railButton.closest('.sf-rail-wrap')?.querySelector('.sf-product-rail');
+        const direction = Number(railButton.dataset.direction || 1);
+
+        if (rail) {
+            rail.scrollBy({
+                left: direction * Math.max(rail.clientWidth * 0.8, 220),
+                behavior: 'smooth',
+            });
+        }
+        return;
+    }
+
     const openCartTrigger = event.target.closest('.js-open-cart');
     if (openCartTrigger) {
         event.preventDefault();
