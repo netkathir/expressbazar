@@ -512,6 +512,16 @@ body.storefront-shell {
     display: none;
 }
 
+.sf-product-rail .sf-product-saving {
+    display: inline-flex;
+}
+
+.sf-product-price-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .sf-product-price-row {
     display: flex;
     align-items: flex-start;
@@ -535,14 +545,14 @@ body.storefront-shell {
 .sf-product-saving {
     display: inline-flex;
     align-items: center;
-    margin-top: 4px;
-    padding: 3px 7px;
-    border-radius: 8px;
+    padding: 2px 5px;
+    border-radius: 6px;
     background: rgba(22, 163, 74, .12);
     color: #15803d;
-    font-size: .66rem;
+    font-size: .52rem;
     font-weight: 900;
     line-height: 1;
+    white-space: nowrap;
 }
 
 .sf-info-card {

@@ -13,9 +13,6 @@
 <article class="sf-product-card">
     <div class="sf-product-media">
         <a href="{{ route('storefront.product', array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-image">
-            @if ($discountPercent)
-                <span class="sf-product-discount-badge">{{ $discountPercent }}% OFF</span>
-            @endif
             <img src="{{ $image ? asset($image->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $product->product_name }}">
         </a>
 
@@ -39,10 +36,14 @@
         <div class="sf-product-meta">{{ $product->inventory?->unit ? $product->inventory->unit : '1 pc' }}</div>
         <div class="sf-product-price-row">
             <div>
-                <div class="sf-price">&#8377;{{ number_format($salePrice, 0) }}</div>
+                <div class="sf-product-price-line">
+                    <span class="sf-price">&#8377;{{ number_format($salePrice, 0) }}</span>
+                    @if ($hasDiscount)
+                        <span class="sf-product-saving">{{ $discountPercent }}% OFF</span>
+                    @endif
+                </div>
                 @if ($hasDiscount)
                     <div class="sf-mrp">&#8377;{{ number_format($basePrice, 0) }}</div>
-                    <span class="sf-product-saving">{{ $discountPercent }}% OFF</span>
                 @endif
             </div>
 
