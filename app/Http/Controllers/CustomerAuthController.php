@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\SendOtpMail;
 use App\Models\OtpVerification;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,6 +61,7 @@ class CustomerAuthController extends Controller
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
+        $guestCart = $this->submittedGuestCart($request);
 
         if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password'], 'status' => 'active'])) {
             return back()->withErrors([
@@ -77,6 +79,10 @@ class CustomerAuthController extends Controller
         }
 
         if (! $user->email_verified_at) {
+            if (! empty($guestCart)) {
+                session()->put('customer.pending_guest_cart', $guestCart);
+            }
+
             $otp = $this->issueOtp($user, 'login');
             session()->put('customer.pending_email', $user->email);
             session()->put('customer.otp_purpose', 'login');
@@ -87,8 +93,12 @@ class CustomerAuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $guestCartMerged = $this->mergeGuestCartIntoSession($guestCart);
 
-        return redirect()->route('user.home')->with('success', 'Welcome back.');
+        return redirect()
+            ->intended(route('user.home'))
+            ->with('success', 'Welcome back.')
+            ->with('guest_cart_merged', $guestCartMerged);
     }
 
     public function otpForm(Request $request)
@@ -131,9 +141,13 @@ class CustomerAuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
-        session()->forget(['customer.pending_email', 'customer.otp_preview', 'customer.otp_purpose']);
+        $guestCartMerged = $this->mergeGuestCartIntoSession(session('customer.pending_guest_cart', []));
+        session()->forget(['customer.pending_email', 'customer.otp_preview', 'customer.otp_purpose', 'customer.pending_guest_cart']);
 
-        return redirect()->route('user.home')->with('success', 'Email verified successfully.');
+        return redirect()
+            ->intended(route('user.home'))
+            ->with('success', 'Email verified successfully.')
+            ->with('guest_cart_merged', $guestCartMerged);
     }
 
     public function resendOtp(Request $request)
@@ -180,5 +194,115 @@ class CustomerAuthController extends Controller
         }
 
         return $otp;
+    }
+
+    private function submittedGuestCart(Request $request): array
+    {
+        $rawCart = $request->input('guest_cart');
+
+        if (blank($rawCart)) {
+            return [];
+        }
+
+        $items = is_array($rawCart) ? $rawCart : json_decode((string) $rawCart, true);
+
+        if (! is_array($items)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $productId = (int) ($item['product_id'] ?? 0);
+            $quantity = max(1, min(99, (int) ($item['quantity'] ?? 1)));
+
+            if ($productId <= 0) {
+                continue;
+            }
+
+            $normalized[$productId] = [
+                'product_id' => $productId,
+                'quantity' => min(99, ($normalized[$productId]['quantity'] ?? 0) + $quantity),
+            ];
+        }
+
+        return array_values($normalized);
+    }
+
+    private function mergeGuestCartIntoSession(array $items): bool
+    {
+        if (empty($items)) {
+            return false;
+        }
+
+        $cart = session()->get('storefront.cart', []);
+        $currentVendorId = $this->cartVendorId($cart);
+        $products = Product::query()
+            ->with(['vendor', 'inventory'])
+            ->whereIn('id', collect($items)->pluck('product_id')->all())
+            ->get()
+            ->keyBy('id');
+
+        $merged = false;
+
+        foreach ($items as $item) {
+            $product = $products->get((int) $item['product_id']);
+
+            if (! $product || $product->status !== 'active' || $product->vendor?->status !== 'active') {
+                continue;
+            }
+
+            $productVendorId = (int) $product->vendor_id;
+
+            if (! empty($cart) && $currentVendorId && $productVendorId !== $currentVendorId) {
+                continue;
+            }
+
+            $requestedQuantity = max(1, min(99, (int) $item['quantity']));
+            $currentQuantity = (int) ($cart[$product->id]['quantity'] ?? 0);
+            $newQuantity = min(99, $currentQuantity + $requestedQuantity);
+
+            if ($product->inventory?->inventory_mode === 'internal') {
+                $available = (int) $product->inventory->stock_quantity;
+
+                if ($available <= 0) {
+                    continue;
+                }
+
+                $newQuantity = min($newQuantity, $available);
+            }
+
+            $cart[$product->id] = ['quantity' => $newQuantity];
+            $currentVendorId = $productVendorId;
+            $merged = true;
+        }
+
+        if (! $merged) {
+            return false;
+        }
+
+        session()->put('storefront.cart', $cart);
+        if ($currentVendorId) {
+            session()->put('storefront.cart_vendor_id', $currentVendorId);
+        }
+
+        return true;
+    }
+
+    private function cartVendorId(array $cart): ?int
+    {
+        $vendorId = session('storefront.cart_vendor_id');
+
+        if ($vendorId) {
+            return (int) $vendorId;
+        }
+
+        $firstProductId = array_key_first($cart);
+
+        return $firstProductId ? (int) Product::query()->whereKey($firstProductId)->value('vendor_id') : null;
     }
 }

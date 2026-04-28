@@ -145,7 +145,12 @@ class StorefrontController extends Controller
     public function checkout(Request $request)
     {
         $user = $request->user();
-        abort_if(! $user || $user->role !== 'customer', 403);
+
+        if (! $user || $user->role !== 'customer') {
+            return redirect()
+                ->route('storefront.login')
+                ->withErrors(['checkout' => 'Please login to continue checkout']);
+        }
 
         $addresses = CustomerAddress::query()
             ->where('user_id', $user->id)
@@ -374,6 +379,15 @@ class StorefrontController extends Controller
     {
         $user = $request->user();
         abort_if(! $user || $user->role !== 'customer', 403);
+
+        if (! $request->has('items') && $request->has('guest_cart')) {
+            $request->merge(['items' => $request->input('guest_cart')]);
+        }
+
+        if (is_string($request->input('items'))) {
+            $decodedItems = json_decode($request->input('items'), true);
+            $request->merge(['items' => is_array($decodedItems) ? $decodedItems : []]);
+        }
 
         $data = $request->validate([
             'items' => ['required', 'array'],

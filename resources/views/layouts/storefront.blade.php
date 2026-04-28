@@ -231,6 +231,7 @@
             searchSuggestionsUrl: @json(route('storefront.search.suggestions')),
             initialLocation: @json($location ?? null),
             initialCartState: @json($cartState ?? []),
+            guestCartMerged: @json((bool) session('guest_cart_merged')),
             currentUserRole: @json(auth()->user()->role ?? null),
             currentUserAvatar: @json(auth()->user()->avatar_path ?? null),
             csrfToken: @json(csrf_token()),

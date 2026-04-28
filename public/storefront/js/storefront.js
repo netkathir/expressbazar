@@ -11,11 +11,12 @@ const countrySelect = document.querySelector('.js-country-select');
 const citySelect = document.querySelector('.js-city-select');
 const zoneSelect = document.querySelector('.js-zone-select');
 const guestCartKey = 'expressbazar.guestCart';
+const legacyGuestCartKey = 'guest_cart';
 window.storefrontAjaxFilters = true;
 
 function getGuestCartState() {
     try {
-        const raw = localStorage.getItem(guestCartKey);
+        const raw = localStorage.getItem(guestCartKey) || localStorage.getItem(legacyGuestCartKey);
         return raw ? JSON.parse(raw) : [];
     } catch (error) {
         return [];
@@ -33,6 +34,7 @@ function setGuestCartState(state) {
 function clearGuestCartState() {
     try {
         localStorage.removeItem(guestCartKey);
+        localStorage.removeItem(legacyGuestCartKey);
     } catch (error) {
         // Ignore storage errors.
     }
@@ -447,6 +449,15 @@ document.addEventListener('click', async (event) => {
 cartBackdrop?.addEventListener('click', closeCart);
 
 document.addEventListener('submit', async (event) => {
+    const loginForm = event.target.closest('.js-login-form');
+    if (loginForm) {
+        const guestCartInput = loginForm.querySelector('.js-guest-cart-input');
+        if (guestCartInput) {
+            guestCartInput.value = JSON.stringify(normalizeCartState(getGuestCartState()));
+        }
+        return;
+    }
+
     const form = event.target.closest('.js-location-form');
     if (!form) {
         return;
@@ -596,7 +607,9 @@ if (config.initialLocation) {
     syncLocationInputs(config.initialLocation);
 }
 
-if (config.currentUserRole === 'customer') {
+if (config.currentUserRole === 'customer' && config.guestCartMerged) {
+    clearGuestCartState();
+} else if (config.currentUserRole === 'customer') {
     mergeGuestCartIfNeeded().catch(() => {});
 } else if (Array.isArray(config.initialCartState) && config.initialCartState.length > 0) {
     setGuestCartState(config.initialCartState);

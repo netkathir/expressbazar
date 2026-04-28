@@ -58,7 +58,7 @@ Route::put('/account/addresses/{address}', [CustomerAccountController::class, 'u
 Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
 Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
 Route::post('/account/orders/{order}/retry-payment', [CustomerAccountController::class, 'retryPayment'])->middleware('auth')->name('storefront.orders.retry-payment');
-Route::get('/checkout', [StorefrontController::class, 'checkout'])->middleware('auth')->name('storefront.checkout');
+Route::get('/checkout', [StorefrontController::class, 'checkout'])->name('storefront.checkout');
 Route::post('/checkout/place-order', [StorefrontController::class, 'placeOrder'])->middleware(['auth', 'verify.checkout.email'])->name('storefront.checkout.place');
 Route::get('/payments/checkout/{order}', [PaymentController::class, 'checkout'])->middleware('auth')->name('payments.checkout');
 Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])

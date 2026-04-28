@@ -8,8 +8,9 @@
                     <div class="sf-info-card p-4 p-md-5">
                         <h1 class="h3 fw-bold mb-2">Login</h1>
                         <p class="text-secondary mb-4">Access your cart, orders and saved addresses.</p>
-                        <form method="POST" action="{{ route('storefront.login.store') }}" class="row g-3">
+                        <form method="POST" action="{{ route('storefront.login.store') }}" class="row g-3 js-login-form">
                             @csrf
+                            <input type="hidden" name="guest_cart" class="js-guest-cart-input">
                             <div class="col-12">
                                 <label class="form-label">Email</label>
                                 <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
