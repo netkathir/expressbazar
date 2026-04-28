@@ -39,9 +39,9 @@
         <div class="sf-product-meta">{{ $product->inventory?->unit ? $product->inventory->unit : '1 pc' }}</div>
         <div class="sf-product-price-row">
             <div>
-                <div class="sf-price">₹{{ number_format((float) ($product->final_price ?: $product->price), 0) }}</div>
+                <div class="sf-price">&#8377;{{ number_format($salePrice, 0) }}</div>
                 @if ($hasDiscount)
-                    <div class="sf-mrp">₹{{ number_format((float) $product->price, 0) }}</div>
+                    <div class="sf-mrp">&#8377;{{ number_format($basePrice, 0) }}</div>
                     <span class="sf-product-saving">{{ $discountPercent }}% OFF</span>
                 @endif
             </div>
