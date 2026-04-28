@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderPlaced;
 use App\Models\Category;
 use App\Models\Banner;
 use App\Models\DeliveryConfig;
@@ -20,6 +21,7 @@ use App\Models\Vendor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -342,7 +344,16 @@ class StorefrontController extends Controller
             ]);
         });
 
-        $order->loadMissing(['items', 'customer']);
+        $order->loadMissing(['items', 'customer', 'vendor']);
+
+        try {
+            event(new OrderPlaced($order));
+        } catch (\Throwable $exception) {
+            Log::error('Order placed event dispatch failed.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
 
         session()->put('storefront.location', $location);
         session()->forget('storefront.soft_location');
