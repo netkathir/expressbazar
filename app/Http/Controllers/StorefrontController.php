@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\OrderPlaced;
 use App\Models\Category;
 use App\Models\Banner;
+use App\Models\Coupon;
 use App\Models\DeliveryConfig;
 use App\Models\City;
 use App\Models\Country;
@@ -315,7 +316,9 @@ class StorefrontController extends Controller
                 ];
             }
 
-            $grandTotal = $itemTotal + $deliveryCharge;
+            $coupon = $this->validCouponForCart($itemTotal, $vendorId);
+            $discount = $coupon ? $this->couponDiscount($coupon, $itemTotal) : 0.0;
+            $grandTotal = max(0, $itemTotal - $discount) + $deliveryCharge;
 
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -326,7 +329,7 @@ class StorefrontController extends Controller
                 'payment_status' => 'pending',
                 'order_status' => 'pending',
                 'placed_at' => now(),
-                'notes' => 'Placed from storefront checkout. Delivery to zone '.$location['zone_id'],
+                'notes' => trim('Placed from storefront checkout. Delivery to zone '.$location['zone_id'].($coupon ? '. Coupon applied: '.$coupon->code.' (-'.number_format($discount, 2).')' : '')),
                 'created_by' => $user->id,
                 'updated_by' => $user->id,
             ]);
@@ -373,6 +376,51 @@ class StorefrontController extends Controller
         return redirect()
             ->route('storefront.orders.success', $order)
             ->with('success', 'Order '.$order->order_number.' placed successfully. Payment is pending.');
+    }
+
+    public function applyCoupon(Request $request)
+    {
+        $data = $request->validate([
+            'coupon_code' => ['required', 'string', 'max:64'],
+        ]);
+
+        $itemTotal = (float) $this->cartItems()->sum('subtotal');
+        $vendorId = $this->cartVendorId();
+
+        if ($itemTotal <= 0 || ! $vendorId) {
+            return back()->withErrors(['coupon_code' => 'Add items to your cart before applying a coupon.']);
+        }
+
+        $coupon = Coupon::query()
+            ->whereRaw('LOWER(code) = ?', [mb_strtolower(trim($data['coupon_code']))])
+            ->where('is_active', true)
+            ->first();
+
+        if (! $coupon || ($coupon->expires_at && now()->gt($coupon->expires_at))) {
+            return back()->withErrors(['coupon_code' => 'Invalid or expired coupon']);
+        }
+
+        if ($coupon->min_order !== null && $itemTotal < (float) $coupon->min_order) {
+            return back()->withErrors(['coupon_code' => 'Minimum order value not met']);
+        }
+
+        if ($coupon->vendor_id && (int) $coupon->vendor_id !== (int) $vendorId) {
+            return back()->withErrors(['coupon_code' => 'Coupon not applicable for this vendor']);
+        }
+
+        session()->put('storefront.coupon', [
+            'id' => $coupon->id,
+            'code' => $coupon->code,
+        ]);
+
+        return back()->with('success', 'Coupon applied');
+    }
+
+    public function removeCoupon()
+    {
+        session()->forget('storefront.coupon');
+
+        return back()->with('success', 'Coupon removed');
     }
 
     public function mergeGuestCart(Request $request): JsonResponse
@@ -1119,12 +1167,61 @@ class StorefrontController extends Controller
         $items = $this->cartItems();
         $itemTotal = $items->sum('subtotal');
         $delivery = $deliveryCharge ?? 0;
+        $vendorId = $this->cartVendorId();
+        $coupon = $this->validCouponForCart((float) $itemTotal, $vendorId);
+        $discount = $coupon ? $this->couponDiscount($coupon, (float) $itemTotal) : 0.0;
 
         return [
             'itemTotal' => $itemTotal,
             'delivery' => $delivery,
-            'grandTotal' => $itemTotal + $delivery,
+            'discount' => $discount,
+            'grandTotal' => max(0, $itemTotal - $discount) + $delivery,
+            'coupon' => $coupon ? [
+                'code' => $coupon->code,
+                'type' => $coupon->type,
+                'value' => (float) $coupon->value,
+            ] : null,
         ];
+    }
+
+    private function validCouponForCart(float $itemTotal, ?int $vendorId): ?Coupon
+    {
+        $sessionCoupon = session('storefront.coupon');
+
+        if (! is_array($sessionCoupon) || empty($sessionCoupon['id'])) {
+            return null;
+        }
+
+        $coupon = Coupon::query()
+            ->whereKey($sessionCoupon['id'])
+            ->where('is_active', true)
+            ->first();
+
+        if (! $coupon || ($coupon->expires_at && now()->gt($coupon->expires_at))) {
+            session()->forget('storefront.coupon');
+            return null;
+        }
+
+        if ($coupon->min_order !== null && $itemTotal < (float) $coupon->min_order) {
+            session()->forget('storefront.coupon');
+            return null;
+        }
+
+        if ($coupon->vendor_id && (! $vendorId || (int) $coupon->vendor_id !== (int) $vendorId)) {
+            session()->forget('storefront.coupon');
+            return null;
+        }
+
+        return $coupon;
+    }
+
+    private function couponDiscount(Coupon $coupon, float $itemTotal): float
+    {
+        $discount = $coupon->type === 'fixed'
+            ? (float) $coupon->value
+            : $itemTotal * ((float) $coupon->value / 100);
+
+        return min($itemTotal, max(0, round($discount, 2)));
     }
 
     private function deliveryChargeForZone(?int $zoneId): ?float
@@ -1199,5 +1296,6 @@ class StorefrontController extends Controller
     {
         session()->forget('storefront.cart');
         session()->forget('storefront.cart_vendor_id');
+        session()->forget('storefront.coupon');
     }
 }

@@ -16,7 +16,7 @@ class StripeCheckoutService
             throw new RuntimeException('Stripe is not configured.');
         }
 
-        $order->loadMissing('items');
+        $order->loadMissing(['items', 'customer']);
 
         $stripe = new StripeClient($secret);
 
@@ -66,6 +66,22 @@ class StripeCheckoutService
      */
     private function buildLineItems(Order $order): array
     {
+        $itemAndDeliveryTotal = (float) $order->items->sum('subtotal') + (float) $order->delivery_charge;
+        $orderTotal = (float) $order->total_amount;
+
+        if ($orderTotal > 0 && abs($itemAndDeliveryTotal - $orderTotal) > 0.01) {
+            return [[
+                'price_data' => [
+                    'currency' => 'inr',
+                    'product_data' => [
+                        'name' => 'Order '.$order->order_number,
+                    ],
+                    'unit_amount' => (int) round($orderTotal * 100),
+                ],
+                'quantity' => 1,
+            ]];
+        }
+
         $lineItems = [];
 
         foreach ($order->items as $item) {

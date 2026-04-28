@@ -19,6 +19,7 @@ class AdminRoleSeeder extends Seeder
             'Subcategory Management',
             'Customer Management',
             'Tax Management',
+            'Coupon Management',
             'Product Management',
             'Inventory Management',
             'Order Management',

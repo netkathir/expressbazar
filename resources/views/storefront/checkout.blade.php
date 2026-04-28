@@ -76,6 +76,25 @@
 
                         <div class="sf-info-card sf-cart-summary">
                             <h4 class="mb-3">Order Summary</h4>
+                            <div class="mb-3">
+                                <label class="form-label small text-secondary">Coupon Code</label>
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        name="coupon_code"
+                                        class="form-control"
+                                        placeholder="Enter coupon"
+                                        value="{{ $cartTotals['coupon']['code'] ?? old('coupon_code') }}"
+                                        form="couponApplyForm"
+                                        {{ ! empty($cartTotals['coupon']) ? 'readonly' : '' }}
+                                    >
+                                    @if (! empty($cartTotals['coupon']))
+                                        <button class="btn btn-outline-secondary" type="submit" form="couponRemoveForm">Remove</button>
+                                    @else
+                                        <button class="btn btn-outline-secondary" type="submit" form="couponApplyForm">Apply</button>
+                                    @endif
+                                </div>
+                            </div>
                             @foreach ($cartItems as $item)
                                 <div class="d-flex justify-content-between small mb-2">
                                     <span>{{ $item['product']->product_name }} x {{ $item['quantity'] }}</span>
@@ -91,6 +110,12 @@
                                 <span>Delivery Fee</span>
                                 <strong data-delivery-total>{{ number_format($cartTotals['delivery'], 0) }}</strong>
                             </div>
+                            @if (($cartTotals['discount'] ?? 0) > 0)
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>Discount{{ ! empty($cartTotals['coupon']['code']) ? ' ('.$cartTotals['coupon']['code'].')' : '' }}</span>
+                                    <strong data-discount-total>-&#8377;{{ number_format($cartTotals['discount'], 0) }}</strong>
+                                </div>
+                            @endif
                             <div class="d-flex justify-content-between">
                                 <span class="fw-semibold">To Pay</span>
                                 <strong class="fs-5" data-grand-total>₹{{ number_format($cartTotals['grandTotal'], 0) }}</strong>
@@ -104,6 +129,12 @@
                             </div>
                         </div>
                     </div>
+                </form>
+                <form id="couponApplyForm" method="POST" action="{{ route('storefront.coupon.apply') }}" class="d-none">
+                    @csrf
+                </form>
+                <form id="couponRemoveForm" method="POST" action="{{ route('storefront.coupon.remove') }}" class="d-none">
+                    @csrf
                 </form>
             @endif
         </section>
@@ -129,7 +160,8 @@
             const wrapper = radio.closest('.js-checkout-address');
             const delivery = Number(wrapper?.dataset.deliveryCharge || 0);
             const itemTotal = Number(@json((float) ($cartTotals['itemTotal'] ?? 0)));
-            const grandTotal = itemTotal + delivery;
+            const discount = Number(@json((float) ($cartTotals['discount'] ?? 0)));
+            const grandTotal = Math.max(0, itemTotal - discount) + delivery;
 
             const deliveryNode = document.querySelector('[data-delivery-total]');
             const grandNode = document.querySelector('[data-grand-total]');

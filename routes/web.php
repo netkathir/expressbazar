@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DeliveryController;
@@ -78,6 +79,8 @@ Route::patch('/cart/items/{product}', [StorefrontController::class, 'updateCart'
 Route::delete('/cart/items/{product}', [StorefrontController::class, 'removeFromCart'])->name('storefront.cart.remove');
 Route::post('/cart/clear', [StorefrontController::class, 'clearCart'])->name('storefront.cart.clear');
 Route::post('/cart/merge', [StorefrontController::class, 'mergeGuestCart'])->middleware('auth')->name('storefront.cart.merge');
+Route::post('/coupon/apply', [StorefrontController::class, 'applyCoupon'])->middleware('auth')->name('storefront.coupon.apply');
+Route::post('/coupon/remove', [StorefrontController::class, 'removeCoupon'])->middleware('auth')->name('storefront.coupon.remove');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -106,6 +109,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('subcategories', SubcategoryController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
         Route::resource('taxes', TaxController::class)->except(['show']);
+        Route::resource('coupons', CouponController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);
         Route::delete('products/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::resource('inventory', InventoryController::class)->except(['show']);

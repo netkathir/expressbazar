@@ -20,6 +20,7 @@ class RoleController extends Controller
         'subcategories' => 'Subcategory Management',
         'customers' => 'Customer Management',
         'taxes' => 'Tax Management',
+        'coupons' => 'Coupon Management',
         'products' => 'Product Management',
         'inventory' => 'Inventory Management',
         'orders' => 'Order Management',
