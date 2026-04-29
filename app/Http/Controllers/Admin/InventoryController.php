@@ -21,7 +21,8 @@ class InventoryController extends Controller
             })
             ->when($request->filled('inventory_mode'), fn ($query) => $query->where('inventory_mode', $request->string('inventory_mode')))
             ->when($request->boolean('low_stock'), function ($query) {
-                $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
+                $query->whereNotNull('low_stock_threshold')
+                    ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
             })
             ->latest()
             ->paginate(10)

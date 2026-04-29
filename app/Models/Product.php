@@ -24,6 +24,8 @@ class Product extends Model
         'discount_start_date',
         'discount_end_date',
         'inventory_mode',
+        'unit',
+        'is_low_stock',
         'status',
         'created_by',
         'updated_by',
@@ -32,6 +34,7 @@ class Product extends Model
     protected $casts = [
         'discount_start_date' => 'date',
         'discount_end_date' => 'date',
+        'is_low_stock' => 'boolean',
     ];
 
     public function category()

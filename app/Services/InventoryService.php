@@ -7,8 +7,13 @@ use App\Jobs\SyncEposStockJob;
 use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\ProductInventory;
+use App\Models\User;
+use App\Notifications\LowStockNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class InventoryService
 {
@@ -18,7 +23,9 @@ class InventoryService
             throw ValidationException::withMessages(['product_id' => 'Inventory managed via EPOS cannot be manually adjusted.']);
         }
 
-        return DB::transaction(function () use ($inventory, $quantity, $type, $reason) {
+        $previousStock = null;
+
+        $updatedInventory = DB::transaction(function () use ($inventory, $quantity, $type, $reason, &$previousStock) {
             $lockedInventory = ProductInventory::query()
                 ->whereKey($inventory->id)
                 ->lockForUpdate()
@@ -43,11 +50,17 @@ class InventoryService
 
             return $lockedInventory;
         });
+
+        $this->notifyIfLowStock($updatedInventory, $previousStock);
+
+        return $updatedInventory;
     }
 
     public function syncFromEpos(ProductInventory $inventory, int $newStock, ?string $reason = null): ProductInventory
     {
-        return DB::transaction(function () use ($inventory, $newStock, $reason) {
+        $previousStock = null;
+
+        $updatedInventory = DB::transaction(function () use ($inventory, $newStock, $reason, &$previousStock) {
             $lockedInventory = ProductInventory::query()
                 ->whereKey($inventory->id)
                 ->lockForUpdate()
@@ -74,6 +87,91 @@ class InventoryService
 
             return $lockedInventory;
         });
+
+        $this->notifyIfLowStock($updatedInventory, $previousStock);
+
+        return $updatedInventory;
+    }
+
+    public function notifyIfLowStock(?ProductInventory $inventory, ?int $previousStock = null): void
+    {
+        if (! $inventory) {
+            return;
+        }
+
+        $inventory->loadMissing('product');
+
+        if (! $inventory->product || ! Schema::hasColumn('products', 'is_low_stock')) {
+            return;
+        }
+
+        if (is_null($inventory->low_stock_threshold)) {
+            $this->resolveLowStockAlert($inventory);
+
+            return;
+        }
+
+        $product = $inventory->product;
+        $currentStock = (int) $inventory->stock_quantity;
+        $threshold = (int) $inventory->low_stock_threshold;
+
+        if ($currentStock > $threshold) {
+            $this->resolveLowStockAlert($inventory);
+
+            return;
+        }
+
+        if ($product->is_low_stock) {
+            return;
+        }
+
+        try {
+            if (Schema::hasTable('notifications')) {
+                User::query()
+                    ->where('status', 'active')
+                    ->whereNotNull('role')
+                    ->where('role', '!=', 'customer')
+                    ->get()
+                    ->each(fn (User $admin) => $admin->notify(new LowStockNotification($product, $inventory)));
+            }
+
+            $product->forceFill(['is_low_stock' => true])->save();
+        } catch (Throwable $exception) {
+            Log::error('Low stock database notification failed.', [
+                'product_id' => $inventory->product_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function resolveLowStockAlert(ProductInventory $inventory): void
+    {
+        $inventory->loadMissing('product');
+        $product = $inventory->product;
+
+        if (! $product || ! $product->is_low_stock) {
+            return;
+        }
+
+        try {
+            if (Schema::hasTable('notifications')) {
+                DB::table('notifications')
+                    ->where('type', LowStockNotification::class)
+                    ->where('data->product_id', $product->id)
+                    ->whereNull('read_at')
+                    ->update([
+                        'read_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            $product->forceFill(['is_low_stock' => false])->save();
+        } catch (Throwable $exception) {
+            Log::error('Low stock alert cleanup failed.', [
+                'product_id' => $inventory->product_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     public function deductForOrder(Order $order): void

@@ -10,6 +10,7 @@ use App\Models\ProductInventory;
 use App\Models\Tax;
 use App\Models\Subcategory;
 use App\Models\Vendor;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
@@ -105,6 +106,7 @@ class ProductController extends Controller
 
         $product->update($data);
         $this->syncInventory($product, $request);
+        $this->removeSelectedImages($product, $request);
         $this->syncImages($product, $request, true);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
@@ -150,10 +152,11 @@ class ProductController extends Controller
             'discount_end_date' => ['nullable', 'date'],
             'inventory_mode' => ['required', Rule::in(['internal', 'epos'])],
             'stock_quantity' => ['nullable', 'integer', 'min:0'],
-            'unit' => ['nullable', 'string', 'max:20'],
+            'unit' => ['nullable', Rule::in(['kg', 'nos', 'pieces'])],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'max:2048'],
+            'remove_image_ids' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
@@ -202,6 +205,9 @@ class ProductController extends Controller
                 'last_synced_at' => now(),
             ]
         );
+
+        $product->forceFill(['unit' => $request->input('unit')])->save();
+        app(InventoryService::class)->notifyIfLowStock($product->inventory()->first());
     }
 
     private function syncImages(Product $product, Request $request, bool $replaceExisting = false): void
@@ -237,6 +243,32 @@ class ProductController extends Controller
                 'updated_by' => $request->user()?->id,
             ]);
         }
+    }
+
+    private function removeSelectedImages(Product $product, Request $request): void
+    {
+        $imageIds = collect(explode(',', (string) $request->input('remove_image_ids')))
+            ->map(fn ($id) => (int) trim($id))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($imageIds->isEmpty()) {
+            return;
+        }
+
+        $product->images()
+            ->whereIn('id', $imageIds)
+            ->get()
+            ->each(function (ProductImage $image) {
+                $fullPath = public_path($image->image_path);
+
+                if (File::exists($fullPath)) {
+                    File::delete($fullPath);
+                }
+
+                $image->delete();
+            });
     }
 
     private function deleteImages(Product $product): void

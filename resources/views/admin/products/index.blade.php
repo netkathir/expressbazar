@@ -106,7 +106,7 @@
                             <td>
                                 <span class="badge text-bg-{{ $product->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($product->inventory_mode) }}</span>
                                 <div class="small text-secondary">
-                                    {{ $product->inventory?->stock_quantity ?? 0 }} {{ $product->inventory?->unit ?? '' }}
+                                    {{ $product->inventory?->stock_quantity ?? 0 }} {{ $product->unit ?: $product->inventory?->unit }}
                                 </div>
                             </td>
                             <td><span class="badge text-bg-{{ $product->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($product->status) }}</span></td>

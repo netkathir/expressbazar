@@ -59,6 +59,10 @@ body.admin-shell {
     transition: width .25s ease, left .25s ease;
 }
 
+.sidebar.sidebar-hidden {
+    left: -280px;
+}
+
 .logo-area {
     position: absolute;
     inset: 0 0 auto 0;
@@ -128,6 +132,7 @@ body.admin-shell {
     height: 60px;
     margin-left: 280px;
     z-index: 1028;
+    transition: margin-left .25s ease;
 }
 
 .sf-avatar {
@@ -154,11 +159,17 @@ body.admin-shell {
 .content {
     margin-left: 280px;
     padding-top: 96px !important;
+    transition: margin-left .25s ease;
 }
 
 .topbar.full,
 .content.full {
     margin-left: 72px;
+}
+
+.topbar.sidebar-hidden,
+.content.sidebar-hidden {
+    margin-left: 0;
 }
 
 .badge-soft {

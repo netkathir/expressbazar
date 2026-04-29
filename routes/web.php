@@ -116,6 +116,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', OrderController::class);
         Route::resource('payments', AdminPaymentController::class)->except(['show']);
         Route::resource('delivery', DeliveryController::class)->except(['show']);
+        Route::get('notification-alerts', [NotificationController::class, 'alerts'])->name('notification-alerts');
         Route::resource('notifications', NotificationController::class)->except(['show']);
         Route::get('notifications/logs', [NotificationController::class, 'logs'])->name('notifications.logs');
         Route::resource('roles', RoleController::class)->except(['show']);

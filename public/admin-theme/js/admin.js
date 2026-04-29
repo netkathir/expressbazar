@@ -7,16 +7,20 @@ const overlay = document.getElementById('overlay');
 
 if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
-        sidebar?.classList.toggle('collapsed');
-        content?.classList.toggle('full');
-        topbar?.classList.toggle('full');
+        const isHidden = sidebar?.classList.toggle('sidebar-hidden') ?? false;
+
+        content?.classList.toggle('sidebar-hidden', isHidden);
+        topbar?.classList.toggle('sidebar-hidden', isHidden);
+        toggleBtn.setAttribute('aria-expanded', String(!isHidden));
     });
 }
 
 if (mobileBtn) {
     mobileBtn.addEventListener('click', () => {
-        sidebar?.classList.add('mobile-show');
-        overlay?.classList.add('show');
+        const isOpen = sidebar?.classList.toggle('mobile-show') ?? false;
+
+        overlay?.classList.toggle('show', isOpen);
+        mobileBtn.setAttribute('aria-expanded', String(isOpen));
     });
 }
 
@@ -24,5 +28,6 @@ if (overlay) {
     overlay.addEventListener('click', () => {
         sidebar?.classList.remove('mobile-show');
         overlay.classList.remove('show');
+        mobileBtn?.setAttribute('aria-expanded', 'false');
     });
 }

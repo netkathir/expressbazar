@@ -16,6 +16,7 @@
                 @if ($mode === 'edit')
                     @method('PUT')
                 @endif
+                <input type="hidden" name="remove_image_ids" id="remove_image_ids" value="{{ old('remove_image_ids', '') }}">
 
                 <div class="col-md-6">
                     <label class="form-label">Product Name</label>
@@ -78,13 +79,9 @@
                         <div class="row g-3">
                             @foreach ($product->images as $image)
                                 <div class="col-6 col-md-3">
-                                    <div class="border rounded-3 p-2 h-100">
+                                    <div class="border rounded-3 p-2 h-100" id="product-image-preview-{{ $image->id }}">
                                         <img src="{{ asset($image->image_path) }}" alt="{{ $product->product_name }}" class="img-fluid rounded-2" style="aspect-ratio: 1 / 1; object-fit: cover;">
-                                        <form action="{{ route('admin.products.images.destroy', $image) }}" method="POST" class="mt-2" onsubmit="return confirm('Delete this image?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">Delete Image</button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="removeProductImage({{ $image->id }})">Delete Image</button>
                                     </div>
                                 </div>
                             @endforeach
@@ -128,7 +125,13 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Unit</label>
-                    <input type="text" name="unit" value="{{ old('unit', $product->inventory?->unit) }}" class="form-control" placeholder="pcs">
+                    @php($selectedUnit = old('unit', $product->unit ?: $product->inventory?->unit))
+                    <select name="unit" class="form-select">
+                        <option value="">Select unit</option>
+                        <option value="kg" @selected($selectedUnit === 'kg')>kg</option>
+                        <option value="nos" @selected($selectedUnit === 'nos')>nos</option>
+                        <option value="pieces" @selected($selectedUnit === 'pieces')>pieces</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Low Stock</label>
@@ -142,3 +145,27 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function removeProductImage(imageId) {
+            if (!confirm('Delete this image?')) {
+                return;
+            }
+
+            const input = document.getElementById('remove_image_ids');
+            const preview = document.getElementById('product-image-preview-' + imageId);
+            const ids = input.value ? input.value.split(',').filter(Boolean) : [];
+
+            if (!ids.includes(String(imageId))) {
+                ids.push(String(imageId));
+            }
+
+            input.value = ids.join(',');
+
+            if (preview) {
+                preview.style.display = 'none';
+            }
+        }
+    </script>
+@endpush
