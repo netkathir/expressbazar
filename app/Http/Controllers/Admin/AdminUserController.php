@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\PasswordService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -112,7 +113,7 @@ class AdminUserController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'role' => ['required', Rule::exists('roles', 'role_name')],
             'status' => ['required', Rule::in(['active', 'inactive'])],
-            'password' => [$user ? 'nullable' : 'required', 'string', 'min:8'],
-        ]);
+            'password' => PasswordService::rule(! $user),
+        ], PasswordService::validationMessages());
     }
 }

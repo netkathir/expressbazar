@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CustomerPasswordMail;
 use App\Models\User;
+use App\Services\PasswordService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
@@ -48,9 +51,9 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateCustomer($request);
-        $password = Str::random(12);
+        $password = PasswordService::generate();
 
-        User::create([
+        $customer = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
@@ -59,7 +62,22 @@ class CustomerController extends Controller
             'status' => $data['status'],
         ]);
 
-        return redirect()->route('admin.customers.index')->with('success', 'Customer created successfully.');
+        $mailSent = true;
+
+        try {
+            Mail::to($customer->email)->send(new CustomerPasswordMail($customer, $password));
+        } catch (\Exception $e) {
+            $mailSent = false;
+            report($e);
+            Log::error('Customer password mail failed: '.$e->getMessage());
+        }
+
+        return redirect()->route('admin.customers.index')->with(
+            'success',
+            $mailSent
+                ? 'Customer created successfully and password sent to email.'
+                : 'Customer created successfully, but password email could not be sent.'
+        );
     }
 
     public function show(User $customer)

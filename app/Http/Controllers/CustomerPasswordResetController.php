@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\SendOtpMail;
 use App\Models\PasswordOtp;
 use App\Models\User;
+use App\Services\PasswordService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -130,8 +131,8 @@ class CustomerPasswordResetController extends Controller
 
         $data = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+            'password' => array_merge(PasswordService::rule(), ['confirmed']),
+        ], PasswordService::validationMessages());
 
         if ($data['email'] !== $email) {
             return back()->withErrors(['email' => 'Your reset session has expired. Please request a new OTP.'])->withInput();

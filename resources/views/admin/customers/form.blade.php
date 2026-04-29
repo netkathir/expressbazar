@@ -10,30 +10,42 @@
                 <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.customers.store') : route('admin.customers.update', $customer) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.customers.store') : route('admin.customers.update', $customer) }}" class="row g-3" novalidate>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
                 @endif
 
                 <div class="col-md-6">
-                    <label class="form-label">Name</label>
+                    <label class="form-label">Name <span class="text-danger">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $customer->name) }}" class="form-control" required>
+                    @error('name')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
                     <input type="email" name="email" value="{{ old('email', $customer->email) }}" class="form-control" required>
+                    @error('email')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Phone</label>
                     <input type="text" name="phone" value="{{ old('phone', $customer->phone) }}" class="form-control">
+                    @error('phone')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Status</label>
+                    <label class="form-label">Status <span class="text-danger">*</span></label>
                     <select name="status" class="form-select" required>
                         <option value="active" @selected(old('status', $customer->status ?: 'active') === 'active')>Active</option>
                         <option value="inactive" @selected(old('status', $customer->status) === 'inactive')>Inactive</option>
                     </select>
+                    @error('status')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 </div>
 
                 @if ($mode === 'create')

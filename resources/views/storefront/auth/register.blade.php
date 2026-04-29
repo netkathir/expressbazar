@@ -8,37 +8,52 @@
                     <div class="sf-info-card p-4 p-md-5">
                         <h1 class="h3 fw-bold mb-2">Create account</h1>
                         <p class="text-secondary mb-4">Register with your email and verify it with OTP.</p>
-                        <form method="POST" action="{{ route('storefront.register.store') }}" class="row g-3">
+                        <form method="POST" action="{{ route('storefront.register.store') }}" class="row g-3" novalidate>
                             @csrf
                             <div class="col-12">
-                                <label class="form-label">Name</label>
+                                <label class="form-label">Name <span class="text-danger">*</span></label>
                                 <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                                @error('name')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Email</label>
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                                @error('email')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Phone</label>
                                 <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
+                                @error('phone')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Password</label>
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="password" name="password" class="form-control" id="customer-register-password" required>
                                     <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-register-password" aria-label="Show password">
                                         <i class="ti ti-eye"></i>
                                     </button>
                                 </div>
+                                @error('password')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Confirm password</label>
+                                <label class="form-label">Confirm password <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="password" name="password_confirmation" class="form-control" id="customer-register-password-confirmation" required>
                                     <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-register-password-confirmation" aria-label="Show password">
                                         <i class="ti ti-eye"></i>
                                     </button>
                                 </div>
+                                @error('password_confirmation')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-12 d-grid">
                                 <button class="btn btn-danger rounded-pill">Register</button>

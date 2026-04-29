@@ -6,6 +6,7 @@ use App\Mail\SendOtpMail;
 use App\Models\OtpVerification;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\PasswordService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -34,8 +35,8 @@ class CustomerAuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+            'password' => array_merge(PasswordService::rule(), ['confirmed']),
+        ], PasswordService::validationMessages());
 
         $user = User::create([
             'name' => $data['name'],
