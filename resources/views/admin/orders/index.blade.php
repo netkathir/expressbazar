@@ -69,7 +69,9 @@
                             <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : 'secondary' }}">{{ ucfirst($order->order_status) }}</span></td>
                             <td>{{ $order->placed_at?->format('M d, Y') ?? '-' }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
+                                    <i class="ti ti-eye"></i>
+                                </a>
                                 <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit order" title="Edit order">
                                     <i class="ti ti-pencil"></i>
                                 </a>

@@ -165,7 +165,9 @@
                                 <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : ($order->order_status === 'cancelled' ? 'danger' : 'secondary') }}">{{ ucfirst($order->order_status) }}</span></td>
                                 <td>{{ number_format((float) $order->total_amount, 2) }}</td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
+                                        <i class="ti ti-eye"></i>
+                                    </a>
                                 </td>
                             </tr>
                         @empty

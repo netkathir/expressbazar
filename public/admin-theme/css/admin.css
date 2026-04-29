@@ -480,18 +480,42 @@ body.admin-shell {
 }
 
 .admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-sm {
-    min-width: 34px;
-    height: 34px;
+    min-width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 .65rem;
-    border-radius: 9px;
-    font-size: .95rem;
+    padding: .15rem;
+    border-color: transparent !important;
+    border-radius: 6px;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 1.05rem;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-sm:hover,
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-sm:focus,
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-sm:active {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    opacity: .78;
 }
 
 .admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-sm .ti {
-    font-size: 1rem;
+    font-size: 1.15rem;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-outline-secondary {
+    color: #111827 !important;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-outline-primary {
+    color: #1d4ed8 !important;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.text-end .btn-outline-danger {
+    color: #ff3333 !important;
 }
 
 .admin-shell main > .container-fluid > .shell-card > .table-responsive + .card-body {

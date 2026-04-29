@@ -55,7 +55,9 @@
                             <td><span class="badge text-bg-{{ $customer->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($customer->status) }}</span></td>
                             <td>{{ optional($customer->created_at)->format('d M Y') }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.customers.show', $customer) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a href="{{ route('admin.customers.show', $customer) }}" class="btn btn-sm btn-outline-secondary" aria-label="View customer" title="View customer">
+                                    <i class="ti ti-eye"></i>
+                                </a>
                                 <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit customer" title="Edit customer">
                                     <i class="ti ti-pencil"></i>
                                 </a>
