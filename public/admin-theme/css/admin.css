@@ -32,6 +32,15 @@ body.admin-shell {
     color: var(--admin-text);
 }
 
+.admin-shell main h1.h2,
+.admin-shell main h1.h3,
+.admin-shell main h2.h4 {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: #111827;
+}
+
 .overlay {
     position: fixed;
     inset: 0;
@@ -197,6 +206,67 @@ body.admin-shell {
     object-fit: cover;
 }
 
+.sf-avatar-sm {
+    width: 42px;
+    height: 42px;
+}
+
+.admin-profile-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    border: 0;
+    padding: .25rem .35rem .25rem .25rem;
+    color: var(--admin-brand-dark);
+    background: transparent;
+    line-height: 1.1;
+}
+
+.admin-profile-toggle:hover,
+.admin-profile-toggle:focus,
+.admin-profile-toggle.show {
+    color: var(--admin-brand-dark);
+    background: var(--admin-brand-soft-weak);
+}
+
+.admin-profile-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .15rem;
+}
+
+.admin-profile-name {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .95rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.admin-profile-role {
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--admin-muted);
+}
+
+.admin-profile-chevron {
+    font-size: 1rem;
+    color: var(--admin-brand-dark);
+    transition: transform .2s ease;
+}
+
+.admin-profile-toggle.show .admin-profile-chevron {
+    transform: rotate(180deg);
+}
+
+.admin-profile-menu {
+    min-width: 210px;
+}
+
 .content {
     margin-left: 280px;
     padding-top: 96px !important;
@@ -340,5 +410,16 @@ body.admin-shell {
 
     .content {
         padding-top: 96px !important;
+    }
+
+    .admin-profile-name {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-profile-copy,
+    .admin-profile-chevron {
+        display: none;
     }
 }

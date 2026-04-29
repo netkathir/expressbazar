@@ -6,7 +6,7 @@
     <title>{{ ($title ?? null) ? $title.' | ' : '' }}{{ config('admin_panel.brand.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.35.0/dist/tabler-icons.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -27,7 +27,6 @@
             </button>
             <div>
                 <div class="fw-semibold">{{ config('admin_panel.brand.name') }}</div>
-                <small class="text-secondary">{{ config('admin_panel.brand.tagline') }}</small>
             </div>
         </div>
 
@@ -61,20 +60,33 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none text-dark">
-                    <span class="sf-avatar sf-avatar-sm">
-                        @if (auth()->user()->avatar_path)
-                            <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
-                        @else
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                        @endif
-                    </span>
-                    <span class="small fw-semibold">{{ auth()->user()->name }}</span>
-                </a>
-                <form method="POST" action="{{ route('admin.logout') }}" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-dark btn-sm">Logout</button>
-                </form>
+                <div class="dropdown admin-profile-dropdown">
+                    <button class="btn admin-profile-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open admin account menu">
+                        <span class="sf-avatar sf-avatar-sm">
+                            @if (auth()->user()->avatar_path)
+                                <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                            @else
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            @endif
+                        </span>
+                        <span class="admin-profile-copy">
+                            <span class="admin-profile-name">{{ auth()->user()->name }}</span>
+                            <span class="admin-profile-role">{{ \Illuminate\Support\Str::headline(auth()->user()->role ?: 'Administrator') }}</span>
+                        </span>
+                        <i class="ti ti-chevron-down admin-profile-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2 admin-profile-menu">
+                        <a href="{{ route('admin.dashboard') }}" class="dropdown-item rounded-2">
+                            <i class="ti ti-layout-dashboard me-2"></i>Dashboard
+                        </a>
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item rounded-2 text-danger">
+                                <i class="ti ti-logout me-2"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
             @endauth
         </div>
     </nav>

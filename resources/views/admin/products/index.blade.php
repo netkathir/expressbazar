@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Product Management</h1>
-                <p class="text-secondary mb-0">Create products with vendor mapping, discounts and stock rules.</p>
             </div>
             <a href="{{ route('admin.products.create') }}" class="btn btn-primary">Add Product</a>
         </div>

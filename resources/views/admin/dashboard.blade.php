@@ -6,21 +6,10 @@
             <div class="hero-card p-4 p-md-5">
                 <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
                     <div>
-                        <span class="badge rounded-pill badge-soft mb-3">Admin workspace</span>
                         <h1 class="display-6 fw-bold mb-3">Build the ecommerce admin first, then expand the storefront.</h1>
-                        <p class="lead text-secondary mb-4">
-                            This shell is split into a user panel and an admin panel. The admin side follows your vendor,
-                            location, catalog, inventory, order and system workflows.
-                        </p>
                         <div class="d-flex flex-wrap gap-2">
                             <a href="{{ route('admin.module', ['module' => 'countries']) }}" class="btn btn-primary">Start with location master</a>
-                            <a href="{{ route('user.home') }}" class="btn btn-outline-secondary">Open user panel</a>
                         </div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="text-secondary small mb-1">Build focus</div>
-                        <div class="fw-bold fs-4">Admin first</div>
-                        <div class="text-secondary">Theme-driven control center</div>
                     </div>
                 </div>
             </div>
@@ -69,7 +58,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                 <div>
                     <h2 class="h4 mb-1">Module coverage</h2>
-                    <p class="text-secondary mb-0">Each module below is mapped from your workflow document.</p>
                 </div>
             </div>
 
@@ -85,8 +73,6 @@
                                 <span class="badge text-bg-light">{{ isset($module['crud_route']) ? 'CRUD' : 'Ready' }}</span>
                             </div>
                             <p class="text-secondary mb-3">{{ $module['subtitle'] }}</p>
-                            <div class="small text-dark fw-semibold">Primary intent</div>
-                            <div class="text-secondary small">{{ $module['objective'] }}</div>
                         </a>
                     </div>
                 @endforeach

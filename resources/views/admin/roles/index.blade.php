@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">User & Role Management</h1>
-                <p class="text-secondary mb-0">Create admin roles and assign module permissions.</p>
             </div>
             <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">Add Role</a>
         </div>

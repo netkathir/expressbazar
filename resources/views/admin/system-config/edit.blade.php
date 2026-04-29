@@ -6,7 +6,6 @@
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
                     <h1 class="h3 mb-1">System Configuration</h1>
-                    <p class="text-secondary mb-0">Update application-wide settings and feature toggles.</p>
                 </div>
             </div>
 

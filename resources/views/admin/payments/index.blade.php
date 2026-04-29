@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Payment Management</h1>
-                <p class="text-secondary mb-0">Track gateway transactions, refunds and payment status.</p>
             </div>
             <a href="{{ route('admin.payments.create') }}" class="btn btn-primary">Add Payment</a>
         </div>

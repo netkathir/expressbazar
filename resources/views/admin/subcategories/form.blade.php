@@ -6,7 +6,6 @@
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Subcategory' : 'Edit Subcategory' }}</h1>
-                    <p class="text-secondary mb-0">Subcategory master under a category.</p>
                 </div>
                 <a href="{{ route('admin.subcategories.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>

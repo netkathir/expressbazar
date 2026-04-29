@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Inventory Management</h1>
-                <p class="text-secondary mb-0">Monitor and adjust internal stock, or inspect EPOS-managed stock.</p>
             </div>
             <a href="{{ route('admin.inventory.create') }}" class="btn btn-primary">Adjust Stock</a>
         </div>

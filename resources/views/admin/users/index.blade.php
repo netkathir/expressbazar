@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Admin User Management</h1>
-                <p class="text-secondary mb-0">Create backend users and assign roles for access control.</p>
             </div>
             <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Add Admin User</a>
         </div>

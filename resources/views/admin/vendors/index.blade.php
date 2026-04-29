@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Vendor Master</h1>
-                <p class="text-secondary mb-0">Manage vendors, inventory mode and EPOS settings.</p>
             </div>
             <a href="{{ route('admin.vendors.create') }}" class="btn btn-primary">Add Vendor</a>
         </div>

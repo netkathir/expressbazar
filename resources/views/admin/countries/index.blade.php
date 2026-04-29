@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Country Management</h1>
-                <p class="text-secondary mb-0">Create and maintain countries for the location hierarchy.</p>
             </div>
             <a href="{{ route('admin.countries.create') }}" class="btn btn-primary">Add Country</a>
         </div>

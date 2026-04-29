@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Notification Management</h1>
-                <p class="text-secondary mb-0">Create templates and review the latest delivery logs.</p>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.notifications.logs') }}" class="btn btn-outline-secondary">View Logs</a>

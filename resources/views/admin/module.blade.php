@@ -7,7 +7,6 @@
                 <div>
                     <span class="badge rounded-pill badge-soft mb-3">{{ $module['group'] }}</span>
                     <h1 class="h2 fw-bold mb-2">{{ $module['title'] }}</h1>
-                    <p class="text-secondary mb-0">{{ $module['subtitle'] }}</p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">Back to dashboard</a>

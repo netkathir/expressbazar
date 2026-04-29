@@ -5,7 +5,6 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
                 <h1 class="h3 mb-1">Reports & Analytics</h1>
-                <p class="text-secondary mb-0">Live business snapshot with filtered sales, vendor, inventory and location reporting.</p>
             </div>
             <a href="{{ route('admin.reports.export', request()->query()) }}" class="btn btn-primary">
                 Export CSV
