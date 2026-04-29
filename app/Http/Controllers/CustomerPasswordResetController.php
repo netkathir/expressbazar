@@ -52,7 +52,14 @@ class CustomerPasswordResetController extends Controller
         session()->forget('password_reset.verified_email');
 
         try {
-            Mail::to($user->email)->send(new SendOtpMail($otp));
+            Mail::to($user->email)->send(new SendOtpMail($otp, [
+                'recipient_type' => 'customer',
+                'recipient_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'purpose' => 'password_reset',
+            ]));
         } catch (\Exception $e) {
             $record->delete();
             report($e);

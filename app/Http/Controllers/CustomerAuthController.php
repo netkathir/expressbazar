@@ -187,7 +187,14 @@ class CustomerAuthController extends Controller
         ]);
 
         try {
-            Mail::to($user->email)->send(new SendOtpMail($otp));
+            Mail::to($user->email)->send(new SendOtpMail($otp, [
+                'recipient_type' => 'customer',
+                'recipient_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'purpose' => $purpose,
+            ]));
         } catch (\Exception $e) {
             report($e);
             Log::error('OTP Mail Error: '.$e->getMessage());
