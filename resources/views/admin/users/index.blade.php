@@ -51,8 +51,8 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Username</th>
-                        <th>Phone</th>
                         <th>Role</th>
+                        <th>Permission Count</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -63,8 +63,8 @@
                             <td class="fw-semibold">{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->username ?: '-' }}</td>
-                            <td>{{ $user->phone ?: '-' }}</td>
                             <td>{{ $user->role }}</td>
+                            <td>{{ (int) $user->permissions_count }}</td>
                             <td><span class="badge text-bg-{{ $user->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($user->status) }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit admin user" title="Edit admin user">

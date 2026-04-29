@@ -51,7 +51,6 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Inventory</th>
-                        <th>Location</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -81,7 +80,6 @@
                                     {{ strtoupper($vendor->inventory_mode) }}
                                 </span>
                             </td>
-                            <td>{{ $vendor->country?->country_name }} / {{ $vendor->city?->city_name }} / {{ $vendor->zone?->zone_name }}</td>
                             <td><span class="badge text-bg-{{ $vendor->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($vendor->status) }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit vendor" title="Edit vendor">
@@ -98,7 +96,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-secondary py-5">No vendors found.</td>
+                            <td colspan="6" class="text-center text-secondary py-5">No vendors found.</td>
                         </tr>
                     @endforelse
                 </tbody>

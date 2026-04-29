@@ -42,7 +42,6 @@
                         <th>Country Name</th>
                         <th>Code</th>
                         <th>Currency</th>
-                        <th>Timezone</th>
                         <th>Status</th>
                         <th>Cities</th>
                         <th class="text-end">Actions</th>
@@ -54,7 +53,6 @@
                             <td class="fw-semibold">{{ $country->country_name }}</td>
                             <td>{{ $country->country_code }}</td>
                             <td>{{ $country->currency }}</td>
-                            <td>{{ $country->timezone ?: '-' }}</td>
                             <td><span class="badge text-bg-{{ $country->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($country->status) }}</span></td>
                             <td>{{ $country->cities_count }}</td>
                             <td class="text-end">
@@ -72,7 +70,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-secondary py-5">No countries found.</td>
+                            <td colspan="6" class="text-center text-secondary py-5">No countries found.</td>
                         </tr>
                     @endforelse
                 </tbody>

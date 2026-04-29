@@ -77,6 +77,10 @@ class User extends Authenticatable
             return false;
         }
 
+        if (strtolower(trim($role->role_name)) === 'admin') {
+            return true;
+        }
+
         $permission = $role->permissions->firstWhere('module_name', self::moduleLabel($moduleKey));
 
         if (! $permission) {

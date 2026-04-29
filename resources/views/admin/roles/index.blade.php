@@ -18,7 +18,7 @@
                     <tr>
                         <th>Role</th>
                         <th>Description</th>
-                        <th>Permissions</th>
+                        <th>Permission Count</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -28,15 +28,7 @@
                         <tr>
                             <td class="fw-semibold">{{ $role->role_name }}</td>
                             <td>{{ $role->description ?: '-' }}</td>
-                            <td>
-                                <div class="small text-secondary">
-                                    @forelse ($role->permissions as $permission)
-                                        <div>{{ $permission->module_name }}: V{{ (int) $permission->can_view }} C{{ (int) $permission->can_create }} E{{ (int) $permission->can_edit }} D{{ (int) $permission->can_delete }}</div>
-                                    @empty
-                                        -
-                                    @endforelse
-                                </div>
-                            </td>
+                            <td>{{ (int) $role->permissions_count }}</td>
                             <td><span class="badge text-bg-{{ $role->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($role->status) }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit role" title="Edit role">

@@ -71,7 +71,6 @@
                         <th>Tax</th>
                         <th>Vendor</th>
                         <th>Price</th>
-                        <th>Final Price</th>
                         <th>Inventory</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
@@ -102,7 +101,6 @@
                             <td>{{ $product->tax?->tax_name ?? '-' }}</td>
                             <td>{{ $product->vendor?->vendor_name ?? '-' }}</td>
                             <td>{{ number_format((float) $product->price, 2) }}</td>
-                            <td>{{ number_format((float) $product->final_price, 2) }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $product->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($product->inventory_mode) }}</span>
                                 <div class="small text-secondary">
@@ -125,7 +123,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center text-secondary py-5">No products found.</td>
+                            <td colspan="9" class="text-center text-secondary py-5">No products found.</td>
                         </tr>
                     @endforelse
                 </tbody>

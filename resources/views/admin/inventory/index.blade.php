@@ -47,7 +47,6 @@
                     <tr>
                         <th>Product</th>
                         <th>Vendor</th>
-                        <th>Mode</th>
                         <th>Stock</th>
                         <th>Unit</th>
                         <th>Threshold</th>
@@ -60,7 +59,6 @@
                         <tr>
                             <td class="fw-semibold">{{ $inventory->product?->product_name ?? '-' }}</td>
                             <td>{{ $inventory->product?->vendor?->vendor_name ?? '-' }}</td>
-                            <td><span class="badge text-bg-{{ $inventory->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($inventory->inventory_mode) }}</span></td>
                             <td>{{ $inventory->stock_quantity }}</td>
                             <td>{{ $inventory->unit ?? '-' }}</td>
                             <td>{{ $inventory->low_stock_threshold ?? '-' }}</td>
@@ -80,7 +78,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-secondary py-5">No inventory records found.</td>
+                            <td colspan="7" class="text-center text-secondary py-5">No inventory records found.</td>
                         </tr>
                     @endforelse
                 </tbody>

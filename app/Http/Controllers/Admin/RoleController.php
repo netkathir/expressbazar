@@ -28,15 +28,26 @@ class RoleController extends Controller
         'delivery' => 'Delivery & Logistics',
         'notifications' => 'Notification Management',
         'reports' => 'Reports & Analytics',
+        'roles' => 'User & Role Management',
+        'users' => 'Admin User Management',
         'config' => 'System Configuration',
     ];
 
     public function index()
     {
+        $permissionCountQuery = RolePermission::query()
+            ->selectRaw('COALESCE(SUM(CASE WHEN can_view = 1 OR can_create = 1 OR can_edit = 1 OR can_delete = 1 THEN 1 ELSE 0 END), 0)')
+            ->whereColumn('role_permissions.role_id', 'roles.id');
+
         return view('admin.roles.index', [
             'title' => 'User & Role Management',
             'activeMenu' => 'roles',
-            'roles' => Role::with('permissions')->latest()->paginate(10),
+            'roles' => Role::query()
+                ->with('permissions')
+                ->select('roles.*')
+                ->selectSub($permissionCountQuery, 'permissions_count')
+                ->latest()
+                ->paginate(10),
             'modules' => $this->modules,
         ]);
     }
@@ -118,6 +129,10 @@ class RoleController extends Controller
 
     private function syncPermissions(Role $role, array $permissions): void
     {
+        if ($this->isAdminRole($role->role_name)) {
+            $permissions = $this->fullPermissions();
+        }
+
         foreach ($this->modules as $moduleKey => $moduleLabel) {
             $modulePermissions = $permissions[$moduleKey] ?? [];
 
@@ -130,5 +145,24 @@ class RoleController extends Controller
                 'can_delete' => (bool) ($modulePermissions['delete'] ?? false),
             ]);
         }
+    }
+
+    private function isAdminRole(string $roleName): bool
+    {
+        return strtolower(trim($roleName)) === 'admin';
+    }
+
+    private function fullPermissions(): array
+    {
+        return collect(array_keys($this->modules))
+            ->mapWithKeys(fn ($moduleKey) => [
+                $moduleKey => [
+                    'view' => true,
+                    'create' => true,
+                    'edit' => true,
+                    'delete' => true,
+                ],
+            ])
+            ->all();
     }
 }

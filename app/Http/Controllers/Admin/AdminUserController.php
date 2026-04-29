@@ -13,8 +13,20 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
+        $roles = Role::query()
+            ->with('permissions')
+            ->orderBy('role_name')
+            ->get();
+
+        $permissionCountQuery = Role::query()
+            ->join('role_permissions', 'role_permissions.role_id', '=', 'roles.id')
+            ->selectRaw('COALESCE(SUM(CASE WHEN role_permissions.can_view = 1 OR role_permissions.can_create = 1 OR role_permissions.can_edit = 1 OR role_permissions.can_delete = 1 THEN 1 ELSE 0 END), 0)')
+            ->whereColumn('roles.role_name', 'users.role');
+
         $users = User::query()
-            ->whereIn('role', Role::query()->pluck('role_name'))
+            ->whereIn('role', $roles->pluck('role_name'))
+            ->select('users.*')
+            ->selectSub($permissionCountQuery, 'permissions_count')
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->where(function ($subQuery) use ($search) {
@@ -33,7 +45,7 @@ class AdminUserController extends Controller
             'title' => 'Admin User Management',
             'activeMenu' => 'users',
             'users' => $users,
-            'roles' => Role::orderBy('role_name')->get(),
+            'roles' => $roles,
         ]);
     }
 
