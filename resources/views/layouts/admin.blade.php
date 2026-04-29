@@ -98,6 +98,7 @@
                         <a
                             class="nav-link {{ ($activeMenu ?? '') === ($item['active'] ?? '') ? 'active' : '' }}"
                             href="{{ route($item['route'], $item['params'] ?? []) }}"
+                            title="{{ $item['label'] }}"
                         >
                             <i class="ti ti-{{ $item['icon'] }}"></i>
                             <span class="nav-text">{{ $item['label'] }}</span>

@@ -5,13 +5,27 @@ const toggleBtn = document.getElementById('toggleBtn');
 const mobileBtn = document.getElementById('mobileBtn');
 const overlay = document.getElementById('overlay');
 
+const setDesktopSidebarState = (collapsed) => {
+    sidebar?.classList.toggle('collapsed', collapsed);
+    content?.classList.toggle('full', collapsed);
+    topbar?.classList.toggle('full', collapsed);
+    toggleBtn?.setAttribute('aria-expanded', String(!collapsed));
+};
+
+if (localStorage.getItem('adminSidebar') === 'hidden') {
+    localStorage.setItem('adminSidebar', 'expanded');
+}
+
+if (localStorage.getItem('adminSidebar') === 'collapsed') {
+    setDesktopSidebarState(true);
+}
+
 if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
-        const isHidden = sidebar?.classList.toggle('sidebar-hidden') ?? false;
+        const isCollapsed = !sidebar?.classList.contains('collapsed');
 
-        content?.classList.toggle('sidebar-hidden', isHidden);
-        topbar?.classList.toggle('sidebar-hidden', isHidden);
-        toggleBtn.setAttribute('aria-expanded', String(!isHidden));
+        setDesktopSidebarState(isCollapsed);
+        localStorage.setItem('adminSidebar', isCollapsed ? 'collapsed' : 'expanded');
     });
 }
 
