@@ -96,7 +96,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-secondary py-5">No vendors found.</td>
+                            <td colspan="6" class="text-center text-secondary py-5">{{ config('ui_messages.no_vendors') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -6,7 +6,7 @@
             'pincode' => $pincode ?? null,
             'vendor_id' => $selectedVendorId ?? request('vendor_id'),
         ], fn ($value) => filled($value)))
-        @php($emptyMessage = !empty($pincode ?? null) ? 'No data available for this pincode' : 'No products found.')
+        @php($emptyMessage = config('ui_messages.no_products'))
         <section class="container-fluid px-3 px-lg-4 py-3">
             <nav class="sf-breadcrumbs">Home <span>›</span> {{ $category->category_name }}</nav>
 
@@ -63,7 +63,7 @@
                                 @forelse (($vendors ?? collect()) as $vendor)
                                     <option value="{{ $vendor->id }}" @selected((string) ($selectedVendorId ?? request('vendor_id')) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
                                 @empty
-                                    <option disabled>No vendors available</option>
+                                    <option disabled>{{ config('ui_messages.no_vendors') }}</option>
                                 @endforelse
                             </select>
                         </form>

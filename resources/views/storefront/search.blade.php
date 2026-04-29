@@ -15,7 +15,7 @@
                     'products' => $searchResults,
                     'emptyMessage' => !empty($requiresLocation ?? false)
                         ? 'Enter your delivery location to see exact availability'
-                        : (!empty($pincode ?? null) ? 'No products available in your area' : 'No products found for your search'),
+                        : config('ui_messages.no_products'),
                 ])
             </div>
         </section>

@@ -49,7 +49,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="sf-empty-state">No orders yet.</div>
+                                <x-empty-state>{{ config('ui_messages.no_orders') }}</x-empty-state>
                             @endforelse
                         </div>
                     </div>

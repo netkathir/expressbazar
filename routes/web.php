@@ -44,6 +44,8 @@ Route::post('/forgot-password/verify-otp', [CustomerPasswordResetController::cla
 Route::get('/forgot-password/reset', [CustomerPasswordResetController::class, 'createResetForm'])->name('storefront.password.reset.form');
 Route::post('/forgot-password/reset', [CustomerPasswordResetController::class, 'resetPassword'])->name('storefront.password.reset');
 Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storefront.logout');
+Route::get('/notifications', [CustomerAccountController::class, 'notifications'])->middleware('auth')->name('notifications.index');
+Route::post('/notifications/read/{id}', [CustomerAccountController::class, 'markNotificationAsRead'])->middleware('auth')->name('notifications.read');
 Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
 Route::get('/account/profile/edit', [CustomerAccountController::class, 'editProfile'])->middleware('auth')->name('storefront.profile.edit');
 Route::put('/account/profile', [CustomerAccountController::class, 'updateProfile'])->middleware('auth')->name('storefront.profile.update');

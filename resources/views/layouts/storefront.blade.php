@@ -51,7 +51,20 @@
                                 <i class="ti ti-user-circle"></i>
                                 <span>Account</span>
                             </a>
-                            <form action="{{ route('storefront.logout') }}" method="POST" class="d-inline">
+                            <div class="dropdown">
+                                <button class="sf-action-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                                    <i class="ti ti-bell"></i>
+                                    <span>Alerts</span>
+                                    <span id="notification-count" class="sf-cart-badge js-notification-count d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
+                                    <div class="small fw-semibold px-2 py-1">Notifications</div>
+                                    <div id="notification-list">
+                                        <div class="dropdown-item-text small text-secondary px-2 py-2">No notifications</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <form action="{{ route('storefront.logout') }}" method="POST" class="d-inline js-logout-form">
                                 @csrf
                                 <button type="submit" class="sf-action-link">
                                     <i class="ti ti-logout"></i>
@@ -229,6 +242,10 @@
             locationCitiesUrl: @json(route('storefront.location.cities')),
             locationZonesUrl: @json(route('storefront.location.zones')),
             searchSuggestionsUrl: @json(route('storefront.search.suggestions')),
+            notificationsUrl: @json(auth()->check() ? route('notifications.index') : null),
+            notificationReadUrlTemplate: @json(auth()->check() ? route('notifications.read', ['id' => '__ID__']) : null),
+            logoutUrl: @json(route('storefront.logout')),
+            uiMessages: @json(config('ui_messages')),
             initialLocation: @json($location ?? null),
             initialCartState: @json($cartState ?? []),
             guestCartMerged: @json((bool) session('guest_cart_merged')),

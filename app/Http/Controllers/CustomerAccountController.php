@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Throwable;
 
 class CustomerAccountController extends Controller
 {
@@ -110,13 +112,62 @@ class CustomerAccountController extends Controller
 
     public function orderStatus(Request $request, Order $order): JsonResponse
     {
-        $user = $request->user();
-        abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
+        try {
+            $user = $request->user();
+            abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
 
-        return response()->json([
-            'status' => $order->order_status,
-            'label' => ucfirst($order->order_status),
-        ]);
+            return response()->json([
+                'status' => $order->order_status,
+                'label' => ucfirst($order->order_status),
+            ]);
+        } catch (Throwable $exception) {
+            if ($exception instanceof HttpExceptionInterface) {
+                throw $exception;
+            }
+
+            report($exception);
+
+            return response()->json([
+                'error' => true,
+                'message' => config('ui_messages.api_error'),
+            ], 500);
+        }
+    }
+
+    public function notifications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_if(! $user, 403);
+
+        if (! Schema::hasTable('notifications')) {
+            return response()->json([]);
+        }
+
+        $notifications = $user->notifications()
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->map(fn ($notification) => [
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'data' => $notification->data,
+                'read_at' => $notification->read_at,
+                'created_at' => $notification->created_at,
+            ])
+            ->values();
+
+        return response()->json($notifications);
+    }
+
+    public function markNotificationAsRead(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+        abort_if(! $user, 403);
+
+        $notification = $user->notifications()->whereKey($id)->firstOrFail();
+        $notification->markAsRead();
+
+        return response()->json(['success' => true]);
     }
 
     public function cancelOrder(Request $request, Order $order)

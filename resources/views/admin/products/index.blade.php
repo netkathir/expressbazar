@@ -123,7 +123,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center text-secondary py-5">No products found.</td>
+                            <td colspan="9" class="text-center text-secondary py-5">{{ config('ui_messages.no_products') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

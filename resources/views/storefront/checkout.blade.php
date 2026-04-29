@@ -6,7 +6,7 @@
             <nav class="sf-breadcrumbs">Home <span>›</span> Checkout</nav>
 
             @if ($cartItems->isEmpty())
-                <div class="sf-empty-state">Your cart is empty. Add products before checkout.</div>
+                <x-empty-state>{{ config('ui_messages.empty_cart') }}</x-empty-state>
             @else
                 <form method="POST" action="{{ route('storefront.checkout.place') }}">
                     @csrf

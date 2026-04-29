@@ -30,7 +30,7 @@
                         @forelse (($vendors ?? collect()) as $vendor)
                             <option value="{{ $vendor->id }}" @selected((string) ($selectedVendorId ?? request('vendor_id')) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
                         @empty
-                            <option disabled>No vendors available</option>
+                            <option disabled>{{ config('ui_messages.no_vendors') }}</option>
                         @endforelse
                     </select>
                 </form>
@@ -39,7 +39,7 @@
             <div class="sf-grid sf-product-grid js-product-list" id="product-list">
                 @include('storefront.partials.product-grid', [
                     'products' => $products,
-                    'emptyMessage' => !empty($pincode ?? null) ? 'No products available in your area' : 'No products found.',
+                    'emptyMessage' => config('ui_messages.no_products'),
                 ])
             </div>
         </section>

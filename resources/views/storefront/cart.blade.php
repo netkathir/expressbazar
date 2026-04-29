@@ -29,7 +29,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="sf-empty-state">Your cart is empty</div>
+                        <x-empty-state>{{ config('ui_messages.empty_cart') }}</x-empty-state>
                     @endforelse
                     </div>
                 </div>

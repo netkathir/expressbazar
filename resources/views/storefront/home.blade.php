@@ -69,7 +69,7 @@
 
         @if ($showNoPincodeData)
             <section class="container-fluid px-3 px-lg-4 mt-4">
-                <div class="sf-empty-state">No data available for this pincode</div>
+                <x-empty-state>{{ config('ui_messages.no_products') }}</x-empty-state>
             </section>
         @else
             @if (($discountedProducts ?? collect())->isNotEmpty())

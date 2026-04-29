@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class StorefrontController extends Controller
 {
@@ -56,7 +57,7 @@ class StorefrontController extends Controller
         ]);
 
         if ($request->ajax()) {
-            return $this->productGridResponse($data['products'], ! empty($data['pincode']) ? 'No products available in your area' : 'No products found.');
+            return $this->productGridResponse($data['products'], config('ui_messages.no_products'));
         }
 
         return view('storefront.category', $data);
@@ -70,7 +71,7 @@ class StorefrontController extends Controller
         ]);
 
         if ($request->ajax()) {
-            return $this->productGridResponse($data['products'], ! empty($data['pincode']) ? 'No products available in your area' : 'No products found.');
+            return $this->productGridResponse($data['products'], config('ui_messages.no_products'));
         }
 
         return view('storefront.subcategory', $data);
@@ -105,11 +106,11 @@ class StorefrontController extends Controller
                 ]);
             }
 
-            return $this->productGridResponse(
-                $products,
-                ! empty($this->activePincode()) ? 'No products available in your area' : 'No products found for your search',
-                [
-                    'recent_searches' => $this->recentSearches(),
+                return $this->productGridResponse(
+                    $products,
+                    config('ui_messages.no_products'),
+                    [
+                        'recent_searches' => $this->recentSearches(),
                 ]
             );
         }
@@ -124,19 +125,23 @@ class StorefrontController extends Controller
 
     public function searchSuggestions(Request $request): JsonResponse
     {
-        $keyword = trim((string) $request->string('q'));
+        try {
+            $keyword = trim((string) $request->string('q'));
 
-        if (mb_strlen($keyword) < 2) {
-            return response()->json([]);
+            if (mb_strlen($keyword) < 2) {
+                return response()->json([]);
+            }
+
+            $products = $this->productsQuery($this->browsingLocation())
+                ->where('product_name', 'like', "%{$keyword}%")
+                ->orderBy('product_name')
+                ->limit(5)
+                ->pluck('product_name');
+
+            return response()->json($products);
+        } catch (Throwable $exception) {
+            return $this->apiError($exception);
         }
-
-        $products = $this->productsQuery($this->browsingLocation())
-            ->where('product_name', 'like', "%{$keyword}%")
-            ->orderBy('product_name')
-            ->limit(5)
-            ->pluck('product_name');
-
-        return response()->json($products);
     }
 
     public function cart(Request $request)
@@ -191,7 +196,7 @@ class StorefrontController extends Controller
         $cartItems = $this->cartItems();
 
         if ($cartItems->isEmpty()) {
-            return redirect()->route('storefront.cart')->with('error', 'Your cart is empty.');
+            return redirect()->route('storefront.cart')->with('error', config('ui_messages.empty_cart'));
         }
 
         $data = $request->validate([
@@ -570,29 +575,37 @@ class StorefrontController extends Controller
 
     public function cities(Request $request): JsonResponse
     {
-        $cities = City::query()
-            ->where('status', 'active')
-            ->when($request->filled('country_id'), function ($query) use ($request) {
-                $query->where('country_id', $request->integer('country_id'));
-            })
-            ->orderBy('city_name')
-            ->get(['id', 'city_name', 'country_id']);
+        try {
+            $cities = City::query()
+                ->where('status', 'active')
+                ->when($request->filled('country_id'), function ($query) use ($request) {
+                    $query->where('country_id', $request->integer('country_id'));
+                })
+                ->orderBy('city_name')
+                ->get(['id', 'city_name', 'country_id']);
 
-        return response()->json(['cities' => $cities]);
+            return response()->json(['cities' => $cities]);
+        } catch (Throwable $exception) {
+            return $this->apiError($exception);
+        }
     }
 
     public function zones(Request $request): JsonResponse
     {
-        $zones = RegionZone::query()
-            ->where('status', 'active')
-            ->where('delivery_available', true)
-            ->when($request->filled('city_id'), function ($query) use ($request) {
-                $query->where('city_id', $request->integer('city_id'));
-            })
-            ->orderBy('zone_name')
-            ->get(['id', 'zone_name', 'zone_code', 'city_id']);
+        try {
+            $zones = RegionZone::query()
+                ->where('status', 'active')
+                ->where('delivery_available', true)
+                ->when($request->filled('city_id'), function ($query) use ($request) {
+                    $query->where('city_id', $request->integer('city_id'));
+                })
+                ->orderBy('zone_name')
+                ->get(['id', 'zone_name', 'zone_code', 'city_id']);
 
-        return response()->json(['zones' => $zones]);
+            return response()->json(['zones' => $zones]);
+        } catch (Throwable $exception) {
+            return $this->apiError($exception);
+        }
     }
 
     public function addToCart(Request $request, Product $product): JsonResponse
@@ -955,6 +968,18 @@ class StorefrontController extends Controller
                 'selectedVendorId' => request()->filled('vendor_id') ? request()->integer('vendor_id') : null,
             ])->render(),
         ], $extra));
+    }
+
+    private function apiError(Throwable $exception): JsonResponse
+    {
+        Log::error('Storefront API request failed.', [
+            'error' => $exception->getMessage(),
+        ]);
+
+        return response()->json([
+            'error' => true,
+            'message' => config('ui_messages.api_error'),
+        ], 500);
     }
 
     private function vendorIdsForPincode(string $pincode)

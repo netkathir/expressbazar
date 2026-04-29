@@ -14,6 +14,26 @@ const guestCartKey = 'expressbazar.guestCart';
 const legacyGuestCartKey = 'guest_cart';
 window.storefrontAjaxFilters = true;
 
+function uiMessage(key, fallback) {
+    return config.uiMessages?.[key] || fallback;
+}
+
+function showError(message) {
+    const text = message || uiMessage('api_error', 'Something went wrong. Please try again');
+    let errorBox = document.getElementById('error-box');
+
+    if (!errorBox) {
+        errorBox = document.createElement('div');
+        errorBox.id = 'error-box';
+        errorBox.className = 'alert alert-danger border-0 shadow-sm rounded-4 mb-3';
+        const container = document.querySelector('main.sf-page') || document.body;
+        container.prepend(errorBox);
+    }
+
+    errorBox.textContent = text;
+    errorBox.style.display = 'block';
+}
+
 function getGuestCartState() {
     try {
         const raw = localStorage.getItem(guestCartKey) || localStorage.getItem(legacyGuestCartKey);
@@ -150,7 +170,7 @@ function updateCartPage(payload = {}) {
     }
 
     if (cartItemsEl && Number(payload.cartCount || 0) === 0) {
-        cartItemsEl.innerHTML = '<div class="sf-empty-state">Your cart is empty</div>';
+        cartItemsEl.innerHTML = `<div class="sf-empty-state">${escapeHtml(uiMessage('empty_cart', 'Your cart is empty'))}</div>`;
     }
 
     if (payload.cartTotals && summaryEls.length >= 3) {
@@ -171,13 +191,101 @@ async function fetchJson(url) {
             'Accept': 'application/json',
         },
     });
-    return response.json();
+    const payload = await response.json();
+
+    if (!response.ok || payload?.error) {
+        throw new Error(payload?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
+    }
+
+    return payload;
 }
 
 function updateProductList(html) {
     const productList = document.querySelector('.js-product-list');
     if (productList && typeof html === 'string') {
         productList.innerHTML = html;
+    }
+}
+
+function notificationMessage(notification) {
+    return notification?.data?.message || notification?.data?.title || 'Notification';
+}
+
+function renderNotifications(data) {
+    const container = document.getElementById('notification-list');
+    const countEl = document.getElementById('notification-count');
+
+    if (!container) {
+        return;
+    }
+
+    const notifications = Array.isArray(data) ? data : [];
+    const unreadCount = notifications.filter((notification) => !notification.read_at).length;
+
+    if (countEl) {
+        countEl.textContent = String(unreadCount);
+        countEl.classList.toggle('d-none', unreadCount < 1);
+    }
+
+    if (notifications.length === 0) {
+        container.innerHTML = '<div class="dropdown-item-text small text-secondary px-2 py-2">No notifications</div>';
+        return;
+    }
+
+    container.innerHTML = notifications
+        .map((notification) => {
+            const unreadClass = notification.read_at ? '' : 'fw-semibold';
+            const message = escapeHtml(notificationMessage(notification));
+            const id = escapeHtml(notification.id);
+
+            return `
+                <div class="dropdown-item-text small text-secondary px-2 py-2 ${unreadClass}">
+                    <div class="d-flex align-items-start justify-content-between gap-2">
+                        <span>${message}</span>
+                        <button type="button" class="btn btn-sm btn-light py-0 px-1 js-notification-read" data-notification-id="${id}" aria-label="Mark notification as read">
+                            <i class="ti ti-check"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        })
+        .join('');
+}
+
+async function loadNotifications() {
+    if (!config.notificationsUrl) {
+        return;
+    }
+
+    try {
+        const notifications = await fetchJson(config.notificationsUrl);
+        renderNotifications(notifications);
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function markRead(id) {
+    if (!id || !config.notificationReadUrlTemplate) {
+        return;
+    }
+
+    const url = String(config.notificationReadUrlTemplate).replace('__ID__', encodeURIComponent(id));
+
+    try {
+        const { response, payload } = await sendCartAction(url, {
+            method: 'POST',
+            body: new FormData(),
+        });
+
+        if (!response.ok || payload?.error) {
+            showError(payload?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
+            return;
+        }
+
+        loadNotifications();
+    } catch (error) {
+        showError(error.message);
     }
 }
 
@@ -204,16 +312,32 @@ async function loadFilteredProducts(form) {
         }
     });
 
-    const response = await fetch(url, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-        },
-    });
-    const payload = await response.json();
+    let response;
+    let payload;
+
+    try {
+        response = await fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+        });
+        payload = await response.json();
+    } catch (error) {
+        updateProductList(`<div class="sf-empty-state">${escapeHtml(uiMessage('api_error', 'Something went wrong. Please try again'))}</div>`);
+        showError(uiMessage('api_error', 'Something went wrong. Please try again'));
+        return;
+    }
+
+    if (!response.ok || payload?.error) {
+        const message = payload?.message || uiMessage('api_error', 'Something went wrong. Please try again');
+        updateProductList(`<div class="sf-empty-state">${escapeHtml(message)}</div>`);
+        showError(message);
+        return;
+    }
 
     if (payload.require_location) {
-        updateProductList(`<div class="sf-empty-state">${payload.message || 'Enter your delivery location to see exact availability'}</div>`);
+        updateProductList(`<div class="sf-empty-state">${escapeHtml(payload.message || 'Enter your delivery location to see exact availability')}</div>`);
         showLocationModal();
         return;
     }
@@ -256,10 +380,16 @@ async function loadCities(countryId, selectedCityId = null) {
         return;
     }
 
-    const url = new URL(config.locationCitiesUrl, window.location.origin);
-    url.searchParams.set('country_id', countryId);
-    const payload = await fetchJson(url);
-    const cities = payload.cities || [];
+    let cities = [];
+
+    try {
+        const url = new URL(config.locationCitiesUrl, window.location.origin);
+        url.searchParams.set('country_id', countryId);
+        const payload = await fetchJson(url);
+        cities = payload.cities || [];
+    } catch (error) {
+        showError(error.message);
+    }
 
     citySelect.innerHTML = '<option value="">Choose city</option>';
     cities.forEach((city) => {
@@ -278,10 +408,16 @@ async function loadZones(cityId, selectedZoneId = null) {
         return;
     }
 
-    const url = new URL(config.locationZonesUrl, window.location.origin);
-    url.searchParams.set('city_id', cityId);
-    const payload = await fetchJson(url);
-    const zones = payload.zones || [];
+    let zones = [];
+
+    try {
+        const url = new URL(config.locationZonesUrl, window.location.origin);
+        url.searchParams.set('city_id', cityId);
+        const payload = await fetchJson(url);
+        zones = payload.zones || [];
+    } catch (error) {
+        showError(error.message);
+    }
 
     zoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
     zones.forEach((zone) => {
@@ -296,24 +432,34 @@ async function loadZones(cityId, selectedZoneId = null) {
 }
 
 async function sendCartAction(url, options = {}) {
-    const response = await fetch(url, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': config.csrfToken || '',
-            ...(options.headers || {}),
-        },
-        ...options,
-    });
-
-    let payload = {};
     try {
-        payload = await response.json();
-    } catch (error) {
-        payload = {};
-    }
+        const response = await fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': config.csrfToken || '',
+                ...(options.headers || {}),
+            },
+            ...options,
+        });
 
-    return { response, payload };
+        let payload = {};
+        try {
+            payload = await response.json();
+        } catch (error) {
+            payload = {};
+        }
+
+        return { response, payload };
+    } catch (error) {
+        return {
+            response: { ok: false },
+            payload: {
+                error: true,
+                message: uiMessage('api_error', 'Something went wrong. Please try again'),
+            },
+        };
+    }
 }
 
 function syncLocationInputs(initialLocation) {
@@ -380,6 +526,13 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
+    const notificationReadButton = event.target.closest('.js-notification-read');
+    if (notificationReadButton) {
+        event.preventDefault();
+        markRead(notificationReadButton.dataset.notificationId);
+        return;
+    }
+
     const addForm = event.target.closest('.js-add-to-cart');
     if (addForm) {
         event.preventDefault();
@@ -394,9 +547,9 @@ document.addEventListener('click', async (event) => {
             if (locationMessage && locationMessage.toLowerCase().includes('location')) {
                 showLocationModal();
             } else if (payload?.message) {
-                alert(payload.message);
+                showError(payload.message);
             } else {
-                alert('Please select your delivery location first.');
+                showError(uiMessage('api_error', 'Something went wrong. Please try again'));
             }
             return;
         }
@@ -421,7 +574,7 @@ document.addEventListener('click', async (event) => {
         });
 
         if (!response.ok) {
-            alert(payload?.message || 'Unable to update cart quantity.');
+            showError(payload?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
             return;
         }
 
@@ -458,6 +611,39 @@ document.addEventListener('submit', async (event) => {
         return;
     }
 
+    const logoutForm = event.target.closest('.js-logout-form');
+    if (logoutForm) {
+        event.preventDefault();
+
+        const existingGuestCart = getGuestCartState();
+        const cartToPreserve = existingGuestCart.length > 0
+            ? existingGuestCart
+            : normalizeCartState(config.initialCartState || []);
+
+        if (cartToPreserve.length > 0) {
+            setGuestCartState(cartToPreserve);
+        }
+
+        try {
+            await fetch(logoutForm.action || config.logoutUrl || '/logout', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html',
+                    'X-CSRF-TOKEN': config.csrfToken || '',
+                },
+                body: new FormData(logoutForm),
+            });
+        } catch (error) {
+            if (cartToPreserve.length > 0) {
+                setGuestCartState(cartToPreserve);
+            }
+        }
+
+        window.location.href = '/';
+        return;
+    }
+
     const form = event.target.closest('.js-location-form');
     if (!form) {
         return;
@@ -485,11 +671,11 @@ document.addEventListener('submit', async (event) => {
                 }
             }
         } else if (payload?.message) {
-            alert(payload.message);
+            showError(payload.message);
         } else if (payload?.errors?.postcode?.[0]) {
-            alert(payload.errors.postcode[0]);
+            showError(payload.errors.postcode[0]);
         } else {
-            alert('Unable to update location.');
+            showError(uiMessage('api_error', 'Something went wrong. Please try again'));
         }
         return;
     }
@@ -580,9 +766,14 @@ searchInput?.addEventListener('input', () => {
     }
 
     searchSuggestionTimer = window.setTimeout(async () => {
-        const url = new URL(config.searchSuggestionsUrl, window.location.origin);
-        url.searchParams.set('q', q);
-        renderSearchSuggestions(await fetchJson(url));
+        try {
+            const url = new URL(config.searchSuggestionsUrl, window.location.origin);
+            url.searchParams.set('q', q);
+            renderSearchSuggestions(await fetchJson(url));
+        } catch (error) {
+            hideSearchSuggestions();
+            showError(error.message);
+        }
     }, 180);
 });
 
@@ -605,6 +796,11 @@ document.addEventListener('click', (event) => {
 
 if (config.initialLocation) {
     syncLocationInputs(config.initialLocation);
+}
+
+if (config.notificationsUrl) {
+    loadNotifications();
+    window.setInterval(loadNotifications, 10000);
 }
 
 if (config.currentUserRole === 'customer' && config.guestCartMerged) {

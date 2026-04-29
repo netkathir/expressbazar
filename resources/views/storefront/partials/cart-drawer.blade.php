@@ -32,7 +32,7 @@
             </div>
         @empty
             <div class="text-center py-5">
-                <div class="fw-semibold mb-2">Your cart is empty</div>
+                <div class="fw-semibold mb-2">{{ config('ui_messages.empty_cart') }}</div>
                 <p class="text-secondary small mb-0">Add items to see them here.</p>
             </div>
         @endforelse
