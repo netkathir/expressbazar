@@ -59,10 +59,6 @@
                                 <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit customer" title="Edit customer">
                                     <i class="ti ti-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.customers.toggle-status', $customer) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-warning">Toggle</button>
-                                </form>
                                 <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this customer?');">
                                     @csrf
                                     @method('DELETE')
