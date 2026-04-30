@@ -1,16 +1,20 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $routePrefix = $routePrefix ?? 'admin.products';
+        $isVendorPanel = $isVendorPanel ?? false;
+    @endphp
     <div class="card shell-card">
         <div class="card-body p-4 p-md-5">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Product' : 'Edit Product' }}</h1>
                 </div>
-                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.products.store') : route('admin.products.update', $product) }}" class="row g-3" enctype="multipart/form-data">
+            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $product) }}" class="row g-3" enctype="multipart/form-data">
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -21,15 +25,19 @@
                     <label class="form-label">Product Name</label>
                     <input type="text" name="product_name" value="{{ old('product_name', $product->product_name) }}" class="form-control" required>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Vendor</label>
-                    <select name="vendor_id" class="form-select" required>
-                        <option value="">Select vendor</option>
-                        @foreach ($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" @selected((string) old('vendor_id', $product->vendor_id) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @if ($isVendorPanel)
+                    <input type="hidden" name="vendor_id" value="{{ auth('vendor')->id() }}">
+                @else
+                    <div class="col-md-6">
+                        <label class="form-label">Vendor</label>
+                        <select name="vendor_id" class="form-select" required>
+                            <option value="">Select vendor</option>
+                            @foreach ($vendors as $vendor)
+                                <option value="{{ $vendor->id }}" @selected((string) old('vendor_id', $product->vendor_id) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <div class="col-md-6">
                     <label class="form-label">Tax</label>
                     <select name="tax_id" class="form-select">

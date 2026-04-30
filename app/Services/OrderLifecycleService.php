@@ -59,6 +59,7 @@ class OrderLifecycleService
 
         $order->update($updates);
         $this->log($order, $from, $to, $changedBy, $note);
+        $this->dispatchVendorStatusNotification($order->fresh(['vendor']), $to);
 
         if ($to === 'delivered') {
             $this->dispatchDeliveredNotification($order->fresh(['customer']));
@@ -99,6 +100,37 @@ class OrderLifecycleService
         } catch (Throwable $exception) {
             Log::error('Order delivered template notification dispatch failed.', [
                 'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function dispatchVendorStatusNotification(Order $order, string $status): void
+    {
+        try {
+            $vendor = $order->vendor;
+
+            if (! $vendor) {
+                return;
+            }
+
+            event(new TriggerNotificationEvent('ORDER_STATUS_UPDATE', [
+                'recipient_type' => 'vendor',
+                'recipient_id' => $vendor->id,
+                'email' => $vendor->email,
+                'phone' => $vendor->phone,
+                'name' => $vendor->vendor_name,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'status' => ucfirst($status),
+                'order_status' => ucfirst($status),
+                'amount' => number_format((float) $order->total_amount, 2),
+                'total_amount' => number_format((float) $order->total_amount, 2),
+            ]));
+        } catch (Throwable $exception) {
+            Log::error('Order status vendor notification dispatch failed.', [
+                'order_id' => $order->id,
+                'status' => $status,
                 'error' => $exception->getMessage(),
             ]);
         }

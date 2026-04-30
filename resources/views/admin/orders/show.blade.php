@@ -1,12 +1,32 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $routePrefix = $routePrefix ?? 'admin.orders';
+        $isVendorPanel = $isVendorPanel ?? false;
+        $panelUser = $isVendorPanel ? auth('vendor')->user() : auth()->user();
+        $canUpdateOrders = $isVendorPanel
+            ? $panelUser?->hasRolePermission('orders', 'edit')
+            : ($panelUser?->hasRolePermission('orders', 'edit') ?? true);
+    @endphp
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Order {{ $order->order_number }}</h1>
             </div>
-            <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">Back</a>
+            <div class="d-flex flex-wrap gap-2">
+                @if ($isVendorPanel && $canUpdateOrders && $order->order_status === 'pending')
+                    <form method="POST" action="{{ route('vendor.orders.accept', $order) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-success">Accept</button>
+                    </form>
+                    <form method="POST" action="{{ route('vendor.orders.reject', $order) }}" onsubmit="return confirm('Reject this order?');">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger">Reject</button>
+                    </form>
+                @endif
+                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
+            </div>
         </div>
     </div>
 

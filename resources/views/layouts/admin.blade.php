@@ -15,6 +15,14 @@
     @stack('head')
 </head>
 <body class="admin-shell">
+    @php
+        $vendorUser = auth('vendor')->user();
+        $adminUser = auth()->user();
+        $panelUser = $vendorUser ?: $adminUser;
+        $isVendorPanel = $vendorUser !== null;
+        $panelBrandName = $isVendorPanel ? 'Express Bazar Vendor' : config('admin_panel.brand.name');
+        $panelNavigation = $isVendorPanel ? config('vendor_panel.navigation') : config('admin_panel.navigation');
+    @endphp
     <div id="overlay" class="overlay"></div>
 
     <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
@@ -26,60 +34,64 @@
                 <i class="ti ti-layout-sidebar-left-expand"></i>
             </button>
             <div>
-                <div class="fw-semibold">{{ config('admin_panel.brand.name') }}</div>
+                <div class="fw-semibold">{{ $panelBrandName }}</div>
             </div>
         </div>
 
         <div class="ms-auto d-flex align-items-center gap-2">
             <span class="badge rounded-pill badge-soft">
-                <i class="ti ti-bolt me-1"></i>Admin panel
+                <i class="ti ti-bolt me-1"></i>{{ $isVendorPanel ? 'Vendor panel' : 'Admin panel' }}
             </span>
-            <a href="{{ route('user.home') }}" class="btn btn-outline-secondary btn-sm">User panel</a>
-            @auth
+            @unless ($isVendorPanel)
+                <a href="{{ route('user.home') }}" class="btn btn-outline-secondary btn-sm">User panel</a>
+            @endunless
+            @if ($panelUser)
                 @php
-                    $adminUnreadNotifications = \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                    $adminUnreadNotifications = (! $isVendorPanel && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
                         ? auth()->user()->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->latest()->limit(5)->get()
                         : collect();
-                    $adminUnreadCount = \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                    $adminUnreadCount = (! $isVendorPanel && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
                         ? auth()->user()->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->count()
                         : 0;
                 @endphp
-                <div class="dropdown">
-                    <button class="btn btn-light btn-icon btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
-                        <i class="ti ti-bell"></i>
-                        <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $adminUnreadCount ? '' : 'd-none' }}">{{ $adminUnreadCount }}</span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
-                        <div class="small fw-semibold px-2 py-1">Notifications</div>
-                        <div id="notification-list">
-                            @forelse ($adminUnreadNotifications as $note)
-                                <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
-                            @empty
-                                <div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>
-                            @endforelse
+                @unless ($isVendorPanel)
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-icon btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                            <i class="ti ti-bell"></i>
+                            <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $adminUnreadCount ? '' : 'd-none' }}">{{ $adminUnreadCount }}</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
+                            <div class="small fw-semibold px-2 py-1">Notifications</div>
+                            <div id="notification-list">
+                                @forelse ($adminUnreadNotifications as $note)
+                                    <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
+                                @empty
+                                    <div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endunless
                 <div class="dropdown admin-profile-dropdown">
                     <button class="btn admin-profile-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open admin account menu">
                         <span class="sf-avatar sf-avatar-sm">
-                            @if (auth()->user()->avatar_path)
-                                <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                            @if (! $isVendorPanel && $panelUser->avatar_path)
+                                <img src="{{ asset($panelUser->avatar_path) }}" alt="{{ $panelUser->name }}">
                             @else
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                {{ strtoupper(substr($isVendorPanel ? $panelUser->vendor_name : $panelUser->name, 0, 1)) }}
                             @endif
                         </span>
                         <span class="admin-profile-copy">
-                            <span class="admin-profile-name">{{ auth()->user()->name }}</span>
-                            <span class="admin-profile-role">{{ \Illuminate\Support\Str::headline(auth()->user()->role ?: 'Administrator') }}</span>
+                            <span class="admin-profile-name">{{ $isVendorPanel ? $panelUser->vendor_name : $panelUser->name }}</span>
+                            <span class="admin-profile-role">{{ \Illuminate\Support\Str::headline($panelUser->role ?: ($isVendorPanel ? 'Vendor' : 'Administrator')) }}</span>
                         </span>
                         <i class="ti ti-chevron-down admin-profile-chevron" aria-hidden="true"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2 admin-profile-menu">
-                        <a href="{{ route('admin.dashboard') }}" class="dropdown-item rounded-2">
+                        <a href="{{ $isVendorPanel ? route('vendor.dashboard') : route('admin.dashboard') }}" class="dropdown-item rounded-2">
                             <i class="ti ti-layout-dashboard me-2"></i>Dashboard
                         </a>
-                        <form method="POST" action="{{ route('admin.logout') }}">
+                        <form method="POST" action="{{ $isVendorPanel ? route('vendor.logout') : route('admin.logout') }}">
                             @csrf
                             <button type="submit" class="dropdown-item rounded-2 text-danger">
                                 <i class="ti ti-logout me-2"></i>Logout
@@ -87,26 +99,29 @@
                         </form>
                     </div>
                 </div>
-            @endauth
+            @endif
         </div>
     </nav>
 
     <aside id="sidebar" class="sidebar">
         <div class="logo-area">
-            <a href="{{ route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
+            <a href="{{ $isVendorPanel ? route('vendor.dashboard') : route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
                 <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="admin-brand-logo">
             </a>
         </div>
 
         <div class="nav flex-column py-3">
-            @php($currentUser = auth()->user())
-            @foreach (config('admin_panel.navigation') as $group)
+            @foreach ($panelNavigation as $group)
                 <div class="px-4 pt-2 pb-1">
                     <small class="nav-text text-uppercase text-secondary fw-semibold">{{ $group['group'] }}</small>
                 </div>
 
                 @foreach ($group['items'] as $item)
-                    @if (! $currentUser || ! method_exists($currentUser, 'canAccessAdminRoute') || $currentUser->canAccessAdminRoute($item['route'], 'GET'))
+                    @if (
+                        ! $panelUser
+                        || ($isVendorPanel && method_exists($panelUser, 'canAccessVendorRoute') && $panelUser->canAccessVendorRoute($item['route'], 'GET'))
+                        || (! $isVendorPanel && method_exists($panelUser, 'canAccessAdminRoute') && $panelUser->canAccessAdminRoute($item['route'], 'GET'))
+                    )
                         <a
                             class="nav-link {{ ($activeMenu ?? '') === ($item['active'] ?? '') ? 'active' : '' }}"
                             href="{{ route($item['route'], $item['params'] ?? []) }}"

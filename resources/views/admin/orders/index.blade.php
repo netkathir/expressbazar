@@ -1,12 +1,18 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $routePrefix = $routePrefix ?? 'admin.orders';
+        $isVendorPanel = $isVendorPanel ?? false;
+    @endphp
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Order Management</h1>
             </div>
-            <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">Add Order</a>
+            @unless ($isVendorPanel)
+                <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">Add Order</a>
+            @endunless
         </div>
     </div>
 
@@ -37,7 +43,7 @@
                 </div>
                 <div class="col-12 d-flex gap-2">
                     <button class="btn btn-dark" type="submit">Filter</button>
-                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
         </div>
@@ -69,19 +75,21 @@
                             <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : 'secondary' }}">{{ ucfirst($order->order_status) }}</span></td>
                             <td>{{ $order->placed_at?->format('M d, Y') ?? '-' }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
+                                <a href="{{ route($routePrefix.'.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
                                     <i class="ti ti-eye"></i>
                                 </a>
-                                <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit order" title="Edit order">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this order?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete order" title="Delete order">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @unless ($isVendorPanel)
+                                    <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit order" title="Edit order">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this order?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete order" title="Delete order">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endunless
                             </td>
                         </tr>
                     @empty

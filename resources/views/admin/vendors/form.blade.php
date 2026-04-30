@@ -56,6 +56,15 @@
                         <option value="inactive" @selected(old('status', $vendor->status) === 'inactive')>Inactive</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Panel Role</label>
+                    <select name="role" class="form-select" required>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->role_name }}" @selected(old('role', $vendor->role ?: 'vendor') === $role->role_name)>{{ \Illuminate\Support\Str::headline($role->role_name) }}</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">Controls vendor panel permissions.</div>
+                </div>
                 <div class="col-12">
                     <label class="form-label">Address</label>
                     <textarea name="address" class="form-control" rows="3">{{ old('address', $vendor->address) }}</textarea>
@@ -93,6 +102,14 @@
                     <label class="form-label">Credentials</label>
                     <textarea name="credentials" class="form-control" rows="4">{{ old('credentials', $vendor->credentials) }}</textarea>
                 </div>
+                @if ($mode === 'edit')
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" name="send_credentials" value="1" class="form-check-input" id="sendCredentials">
+                            <label class="form-check-label" for="sendCredentials">Generate and email new vendor panel credentials</label>
+                        </div>
+                    </div>
+                @endif
                 <div class="col-12">
                     <button class="btn btn-primary" type="submit">{{ $mode === 'create' ? 'Save Vendor' : 'Update Vendor' }}</button>
                 </div>

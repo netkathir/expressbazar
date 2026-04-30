@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\VendorCredentialsMail;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\RegionZone;
+use App\Models\Role;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +54,7 @@ class VendorController extends Controller
             'countries' => Country::orderBy('country_name')->get(),
             'cities' => City::orderBy('city_name')->get(),
             'zones' => RegionZone::orderBy('zone_name')->get(),
+            'roles' => Role::query()->where('status', 'active')->orderBy('role_name')->get(),
             'mode' => 'create',
         ]);
     }
@@ -56,12 +63,20 @@ class VendorController extends Controller
     {
         $data = $this->validateVendor($request);
 
+        $plainPassword = $this->generatePassword();
+        $data['password'] = Hash::make($plainPassword);
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
 
-        Vendor::create($data);
+        $vendor = Vendor::create($data);
+        $mailSent = $this->sendCredentialsMail($vendor, $plainPassword);
 
-        return redirect()->route('admin.vendors.index')->with('success', 'Vendor created successfully.');
+        return redirect()
+            ->route('admin.vendors.index')
+            ->with('success', $mailSent
+                ? 'Vendor created successfully. Credentials email sent.'
+                : 'Vendor created successfully, but credentials email could not be sent. Please check mail settings and resend from vendor edit.'
+            );
     }
 
     public function edit(Vendor $vendor)
@@ -73,6 +88,7 @@ class VendorController extends Controller
             'countries' => Country::orderBy('country_name')->get(),
             'cities' => City::orderBy('city_name')->get(),
             'zones' => RegionZone::orderBy('zone_name')->get(),
+            'roles' => Role::query()->where('status', 'active')->orderBy('role_name')->get(),
             'mode' => 'edit',
         ]);
     }
@@ -81,10 +97,28 @@ class VendorController extends Controller
     {
         $data = $this->validateVendor($request, $vendor);
         $data['updated_by'] = $request->user()?->id;
+        $plainPassword = null;
+
+        if ($request->boolean('send_credentials') || empty($vendor->password)) {
+            $plainPassword = $this->generatePassword();
+            $data['password'] = Hash::make($plainPassword);
+        }
 
         $vendor->update($data);
 
-        return redirect()->route('admin.vendors.index')->with('success', 'Vendor updated successfully.');
+        $mailSent = null;
+        if ($plainPassword) {
+            $mailSent = $this->sendCredentialsMail($vendor->fresh(), $plainPassword);
+        }
+
+        $message = 'Vendor updated successfully.';
+        if ($mailSent === true) {
+            $message .= ' Credentials email sent.';
+        } elseif ($mailSent === false) {
+            $message .= ' Credentials were generated, but email could not be sent. Please check mail settings and try again.';
+        }
+
+        return redirect()->route('admin.vendors.index')->with('success', $message);
     }
 
     public function destroy(Vendor $vendor)
@@ -135,6 +169,7 @@ class VendorController extends Controller
         $data = $request->validate([
             'vendor_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('vendors', 'email')->ignore($vendor?->id)],
+            'role' => ['required', 'exists:roles,role_name'],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string'],
             'pincode' => ['nullable', 'string', 'max:10'],
@@ -163,7 +198,35 @@ class VendorController extends Controller
         }
 
         $data['pincode'] = mb_strtoupper(trim((string) ($data['pincode'] ?? ''))) ?: null;
+        $data['email'] = mb_strtolower(trim((string) $data['email']));
 
         return $data;
+    }
+
+    private function generatePassword(): string
+    {
+        return Str::password(12, true, true, false);
+    }
+
+    private function sendCredentialsMail(Vendor $vendor, string $plainPassword): bool
+    {
+        try {
+            Mail::to($vendor->email)->send(new VendorCredentialsMail($vendor, $plainPassword));
+
+            Log::info('Vendor credentials email sent.', [
+                'vendor_id' => $vendor->id,
+                'email' => $vendor->email,
+            ]);
+
+            return true;
+        } catch (\Throwable $exception) {
+            Log::error('Vendor credentials email failed.', [
+                'vendor_id' => $vendor->id,
+                'email' => $vendor->email,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }

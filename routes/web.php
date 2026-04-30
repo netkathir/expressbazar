@@ -27,6 +27,11 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\StorefrontController;
+use App\Http\Controllers\VendorAuthController;
+use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
+use App\Http\Controllers\Vendor\CouponController as VendorCouponController;
+use App\Http\Controllers\Vendor\OrderController as VendorOrderController;
+use App\Http\Controllers\Vendor\ProductController as VendorProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'home'])->name('user.home');
@@ -130,5 +135,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
         Route::get('vendors/options/cities', [VendorController::class, 'cities'])->name('vendors.cities');
         Route::get('vendors/options/zones', [VendorController::class, 'zones'])->name('vendors.zones');
+    });
+});
+
+Route::prefix('vendor')->name('vendor.')->group(function () {
+    Route::middleware('guest:vendor')->group(function () {
+        Route::get('/login', [VendorAuthController::class, 'create'])->name('login');
+        Route::post('/login', [VendorAuthController::class, 'store'])->name('login.store');
+    });
+
+    Route::post('/logout', [VendorAuthController::class, 'destroy'])->middleware('vendor')->name('logout');
+
+    Route::middleware('vendor')->group(function () {
+        Route::get('/', VendorDashboardController::class)->name('dashboard');
+        Route::resource('products', VendorProductController::class)->except(['show']);
+        Route::delete('products/images/{image}', [VendorProductController::class, 'destroyImage'])->name('products.images.destroy');
+        Route::resource('coupons', VendorCouponController::class)->except(['show']);
+        Route::get('orders', [VendorOrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [VendorOrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{order}/accept', [VendorOrderController::class, 'accept'])->name('orders.accept');
+        Route::post('orders/{order}/reject', [VendorOrderController::class, 'reject'])->name('orders.reject');
     });
 });

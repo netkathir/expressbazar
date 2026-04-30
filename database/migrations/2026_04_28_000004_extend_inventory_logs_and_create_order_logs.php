@@ -14,15 +14,17 @@ return new class extends Migration
             }
         });
 
-        Schema::create('order_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->string('from_status')->nullable();
-            $table->string('to_status');
-            $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->text('note')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('order_logs')) {
+            Schema::create('order_logs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
+                $table->string('from_status')->nullable();
+                $table->string('to_status');
+                $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->text('note')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

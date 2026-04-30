@@ -1,12 +1,28 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $routePrefix = $routePrefix ?? 'admin.products';
+        $isVendorPanel = $isVendorPanel ?? false;
+        $panelUser = $isVendorPanel ? auth('vendor')->user() : auth()->user();
+        $canCreateProducts = $isVendorPanel
+            ? $panelUser?->hasRolePermission('products', 'create')
+            : ($panelUser?->hasRolePermission('products', 'create') ?? true);
+        $canEditProducts = $isVendorPanel
+            ? $panelUser?->hasRolePermission('products', 'edit')
+            : ($panelUser?->hasRolePermission('products', 'edit') ?? true);
+        $canDeleteProducts = $isVendorPanel
+            ? $panelUser?->hasRolePermission('products', 'delete')
+            : ($panelUser?->hasRolePermission('products', 'delete') ?? true);
+    @endphp
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Product Management</h1>
             </div>
-            <a href="{{ route('admin.products.create') }}" class="btn btn-primary">Add Product</a>
+            @if ($canCreateProducts)
+                <a href="{{ route($routePrefix.'.create') }}" class="btn btn-primary">Add Product</a>
+            @endif
         </div>
     </div>
 
@@ -26,15 +42,17 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Vendor</label>
-                    <select name="vendor_id" class="form-select">
-                        <option value="">All</option>
-                        @foreach ($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" @selected((string) request('vendor_id') === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @unless ($isVendorPanel)
+                    <div class="col-md-2">
+                        <label class="form-label">Vendor</label>
+                        <select name="vendor_id" class="form-select">
+                            <option value="">All</option>
+                            @foreach ($vendors as $vendor)
+                                <option value="{{ $vendor->id }}" @selected((string) request('vendor_id') === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endunless
                 <div class="col-md-2">
                     <label class="form-label">Mode</label>
                     <select name="inventory_mode" class="form-select">
@@ -53,7 +71,7 @@
                 </div>
                 <div class="col-12 d-flex gap-2">
                     <button class="btn btn-dark" type="submit">Filter</button>
-                    <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
         </div>
@@ -108,16 +126,20 @@
                             </td>
                             <td><span class="badge text-bg-{{ $product->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($product->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit product" title="Edit product">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this product?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete product" title="Delete product">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @if ($canEditProducts)
+                                    <a href="{{ route($routePrefix.'.edit', $product) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit product" title="Edit product">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endif
+                                @if ($canDeleteProducts)
+                                    <form action="{{ route($routePrefix.'.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this product?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete product" title="Delete product">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

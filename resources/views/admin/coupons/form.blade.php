@@ -1,16 +1,20 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $routePrefix = $routePrefix ?? 'admin.coupons';
+        $isVendorPanel = $isVendorPanel ?? false;
+    @endphp
     <div class="card shell-card">
         <div class="card-body p-4 p-md-5">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Coupon' : 'Edit Coupon' }}</h1>
                 </div>
-                <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.coupons.store') : route('admin.coupons.update', $coupon) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $coupon) }}" class="row g-3">
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -35,15 +39,19 @@
                     <label class="form-label">Minimum Order</label>
                     <input type="number" name="min_order" step="0.01" min="0" value="{{ old('min_order', $coupon->min_order) }}" class="form-control" placeholder="Optional">
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Vendor</label>
-                    <select name="vendor_id" class="form-select">
-                        <option value="">All vendors</option>
-                        @foreach ($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" @selected((string) old('vendor_id', $coupon->vendor_id) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @if ($isVendorPanel)
+                    <input type="hidden" name="vendor_id" value="{{ auth('vendor')->id() }}">
+                @else
+                    <div class="col-md-4">
+                        <label class="form-label">Vendor</label>
+                        <select name="vendor_id" class="form-select">
+                            <option value="">All vendors</option>
+                            @foreach ($vendors as $vendor)
+                                <option value="{{ $vendor->id }}" @selected((string) old('vendor_id', $coupon->vendor_id) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <div class="col-md-4">
                     <label class="form-label">Expiry Date & Time</label>
                     <input type="datetime-local" name="expires_at" value="{{ old('expires_at', optional($coupon->expires_at)->format('Y-m-d\TH:i')) }}" class="form-control">
