@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\OrderPlaced;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
@@ -9,8 +10,10 @@ use App\Models\Vendor;
 use App\Services\OrderLifecycleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class OrderController extends Controller
 {
@@ -57,6 +60,15 @@ class OrderController extends Controller
 
         $order = Order::create($data);
         app(OrderLifecycleService::class)->log($order, null, $order->order_status, $request->user()?->id, 'Manual order created from admin.');
+
+        try {
+            event(new OrderPlaced($order->loadMissing(['customer', 'vendor', 'items'])));
+        } catch (Throwable $exception) {
+            Log::error('Admin order placed event dispatch failed.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
 
         return redirect()->route('admin.orders.index')->with('success', 'Order created successfully.');
     }

@@ -28,8 +28,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
-        Event::listen(OrderPlaced::class, SendVendorNotification::class);
         Event::listen(OrderPlaced::class, DispatchOrderPlacedTemplateNotification::class);
+        Event::listen(OrderPlaced::class, SendVendorNotification::class);
         Event::listen(TriggerNotificationEvent::class, SendTemplateNotification::class);
     }
 }

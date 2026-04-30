@@ -8,13 +8,12 @@ use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
 use App\Services\NotificationTemplateService;
 use App\Services\SmsService;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
-class SendTemplateNotification implements ShouldQueue
+class SendTemplateNotification
 {
     public function __construct(private NotificationTemplateService $templates)
     {
@@ -22,7 +21,7 @@ class SendTemplateNotification implements ShouldQueue
 
     public function handle(TriggerNotificationEvent $event): void
     {
-        $template = $this->templates->findActive($event->trigger, $event->data['channel'] ?? null);
+        $template = $this->templates->findActive($event->trigger, $event->data['channel'] ?? 'email');
 
         if (! $template) {
             return;
@@ -32,14 +31,17 @@ class SendTemplateNotification implements ShouldQueue
 
         try {
             if ($template->channel === 'email') {
-                $this->sendEmail($template, $message, $event->data);
-                $this->logNotification($template->id, $event->data, 'email', $message, 'sent');
+                if ($this->sendEmail($template, $message, $event->data)) {
+                    $this->logNotification($template->id, $event->data, 'email', $message, 'sent');
+                }
+
                 return;
             }
 
             if ($template->channel === 'sms') {
-                $this->sendSms($message, $event->data);
-                $this->logNotification($template->id, $event->data, 'sms', $message, 'sent');
+                if ($this->sendSms($message, $event->data)) {
+                    $this->logNotification($template->id, $event->data, 'sms', $message, 'sent');
+                }
             }
         } catch (Throwable $exception) {
             Log::error('Template notification failed.', [
@@ -53,28 +55,32 @@ class SendTemplateNotification implements ShouldQueue
         }
     }
 
-    private function sendEmail(NotificationTemplate $template, string $message, array $data): void
+    private function sendEmail(NotificationTemplate $template, string $message, array $data): bool
     {
         $email = $data['email'] ?? null;
 
         if (! $email) {
-            throw new \RuntimeException('Email recipient missing.');
+            return false;
         }
 
         $subject = $this->templates->render($template->subject ?: $template->template_name, $data);
 
-        Mail::to($email)->queue(new GenericTemplateMail($subject, $message));
+        Mail::to($email)->send(new GenericTemplateMail($subject, $message));
+
+        return true;
     }
 
-    private function sendSms(string $message, array $data): void
+    private function sendSms(string $message, array $data): bool
     {
         $phone = $data['phone'] ?? null;
 
         if (! $phone) {
-            throw new \RuntimeException('SMS recipient missing.');
+            return false;
         }
 
         app(SmsService::class)->send($phone, $message);
+
+        return true;
     }
 
     private function logNotification(?int $templateId, array $data, string $channel, string $message, string $status, ?string $error = null): void

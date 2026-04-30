@@ -39,7 +39,8 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME') ?: match (strtolower((string) env('MAIL_ENCRYPTION'))) {
+            'scheme' => match (strtolower((string) (env('MAIL_SCHEME') ?: env('MAIL_ENCRYPTION')))) {
+                'smtp' => 'smtp',
                 'tls', 'starttls' => 'smtp',
                 'ssl', 'smtps' => 'smtps',
                 default => null,

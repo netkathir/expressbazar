@@ -15,14 +15,19 @@ class NotificationTemplateService
         }
 
         $normalizedTrigger = $this->normalizeKey($trigger);
+        $hasTriggerKey = Schema::hasColumn('notification_templates', 'trigger_key');
+        $hasStatus = Schema::hasColumn('notification_templates', 'status');
+        $hasIsActive = Schema::hasColumn('notification_templates', 'is_active');
 
         return NotificationTemplate::query()
             ->when($channel, fn ($query) => $query->where('channel', Str::lower($channel)))
-            ->where('status', 'active')
+            ->when($hasStatus, fn ($query) => $query->where('status', 'active'))
+            ->when($hasIsActive, fn ($query) => $query->where('is_active', 1))
             ->latest()
             ->get()
-            ->first(function (NotificationTemplate $template) use ($normalizedTrigger) {
-                return $this->normalizeKey($template->notification_type) === $normalizedTrigger
+            ->first(function (NotificationTemplate $template) use ($normalizedTrigger, $hasTriggerKey) {
+                return ($hasTriggerKey && $this->normalizeKey((string) $template->trigger_key) === $normalizedTrigger)
+                    || $this->normalizeKey($template->notification_type) === $normalizedTrigger
                     || $this->normalizeKey($template->template_name) === $normalizedTrigger;
             });
     }

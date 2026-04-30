@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TriggerNotificationEvent;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\StripeCheckoutService;
@@ -124,9 +125,15 @@ class PaymentController extends Controller
             }
 
             if ($orderId) {
-                $this->markOrderAsPaidByOrderId((int) $orderId, $sessionId, $paymentIntentId);
+                $paidOrder = $this->markOrderAsPaidByOrderId((int) $orderId, $sessionId, $paymentIntentId);
             } elseif ($sessionId) {
-                $this->markOrderAsPaid($sessionId, $paymentIntentId);
+                $paidOrder = $this->markOrderAsPaid($sessionId, $paymentIntentId);
+            } else {
+                $paidOrder = null;
+            }
+
+            if ($paidOrder) {
+                $this->dispatchPaymentSuccessNotification($paidOrder);
             }
         }
 
@@ -148,19 +155,23 @@ class PaymentController extends Controller
         return response()->json(['received' => true]);
     }
 
-    private function markOrderAsPaid(?string $sessionId, ?string $paymentIntentId): void
+    private function markOrderAsPaid(?string $sessionId, ?string $paymentIntentId): ?Order
     {
         if (! $sessionId) {
-            return;
+            return null;
         }
 
-        DB::transaction(function () use ($sessionId, $paymentIntentId) {
+        return DB::transaction(function () use ($sessionId, $paymentIntentId) {
             $order = Order::query()
                 ->where('stripe_session_id', $sessionId)
                 ->first();
 
             if (! $order) {
-                return;
+                return null;
+            }
+
+            if ($order->payment_status === 'paid') {
+                return null;
             }
 
             $payment = $order->payments()
@@ -186,16 +197,22 @@ class PaymentController extends Controller
                     ]),
                 ]);
             }
+
+            return $order->fresh(['customer']);
         });
     }
 
-    private function markOrderAsPaidByOrderId(int $orderId, ?string $sessionId, ?string $paymentIntentId): void
+    private function markOrderAsPaidByOrderId(int $orderId, ?string $sessionId, ?string $paymentIntentId): ?Order
     {
-        DB::transaction(function () use ($orderId, $sessionId, $paymentIntentId) {
+        return DB::transaction(function () use ($orderId, $sessionId, $paymentIntentId) {
             $order = Order::query()->find($orderId);
 
             if (! $order) {
-                return;
+                return null;
+            }
+
+            if ($order->payment_status === 'paid') {
+                return null;
             }
 
             $payment = $order->payments()
@@ -222,6 +239,8 @@ class PaymentController extends Controller
                     ]),
                 ]);
             }
+
+            return $order->fresh(['customer']);
         });
     }
 
@@ -261,5 +280,33 @@ class PaymentController extends Controller
                 ]);
             }
         });
+    }
+
+    private function dispatchPaymentSuccessNotification(Order $order): void
+    {
+        try {
+            $customer = $order->customer;
+
+            if (! $customer) {
+                return;
+            }
+
+            event(new TriggerNotificationEvent('PAYMENT_SUCCESS', [
+                'recipient_type' => 'customer',
+                'recipient_id' => $customer->id,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'name' => $customer->name,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'amount' => number_format((float) $order->total_amount, 2),
+                'total_amount' => number_format((float) $order->total_amount, 2),
+            ]));
+        } catch (Throwable $exception) {
+            Log::error('Payment success template notification dispatch failed.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\TriggerNotificationEvent;
 use App\Models\Order;
 use App\Models\OrderLog;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class OrderLifecycleService
 {
@@ -56,6 +59,10 @@ class OrderLifecycleService
 
         $order->update($updates);
         $this->log($order, $from, $to, $changedBy, $note);
+
+        if ($to === 'delivered') {
+            $this->dispatchDeliveredNotification($order->fresh(['customer']));
+        }
     }
 
     public function log(Order $order, ?string $from, string $to, ?int $changedBy = null, ?string $note = null): void
@@ -67,5 +74,33 @@ class OrderLifecycleService
             'changed_by' => $changedBy,
             'note' => $note,
         ]);
+    }
+
+    private function dispatchDeliveredNotification(Order $order): void
+    {
+        try {
+            $customer = $order->customer;
+
+            if (! $customer) {
+                return;
+            }
+
+            event(new TriggerNotificationEvent('ORDER_DELIVERED', [
+                'recipient_type' => 'customer',
+                'recipient_id' => $customer->id,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'name' => $customer->name,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'amount' => number_format((float) $order->total_amount, 2),
+                'total_amount' => number_format((float) $order->total_amount, 2),
+            ]));
+        } catch (Throwable $exception) {
+            Log::error('Order delivered template notification dispatch failed.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

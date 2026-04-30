@@ -3,12 +3,10 @@
 namespace App\Listeners;
 
 use App\Events\OrderPlaced;
-use App\Mail\VendorOrderPlacedMail;
 use App\Models\NotificationLog;
 use App\Notifications\VendorOrderNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
@@ -27,7 +25,6 @@ class SendVendorNotification implements ShouldQueue
 
             $this->logInAppNotification($order);
             $this->sendDatabaseNotification($vendor, $order);
-            $this->queueVendorEmail($vendor, $order);
         } catch (Throwable $exception) {
             Log::error('Vendor notification listener failed.', [
                 'order_id' => $event->order->id ?? null,
@@ -74,23 +71,6 @@ class SendVendorNotification implements ShouldQueue
             Notification::send($vendor, new VendorOrderNotification($order));
         } catch (Throwable $exception) {
             Log::error('Vendor database notification failed.', [
-                'order_id' => $order->id,
-                'vendor_id' => $vendor->id,
-                'error' => $exception->getMessage(),
-            ]);
-        }
-    }
-
-    private function queueVendorEmail($vendor, $order): void
-    {
-        if (empty($vendor->email)) {
-            return;
-        }
-
-        try {
-            Mail::to($vendor->email)->queue(new VendorOrderPlacedMail($order));
-        } catch (Throwable $exception) {
-            Log::error('Vendor order email notification failed.', [
                 'order_id' => $order->id,
                 'vendor_id' => $vendor->id,
                 'error' => $exception->getMessage(),

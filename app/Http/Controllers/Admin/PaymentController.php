@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\TriggerNotificationEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class PaymentController extends Controller
 {
@@ -45,7 +48,11 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatePayment($request);
-        Payment::create($data);
+        $payment = Payment::create($data);
+
+        if ($payment->status === 'paid') {
+            $this->dispatchPaymentSuccessNotification($payment->load('order.customer'));
+        }
 
         return redirect()->route('admin.payments.index')->with('success', 'Payment created successfully.');
     }
@@ -64,7 +71,12 @@ class PaymentController extends Controller
     public function update(Request $request, Payment $payment)
     {
         $data = $this->validatePayment($request, $payment);
+        $wasPaid = $payment->status === 'paid';
         $payment->update($data);
+
+        if (! $wasPaid && $payment->status === 'paid') {
+            $this->dispatchPaymentSuccessNotification($payment->load('order.customer'));
+        }
 
         return redirect()->route('admin.payments.index')->with('success', 'Payment updated successfully.');
     }
@@ -87,5 +99,36 @@ class PaymentController extends Controller
             'gateway_response' => ['nullable', 'string'],
             'paid_at' => ['nullable', 'date'],
         ]);
+    }
+
+    private function dispatchPaymentSuccessNotification(Payment $payment): void
+    {
+        try {
+            $order = $payment->order;
+            $customer = $order?->customer;
+
+            if (! $order || ! $customer) {
+                return;
+            }
+
+            event(new TriggerNotificationEvent('PAYMENT_SUCCESS', [
+                'recipient_type' => 'customer',
+                'recipient_id' => $customer->id,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'name' => $customer->name,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'amount' => number_format((float) $payment->amount, 2),
+                'total_amount' => number_format((float) $order->total_amount, 2),
+                'transaction_id' => $payment->transaction_id,
+            ]));
+        } catch (Throwable $exception) {
+            Log::error('Admin payment success template notification dispatch failed.', [
+                'payment_id' => $payment->id,
+                'order_id' => $payment->order_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }
