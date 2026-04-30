@@ -8,6 +8,7 @@ use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
 use App\Services\NotificationTemplateService;
 use App\Services\SmsService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
@@ -28,11 +29,22 @@ class SendTemplateNotification
         }
 
         $message = $this->templates->render($template->message_body, $event->data);
+        $duplicateKey = $this->duplicateKey($event, $template);
+
+        if ($this->wasAlreadySent($template, $event->data, $template->channel, $message)) {
+            return;
+        }
+
+        if ($duplicateKey && ! Cache::add($duplicateKey, true, now()->addDay())) {
+            return;
+        }
 
         try {
             if ($template->channel === 'email') {
                 if ($this->sendEmail($template, $message, $event->data)) {
                     $this->logNotification($template->id, $event->data, 'email', $message, 'sent');
+                } else {
+                    $this->releaseDuplicateKey($duplicateKey);
                 }
 
                 return;
@@ -41,9 +53,13 @@ class SendTemplateNotification
             if ($template->channel === 'sms') {
                 if ($this->sendSms($message, $event->data)) {
                     $this->logNotification($template->id, $event->data, 'sms', $message, 'sent');
+                } else {
+                    $this->releaseDuplicateKey($duplicateKey);
                 }
             }
         } catch (Throwable $exception) {
+            $this->releaseDuplicateKey($duplicateKey);
+
             Log::error('Template notification failed.', [
                 'trigger' => $event->trigger,
                 'template_id' => $template->id,
@@ -98,5 +114,53 @@ class SendTemplateNotification
             'status' => $status,
             'error_message' => $error,
         ]);
+    }
+
+    private function duplicateKey(TriggerNotificationEvent $event, NotificationTemplate $template): ?string
+    {
+        $orderId = $event->data['order_id'] ?? $event->data['order_number'] ?? null;
+        $recipientType = $event->data['recipient_type'] ?? 'user';
+        $recipientId = $event->data['recipient_id'] ?? $event->data['email'] ?? $event->data['phone'] ?? null;
+
+        if (! $orderId || ! $recipientId) {
+            return null;
+        }
+
+        return 'notification_sent:'.sha1(implode('|', [
+            $event->trigger,
+            $template->id,
+            $template->channel,
+            $recipientType,
+            $recipientId,
+            $orderId,
+        ]));
+    }
+
+    private function releaseDuplicateKey(?string $key): void
+    {
+        if ($key) {
+            Cache::forget($key);
+        }
+    }
+
+    private function wasAlreadySent(NotificationTemplate $template, array $data, string $channel, string $message): bool
+    {
+        if (! Schema::hasTable('notification_logs')) {
+            return false;
+        }
+
+        $orderId = $data['order_id'] ?? null;
+        if (! $orderId) {
+            return false;
+        }
+
+        return NotificationLog::query()
+            ->where('template_id', $template->id)
+            ->where('recipient_type', $data['recipient_type'] ?? 'user')
+            ->where('recipient_id', $data['recipient_id'] ?? null)
+            ->where('channel', $channel)
+            ->where('status', 'sent')
+            ->where('message', $message)
+            ->exists();
     }
 }
