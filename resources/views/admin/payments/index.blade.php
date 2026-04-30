@@ -1,12 +1,18 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $routePrefix = $routePrefix ?? 'admin.payments';
+        $isVendorPanel = $isVendorPanel ?? false;
+    @endphp
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="h3 mb-1">Payment Management</h1>
             </div>
-            <a href="{{ route('admin.payments.create') }}" class="btn btn-primary">Add Payment</a>
+            @unless ($isVendorPanel)
+                <a href="{{ route('admin.payments.create') }}" class="btn btn-primary">Add Payment</a>
+            @endunless
         </div>
     </div>
 
@@ -37,7 +43,7 @@
                 </div>
                 <div class="col-md-2 d-flex gap-2">
                     <button class="btn btn-dark" type="submit">Filter</button>
-                    <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
         </div>
@@ -67,16 +73,18 @@
                             <td><span class="badge text-bg-{{ $payment->status === 'paid' ? 'success' : 'secondary' }}">{{ ucfirst($payment->status) }}</span></td>
                             <td>{{ $payment->paid_at?->format('M d, Y h:i A') ?? '-' }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.payments.edit', $payment) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit payment" title="Edit payment">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this payment?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete payment" title="Delete payment">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @unless ($isVendorPanel)
+                                    <a href="{{ route('admin.payments.edit', $payment) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit payment" title="Edit payment">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this payment?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete payment" title="Delete payment">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endunless
                             </td>
                         </tr>
                     @empty

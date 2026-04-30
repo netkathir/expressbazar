@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Vendor;
 use App\Events\TriggerNotificationEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Services\OrderLifecycleService;
+use App\Services\VendorOrderWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -52,25 +52,52 @@ class OrderController extends Controller
 
     public function accept(Order $order)
     {
-        $this->transitionVendorOrder($order, 'accepted', 'Vendor accepted order.');
+        $this->transitionVendorOrder($order, 'accepted');
 
         return redirect()->route('vendor.orders.show', $order)->with('success', 'Order accepted successfully.');
     }
 
-    public function reject(Order $order)
+    public function reject(Request $request, Order $order)
     {
-        $this->transitionVendorOrder($order, 'cancelled', 'Vendor rejected order.');
+        $this->transitionVendorOrder($order, 'cancelled', $request->string('reason')->toString());
 
         return redirect()->route('vendor.orders.show', $order)->with('success', 'Order rejected successfully.');
     }
 
-    private function transitionVendorOrder(Order $order, string $status, string $note): void
+    public function processing(Order $order)
+    {
+        $this->transitionVendorOrder($order, 'processing');
+
+        return redirect()->route('vendor.orders.show', $order)->with('success', 'Order moved to processing.');
+    }
+
+    public function dispatched(Order $order)
+    {
+        $this->transitionVendorOrder($order, 'dispatched');
+
+        return redirect()->route('vendor.orders.show', $order)->with('success', 'Order marked as dispatched.');
+    }
+
+    public function delivered(Order $order)
+    {
+        $this->transitionVendorOrder($order, 'delivered');
+
+        return redirect()->route('vendor.orders.show', $order)->with('success', 'Order marked as delivered.');
+    }
+
+    private function transitionVendorOrder(Order $order, string $status, ?string $reason = null): void
     {
         $this->authorizeVendorOrder($order);
 
-        abort_if($order->order_status !== 'pending', 422, 'Only pending orders can be accepted or rejected.');
+        match ($status) {
+            'accepted' => app(VendorOrderWorkflowService::class)->accept($order),
+            'cancelled' => app(VendorOrderWorkflowService::class)->reject($order, $reason),
+            'processing' => app(VendorOrderWorkflowService::class)->markProcessing($order),
+            'dispatched' => app(VendorOrderWorkflowService::class)->markDispatched($order),
+            'delivered' => app(VendorOrderWorkflowService::class)->markDelivered($order),
+            default => abort(422, 'Unsupported vendor order action.'),
+        };
 
-        app(OrderLifecycleService::class)->transition($order, $status, null, $note);
         $this->dispatchCustomerStatusNotification($order->fresh(['customer', 'vendor']), $status);
     }
 

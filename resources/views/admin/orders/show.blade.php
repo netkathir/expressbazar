@@ -15,15 +15,32 @@
                 <h1 class="h3 mb-1">Order {{ $order->order_number }}</h1>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                @if ($isVendorPanel && $canUpdateOrders && $order->order_status === 'pending')
-                    <form method="POST" action="{{ route('vendor.orders.accept', $order) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Accept</button>
-                    </form>
-                    <form method="POST" action="{{ route('vendor.orders.reject', $order) }}" onsubmit="return confirm('Reject this order?');">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-danger">Reject</button>
-                    </form>
+                @if ($isVendorPanel && $canUpdateOrders)
+                    @if ($order->order_status === 'pending')
+                        <form method="POST" action="{{ route('vendor.orders.accept', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-success">Accept</button>
+                        </form>
+                        <form method="POST" action="{{ route('vendor.orders.reject', $order) }}" onsubmit="return confirm('Reject this order?');">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger">Reject</button>
+                        </form>
+                    @elseif ($order->order_status === 'accepted')
+                        <form method="POST" action="{{ route('vendor.orders.processing', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">Processing</button>
+                        </form>
+                    @elseif ($order->order_status === 'processing')
+                        <form method="POST" action="{{ route('vendor.orders.dispatched', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">Dispatch</button>
+                        </form>
+                    @elseif ($order->order_status === 'dispatched')
+                        <form method="POST" action="{{ route('vendor.orders.delivered', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-success">Deliver</button>
+                        </form>
+                    @endif
                 @endif
                 <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>

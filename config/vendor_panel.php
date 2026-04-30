@@ -14,6 +14,7 @@ return [
                 ['label' => 'Products', 'route' => 'vendor.products.index', 'icon' => 'shopping-bag', 'active' => 'products'],
                 ['label' => 'Orders', 'route' => 'vendor.orders.index', 'icon' => 'clipboard-list', 'active' => 'orders'],
                 ['label' => 'Coupons', 'route' => 'vendor.coupons.index', 'icon' => 'discount-2', 'active' => 'coupons'],
+                ['label' => 'Payments', 'route' => 'vendor.payments.index', 'icon' => 'credit-card', 'active' => 'payments'],
             ],
         ],
     ],

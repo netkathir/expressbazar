@@ -28,7 +28,15 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Vendor Name</label>
-                    <input type="text" name="vendor_name" value="{{ old('vendor_name', $vendor->vendor_name) }}" class="form-control" required>
+                    <input
+                        type="text"
+                        name="vendor_name"
+                        value="{{ old('vendor_name', $vendor->vendor_name) }}"
+                        class="form-control"
+                        required
+                        pattern="(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,'()\-\/]+"
+                        title="Use letters, numbers, spaces, and common business symbols only."
+                    >
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email</label>
@@ -36,15 +44,36 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Phone</label>
-                    <input type="text" name="phone" value="{{ old('phone', $vendor->phone) }}" class="form-control">
+                    <input
+                        type="tel"
+                        name="phone"
+                        value="{{ old('phone', $vendor->phone) }}"
+                        class="form-control"
+                        inputmode="numeric"
+                        pattern="[0-9]{10,15}"
+                        minlength="10"
+                        maxlength="15"
+                        title="Enter 10 to 15 digits only."
+                    >
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Pincode</label>
-                    <input type="text" name="pincode" value="{{ old('pincode', $vendor->pincode) }}" class="form-control" maxlength="10">
+                    <input
+                        type="text"
+                        name="pincode"
+                        value="{{ old('pincode', $vendor->pincode) }}"
+                        class="form-control"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        minlength="6"
+                        maxlength="6"
+                        title="Enter exactly 6 digits."
+                    >
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Inventory Mode</label>
                     <select name="inventory_mode" class="form-select" required>
+                        <option value="">Select inventory mode</option>
                         <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode ?: 'internal') === 'internal')>Internal</option>
                         <option value="epos" @selected(old('inventory_mode', $vendor->inventory_mode) === 'epos')>EPOS</option>
                     </select>

@@ -28,9 +28,11 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Controllers\VendorAuthController;
+use App\Http\Controllers\VendorSetupController;
 use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\Vendor\CouponController as VendorCouponController;
 use App\Http\Controllers\Vendor\OrderController as VendorOrderController;
+use App\Http\Controllers\Vendor\PaymentController as VendorPaymentController;
 use App\Http\Controllers\Vendor\ProductController as VendorProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -139,6 +141,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 Route::prefix('vendor')->name('vendor.')->group(function () {
+    Route::get('/setup/{token}', [VendorSetupController::class, 'edit'])->name('setup.edit');
+    Route::post('/setup/{token}', [VendorSetupController::class, 'update'])->name('setup.update');
+
     Route::middleware('guest:vendor')->group(function () {
         Route::get('/login', [VendorAuthController::class, 'create'])->name('login');
         Route::post('/login', [VendorAuthController::class, 'store'])->name('login.store');
@@ -151,9 +156,13 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::resource('products', VendorProductController::class)->except(['show']);
         Route::delete('products/images/{image}', [VendorProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::resource('coupons', VendorCouponController::class)->except(['show']);
+        Route::get('payments', [VendorPaymentController::class, 'index'])->name('payments.index');
         Route::get('orders', [VendorOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [VendorOrderController::class, 'show'])->name('orders.show');
         Route::post('orders/{order}/accept', [VendorOrderController::class, 'accept'])->name('orders.accept');
         Route::post('orders/{order}/reject', [VendorOrderController::class, 'reject'])->name('orders.reject');
+        Route::post('orders/{order}/processing', [VendorOrderController::class, 'processing'])->name('orders.processing');
+        Route::post('orders/{order}/dispatched', [VendorOrderController::class, 'dispatched'])->name('orders.dispatched');
+        Route::post('orders/{order}/delivered', [VendorOrderController::class, 'delivered'])->name('orders.delivered');
     });
 });

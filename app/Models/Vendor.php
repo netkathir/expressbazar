@@ -23,11 +23,14 @@ class Vendor extends Authenticatable
         'country_id',
         'city_id',
         'region_zone_id',
+        'zone_id',
         'inventory_mode',
         'api_url',
         'api_key',
         'credentials',
         'status',
+        'setup_token',
+        'is_setup_complete',
         'created_by',
         'updated_by',
     ];
@@ -41,6 +44,7 @@ class Vendor extends Authenticatable
     {
         return [
             'last_login_at' => 'datetime',
+            'is_setup_complete' => 'boolean',
         ];
     }
 
@@ -117,9 +121,23 @@ class Vendor extends Authenticatable
         return $this->belongsTo(RegionZone::class, 'region_zone_id');
     }
 
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     private static function abilityFromRoute(string $routeName, string $method): string
     {
         if (str_contains($routeName, '.accept') || str_contains($routeName, '.reject')) {
+            return 'edit';
+        }
+
+        if (str_contains($routeName, '.processing') || str_contains($routeName, '.dispatched') || str_contains($routeName, '.delivered')) {
             return 'edit';
         }
 
@@ -158,6 +176,7 @@ class Vendor extends Authenticatable
             'products' => 'products',
             'orders' => 'orders',
             'coupons' => 'coupons',
+            'payments' => 'payments',
             default => null,
         };
     }
@@ -168,6 +187,7 @@ class Vendor extends Authenticatable
             'products' => 'Product Management',
             'orders' => 'Order Management',
             'coupons' => 'Coupon Management',
+            'payments' => 'Payment Management',
             default => $moduleKey,
         };
     }

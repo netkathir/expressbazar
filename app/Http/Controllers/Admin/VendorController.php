@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\VendorCredentialsMail;
+use App\Mail\VendorSetupMail;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\RegionZone;
@@ -65,18 +66,18 @@ class VendorController extends Controller
 
         $plainPassword = $this->generatePassword();
         $data['password'] = Hash::make($plainPassword);
+        $data['setup_token'] = Str::random(40);
+        $data['is_setup_complete'] = false;
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
 
         $vendor = Vendor::create($data);
         $mailSent = $this->sendCredentialsMail($vendor, $plainPassword);
+        $setupMailSent = $this->sendSetupMail($vendor);
 
         return redirect()
             ->route('admin.vendors.index')
-            ->with('success', $mailSent
-                ? "Vendor created successfully. Credentials email sent to {$vendor->email}."
-                : 'Vendor created successfully, but credentials email could not be sent. Please check mail settings and resend from vendor edit.'
-            );
+            ->with('success', $this->vendorMailMessage('Vendor created successfully.', $vendor, $mailSent, $setupMailSent));
     }
 
     public function edit(Vendor $vendor)
@@ -102,23 +103,23 @@ class VendorController extends Controller
         if ($request->boolean('send_credentials') || empty($vendor->password)) {
             $plainPassword = $this->generatePassword();
             $data['password'] = Hash::make($plainPassword);
+            $data['setup_token'] = Str::random(40);
+            $data['is_setup_complete'] = false;
         }
 
         $vendor->update($data);
 
         $mailSent = null;
+        $setupMailSent = null;
         if ($plainPassword) {
-            $mailSent = $this->sendCredentialsMail($vendor->fresh(), $plainPassword);
+            $freshVendor = $vendor->fresh();
+            $mailSent = $this->sendCredentialsMail($freshVendor, $plainPassword);
+            $setupMailSent = $this->sendSetupMail($freshVendor);
         }
 
-        $message = 'Vendor updated successfully.';
-        if ($mailSent === true) {
-            $message .= " Credentials email sent to {$vendor->email}.";
-        } elseif ($mailSent === false) {
-            $message .= ' Credentials were generated, but email could not be sent. Please check mail settings and try again.';
-        }
-
-        return redirect()->route('admin.vendors.index')->with('success', $message);
+        return redirect()
+            ->route('admin.vendors.index')
+            ->with('success', $this->vendorMailMessage('Vendor updated successfully.', $vendor->fresh(), $mailSent, $setupMailSent));
     }
 
     public function destroy(Vendor $vendor)
@@ -167,12 +168,17 @@ class VendorController extends Controller
     private function validateVendor(Request $request, ?Vendor $vendor = null): array
     {
         $data = $request->validate([
-            'vendor_name' => ['required', 'string', 'max:255'],
+            'vendor_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,\'()\-\/]+$/',
+            ],
             'email' => ['required', 'email', 'max:255', Rule::unique('vendors', 'email')->ignore($vendor?->id)],
             'role' => ['required', 'exists:roles,role_name'],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['nullable', 'regex:/^[0-9]{10,15}$/'],
             'address' => ['nullable', 'string'],
-            'pincode' => ['nullable', 'string', 'max:10'],
+            'pincode' => ['nullable', 'regex:/^[0-9]{6}$/'],
             'country_id' => ['required', 'exists:countries,id'],
             'city_id' => ['required', 'exists:cities,id'],
             'region_zone_id' => ['required', 'exists:regions_zones,id'],
@@ -181,6 +187,10 @@ class VendorController extends Controller
             'api_key' => ['nullable', 'string', 'max:255'],
             'credentials' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'vendor_name.regex' => 'Vendor name must include letters or numbers and cannot contain unsupported special characters.',
+            'phone.regex' => 'Phone must contain only 10 to 15 digits.',
+            'pincode.regex' => 'Pincode must be exactly 6 digits.',
         ]);
 
         $city = City::findOrFail($data['city_id']);
@@ -199,6 +209,9 @@ class VendorController extends Controller
 
         $data['pincode'] = mb_strtoupper(trim((string) ($data['pincode'] ?? ''))) ?: null;
         $data['email'] = mb_strtolower(trim((string) $data['email']));
+        $data['phone'] = trim((string) ($data['phone'] ?? '')) ?: null;
+        $data['vendor_name'] = trim((string) $data['vendor_name']);
+        $data['zone_id'] = $data['region_zone_id'];
 
         return $data;
     }
@@ -232,5 +245,51 @@ class VendorController extends Controller
 
             return false;
         }
+    }
+
+    private function sendSetupMail(Vendor $vendor): bool
+    {
+        if (! $vendor->setup_token) {
+            return false;
+        }
+
+        try {
+            Mail::to($vendor->email)->send(new VendorSetupMail($vendor, route('vendor.setup.edit', $vendor->setup_token)));
+
+            Log::info('Vendor setup email sent.', [
+                'vendor_id' => $vendor->id,
+                'email' => $vendor->email,
+                'mailer' => config('mail.default'),
+            ]);
+
+            return true;
+        } catch (\Throwable $exception) {
+            Log::error('Vendor setup email failed.', [
+                'vendor_id' => $vendor->id,
+                'email' => $vendor->email,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function vendorMailMessage(string $prefix, Vendor $vendor, ?bool $credentialsSent, ?bool $setupSent): string
+    {
+        $message = $prefix;
+
+        if ($credentialsSent === true) {
+            $message .= " Credentials email sent to {$vendor->email}.";
+        } elseif ($credentialsSent === false) {
+            $message .= ' Credentials email could not be sent.';
+        }
+
+        if ($setupSent === true) {
+            $message .= " Setup email sent to {$vendor->email}.";
+        } elseif ($setupSent === false) {
+            $message .= ' Setup email could not be sent.';
+        }
+
+        return $message;
     }
 }

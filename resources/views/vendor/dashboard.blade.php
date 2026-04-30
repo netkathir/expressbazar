@@ -5,7 +5,7 @@
         <div class="card-body p-4 p-md-5 d-flex flex-wrap justify-content-between gap-4">
             <div>
                 <h1 class="h2 mb-2">Vendor Dashboard</h1>
-                <p class="text-secondary mb-0">Manage your catalog and respond to new orders.</p>
+                <p class="text-secondary mb-0">{{ $showSetupHint ? 'Complete setup and add your first products to start receiving orders.' : 'Manage your catalog and respond to new orders.' }}</p>
             </div>
         </div>
     </div>
@@ -18,8 +18,20 @@
                     <div class="h3 mb-0">{{ $productCount }}</div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="text-secondary small">Low Stock</div>
+                    <div class="h3 mb-0">{{ $lowStockCount }}</div>
+                </div>
+            </div>
         @endif
         @if ($canViewOrders)
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="text-secondary small">Total Orders</div>
+                    <div class="h3 mb-0">{{ $totalOrderCount }}</div>
+                </div>
+            </div>
             <div class="col-md-4">
                 <div class="metric-card">
                     <div class="text-secondary small">Pending Orders</div>
@@ -30,6 +42,12 @@
                 <div class="metric-card">
                     <div class="text-secondary small">Active Orders</div>
                     <div class="h3 mb-0">{{ $activeOrderCount }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="text-secondary small">Delivered Revenue</div>
+                    <div class="h3 mb-0">{{ number_format((float) $deliveredRevenue, 2) }}</div>
                 </div>
             </div>
         @endif

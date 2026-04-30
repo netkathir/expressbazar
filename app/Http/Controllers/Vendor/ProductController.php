@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Vendor;
 
+use App\Jobs\SyncEposStockJob;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
@@ -69,6 +70,8 @@ class ProductController extends Controller
         $vendor = Auth::guard('vendor')->user();
         $data = $this->validateProduct($request);
         $data['vendor_id'] = $vendor->id;
+        $data['inventory_mode'] = $vendor->inventory_mode ?: $data['inventory_mode'];
+        $data['status'] = $data['status'] ?: 'active';
         $data['created_by'] = null;
         $data['updated_by'] = null;
         $data['final_price'] = $this->calculateFinalPrice($data);
@@ -78,6 +81,7 @@ class ProductController extends Controller
         $product = Product::create($data);
         $this->syncInventory($product, $request);
         $this->syncImages($product, $request, false);
+        $this->queueEposSyncIfNeeded($product);
 
         return redirect()->route('vendor.products.index')->with('success', 'Product created successfully.');
     }
@@ -105,7 +109,9 @@ class ProductController extends Controller
         $this->authorizeVendorProduct($product);
 
         $data = $this->validateProduct($request, $product);
-        $data['vendor_id'] = Auth::guard('vendor')->id();
+        $vendor = Auth::guard('vendor')->user();
+        $data['vendor_id'] = $vendor->id;
+        $data['inventory_mode'] = $vendor->inventory_mode ?: $data['inventory_mode'];
         $data['updated_by'] = null;
         $data['final_price'] = $this->calculateFinalPrice($data);
 
@@ -115,6 +121,7 @@ class ProductController extends Controller
         $this->syncInventory($product, $request);
         $this->removeSelectedImages($product, $request);
         $this->syncImages($product, $request, true);
+        $this->queueEposSyncIfNeeded($product);
 
         return redirect()->route('vendor.products.index')->with('success', 'Product updated successfully.');
     }
@@ -222,7 +229,7 @@ class ProductController extends Controller
 
     private function syncInventory(Product $product, Request $request): void
     {
-        $inventoryMode = $request->string('inventory_mode')->toString();
+        $inventoryMode = $product->inventory_mode;
         $stockQuantity = $inventoryMode === 'internal' ? (int) ($request->input('stock_quantity', 0) ?: 0) : 0;
 
         ProductInventory::updateOrCreate(
@@ -239,6 +246,16 @@ class ProductController extends Controller
 
         $product->forceFill(['unit' => $request->input('unit')])->save();
         app(InventoryService::class)->notifyIfLowStock($product->inventory()->first());
+    }
+
+    private function queueEposSyncIfNeeded(Product $product): void
+    {
+        if ($product->inventory_mode !== 'epos') {
+            return;
+        }
+
+        $product->inventory?->update(['sync_status' => 'pending']);
+        SyncEposStockJob::dispatch($product->id, 0);
     }
 
     private function syncImages(Product $product, Request $request, bool $replaceExisting = false): void

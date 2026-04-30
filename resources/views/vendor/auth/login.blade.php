@@ -24,6 +24,9 @@
                     @if ($errors->any())
                         <div class="alert alert-danger">{{ $errors->first() }}</div>
                     @endif
+                    @if (session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
 
                     <form method="POST" action="{{ route('vendor.login.store') }}" class="d-grid gap-3">
                         @csrf
