@@ -133,6 +133,7 @@ class SendTemplateNotification
             $recipientType,
             $recipientId,
             $orderId,
+            $event->data['status'] ?? $event->data['order_status'] ?? '',
         ]));
     }
 

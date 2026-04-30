@@ -32,6 +32,7 @@ class SendOtpMail extends Mailable
     public function build()
     {
         $template = app(NotificationTemplateService::class)->findActive('otp mail', 'email');
+        $fromAddress = $this->senderAddress();
 
         if ($template) {
             $this->templateSubject = app(NotificationTemplateService::class)
@@ -39,16 +40,43 @@ class SendOtpMail extends Mailable
             $this->templateMessage = app(NotificationTemplateService::class)
                 ->render($template->message_body, $this->templateData);
 
-            return $this->from(config('mail.from.address'), config('mail.from.name', config('app.name', 'Express Bazar')))
+            return $this->from($fromAddress, config('mail.from.name', config('app.name', 'Express Bazar')))
                 ->subject($this->templateSubject)
+                ->withSymfonyMessage(fn ($message) => $this->addPriorityHeaders($message))
                 ->view('emails.generic-template')
+                ->text('emails.generic-template-text')
                 ->with([
                     'messageBody' => $this->templateMessage,
                 ]);
         }
 
-        return $this->from(config('mail.from.address'), 'OTP Service')
+        return $this->from($fromAddress, config('mail.from.name', 'OTP Service'))
             ->subject('Your OTP Code')
+            ->withSymfonyMessage(fn ($message) => $this->addPriorityHeaders($message))
             ->view('emails.otp');
+    }
+
+    private function senderAddress(): string
+    {
+        $configuredFrom = config('mail.from.address');
+        $smtpUsername = config('mail.mailers.smtp.username');
+
+        if (
+            config('mail.default') === 'smtp'
+            && $smtpUsername
+            && filter_var($smtpUsername, FILTER_VALIDATE_EMAIL)
+        ) {
+            return $smtpUsername;
+        }
+
+        return $configuredFrom;
+    }
+
+    private function addPriorityHeaders($message): void
+    {
+        $headers = $message->getHeaders();
+        $headers->addTextHeader('X-Priority', '1');
+        $headers->addTextHeader('X-MSMail-Priority', 'High');
+        $headers->addTextHeader('Importance', 'High');
     }
 }

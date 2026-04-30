@@ -34,6 +34,7 @@ use App\Http\Controllers\Vendor\CouponController as VendorCouponController;
 use App\Http\Controllers\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\Vendor\PaymentController as VendorPaymentController;
 use App\Http\Controllers\Vendor\ProductController as VendorProductController;
+use App\Http\Controllers\Vendor\ReferenceModuleController as VendorReferenceModuleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'home'])->name('user.home');
@@ -153,6 +154,17 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
 
     Route::middleware('vendor')->group(function () {
         Route::get('/', VendorDashboardController::class)->name('dashboard');
+        Route::get('countries', [VendorReferenceModuleController::class, 'countries'])->name('countries.index');
+        Route::get('cities', [VendorReferenceModuleController::class, 'cities'])->name('cities.index');
+        Route::get('zones', [VendorReferenceModuleController::class, 'zones'])->name('zones.index');
+        Route::get('categories', [VendorReferenceModuleController::class, 'categories'])->name('categories.index');
+        Route::get('subcategories', [VendorReferenceModuleController::class, 'subcategories'])->name('subcategories.index');
+        Route::get('customers', [VendorReferenceModuleController::class, 'customers'])->name('customers.index');
+        Route::get('taxes', [VendorReferenceModuleController::class, 'taxes'])->name('taxes.index');
+        Route::get('inventory', [VendorReferenceModuleController::class, 'inventory'])->name('inventory.index');
+        Route::get('delivery', [VendorReferenceModuleController::class, 'delivery'])->name('delivery.index');
+        Route::get('notifications', [VendorReferenceModuleController::class, 'notifications'])->name('notifications.index');
+        Route::get('reports', [VendorReferenceModuleController::class, 'reports'])->name('reports.index');
         Route::resource('products', VendorProductController::class)->except(['show']);
         Route::delete('products/images/{image}', [VendorProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::resource('coupons', VendorCouponController::class)->except(['show']);

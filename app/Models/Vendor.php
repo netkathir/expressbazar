@@ -173,10 +173,21 @@ class Vendor extends Authenticatable
         $prefix = explode('.', $routeName)[1] ?? null;
 
         return match ($prefix) {
+            'countries' => 'countries',
+            'cities' => 'cities',
+            'zones' => 'zones',
+            'categories' => 'categories',
+            'subcategories' => 'subcategories',
+            'customers' => 'customers',
+            'taxes' => 'taxes',
             'products' => 'products',
+            'inventory' => 'inventory',
             'orders' => 'orders',
             'coupons' => 'coupons',
             'payments' => 'payments',
+            'delivery' => 'delivery',
+            'notifications' => 'notifications',
+            'reports' => 'reports',
             default => null,
         };
     }
@@ -184,10 +195,21 @@ class Vendor extends Authenticatable
     private static function moduleLabel(string $moduleKey): string
     {
         return match ($moduleKey) {
+            'countries' => 'Country Management',
+            'cities' => 'City Management',
+            'zones' => 'Region / Zone Management',
+            'categories' => 'Category Management',
+            'subcategories' => 'Subcategory Management',
+            'customers' => 'Customer Management',
+            'taxes' => 'Tax Management',
             'products' => 'Product Management',
+            'inventory' => 'Inventory Management',
             'orders' => 'Order Management',
             'coupons' => 'Coupon Management',
             'payments' => 'Payment Management',
+            'delivery' => 'Delivery & Logistics',
+            'notifications' => 'Notification Management',
+            'reports' => 'Reports & Analytics',
             default => $moduleKey,
         };
     }
