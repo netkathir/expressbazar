@@ -32,13 +32,28 @@ body.admin-shell {
     color: var(--admin-text);
 }
 
-.admin-shell main h1.h2,
-.admin-shell main h1.h3,
-.admin-shell main h2.h4 {
-    font-family: 'Libre Baskerville', Georgia, serif;
+.admin-shell main h1,
+.admin-shell main h2 {
+    font-family: 'Poppins', sans-serif;
     font-weight: 700;
     letter-spacing: 0;
     color: #111827;
+}
+
+.admin-shell main h1.h2,
+.admin-shell main h1.h3 {
+    display: block;
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.25;
+    color: #0b1f44;
+}
+
+.admin-shell main h2.h4,
+.admin-shell main h2.h5 {
+    font-size: 1.1rem;
+    line-height: 1.35;
+    color: #0b1f44;
 }
 
 .overlay {
@@ -282,6 +297,31 @@ body.admin-shell {
     color: var(--admin-brand-dark);
     background: var(--admin-brand-soft);
     border: 1px solid var(--admin-brand-soft-border);
+}
+
+.admin-flash-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 84px 1rem 1rem;
+    background: rgba(15, 23, 42, .28);
+}
+
+.admin-flash-backdrop.is-closing {
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+
+.admin-flash-message {
+    width: min(560px, 100%);
+    margin: 0;
+    border: 0;
+    border-radius: 12px;
+    font-size: .92rem;
+    line-height: 1.45;
 }
 
 .hero-card,

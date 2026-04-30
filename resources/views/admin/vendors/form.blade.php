@@ -73,7 +73,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Inventory Mode</label>
                     <select name="inventory_mode" class="form-select" required>
-                        <option value="">Select inventory mode</option>
+                        <option value="" disabled hidden>Select inventory mode</option>
                         <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode ?: 'internal') === 'internal')>Internal</option>
                         <option value="epos" @selected(old('inventory_mode', $vendor->inventory_mode) === 'epos')>EPOS</option>
                     </select>
@@ -101,7 +101,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Country</label>
                     <select name="country_id" class="form-select" required id="countryId">
-                        <option value="">Select country</option>
+                        <option value="" disabled hidden>Select country</option>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
                         @endforeach
@@ -110,13 +110,13 @@
                 <div class="col-md-4">
                     <label class="form-label">City</label>
                     <select name="city_id" class="form-select" required id="cityId">
-                        <option value="">Select city</option>
+                        <option value="" disabled hidden>Select city</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Region / Zone</label>
                     <select name="region_zone_id" class="form-select" required id="zoneId">
-                        <option value="">Select zone</option>
+                        <option value="" disabled hidden>Select zone</option>
                     </select>
                 </div>
                 <div class="col-md-6">
@@ -175,8 +175,8 @@
                         };
 
                         async function loadCities(countryId, cityId = '') {
-                            citySelect.innerHTML = '<option value="">Select city</option>';
-                            zoneSelect.innerHTML = '<option value="">Select zone</option>';
+                            citySelect.innerHTML = '<option value="" disabled hidden>Select city</option>';
+                            zoneSelect.innerHTML = '<option value="" disabled hidden>Select zone</option>';
 
                             if (!countryId) {
                                 return;
@@ -197,7 +197,7 @@
                         }
 
                         async function loadZones(countryId, cityId, zoneId = '') {
-                            zoneSelect.innerHTML = '<option value="">Select zone</option>';
+                            zoneSelect.innerHTML = '<option value="" disabled hidden>Select zone</option>';
 
                             if (!countryId || !cityId) {
                                 return;

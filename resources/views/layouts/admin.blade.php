@@ -139,15 +139,24 @@
     <main id="content" class="content py-4">
         <div class="container-fluid">
             @if (session('success'))
-                <div class="alert alert-success border-0 shadow-sm">{{ session('success') }}</div>
+                <div class="admin-flash-backdrop" data-admin-flash>
+                    <div class="alert alert-success admin-flash-message shadow-lg" role="alertdialog" aria-modal="true" aria-live="assertive">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="ti ti-circle-check fs-4" aria-hidden="true"></i>
+                            <div class="flex-grow-1">{{ session('success') }}</div>
+                            <button type="button" class="btn-close" data-admin-flash-close aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
             @endif
             @if ($errors->any())
-                <div class="alert alert-danger border-0 shadow-sm">
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
                     <ul class="mb-0 ps-3">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
                     </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
             @yield('content')
@@ -157,6 +166,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('admin-theme/js/admin.js') }}"></script>
     <script src="{{ asset('js/inline-validation.js') }}"></script>
+    <script>
+        (function () {
+            const flash = document.querySelector('[data-admin-flash]');
+            if (!flash) {
+                return;
+            }
+
+            const close = () => {
+                flash.classList.add('is-closing');
+                setTimeout(() => flash.remove(), 180);
+            };
+
+            flash.querySelector('[data-admin-flash-close]')?.addEventListener('click', close);
+            flash.addEventListener('click', (event) => {
+                if (event.target === flash) {
+                    close();
+                }
+            });
+
+            setTimeout(close, 4500);
+        })();
+    </script>
     @auth
         <script>
             (function () {
