@@ -74,7 +74,7 @@ class VendorController extends Controller
         return redirect()
             ->route('admin.vendors.index')
             ->with('success', $mailSent
-                ? 'Vendor created successfully. Credentials email sent.'
+                ? "Vendor created successfully. Credentials email sent to {$vendor->email}."
                 : 'Vendor created successfully, but credentials email could not be sent. Please check mail settings and resend from vendor edit.'
             );
     }
@@ -113,7 +113,7 @@ class VendorController extends Controller
 
         $message = 'Vendor updated successfully.';
         if ($mailSent === true) {
-            $message .= ' Credentials email sent.';
+            $message .= " Credentials email sent to {$vendor->email}.";
         } elseif ($mailSent === false) {
             $message .= ' Credentials were generated, but email could not be sent. Please check mail settings and try again.';
         }
@@ -211,11 +211,15 @@ class VendorController extends Controller
     private function sendCredentialsMail(Vendor $vendor, string $plainPassword): bool
     {
         try {
-            Mail::to($vendor->email)->send(new VendorCredentialsMail($vendor, $plainPassword));
+            $mail = new VendorCredentialsMail($vendor, $plainPassword);
+
+            Mail::to($vendor->email)->send($mail);
 
             Log::info('Vendor credentials email sent.', [
                 'vendor_id' => $vendor->id,
                 'email' => $vendor->email,
+                'mailer' => config('mail.default'),
+                'from' => $mail->from[0]['address'] ?? config('mail.from.address'),
             ]);
 
             return true;
