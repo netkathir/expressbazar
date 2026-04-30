@@ -265,7 +265,7 @@ class StorefrontController extends Controller
                     ]);
                 }
 
-                if (! empty($product->vendor?->region_zone_id) && (int) $product->vendor->region_zone_id !== (int) $address->zone_id) {
+                if (! $this->vendorMatchesLocation($product->vendor, $location)) {
                     throw ValidationException::withMessages([
                         'address_id' => 'Selected address does not match the vendor delivery zone.',
                     ]);
@@ -749,7 +749,7 @@ class StorefrontController extends Controller
             'locationLabel' => $this->locationLabel(),
             'pincode' => $pincode,
             'selectedVendorId' => $selectedVendorId,
-            'vendors' => $this->vendorsForPincode($pincode),
+            'vendors' => $this->vendorsForLocation($location, $pincode),
             'hasPincodeProducts' => ! $pincode || $this->productsQuery($location)->exists(),
             'cartCount' => $this->cartCount(),
             'cartItems' => $cartItems,
@@ -897,12 +897,7 @@ class StorefrontController extends Controller
     {
         $query->whereHas('vendor', function ($vendorQuery) use ($location) {
             $vendorQuery->where('status', 'active');
-
-            if ($location && ! empty($location['zone_id'])) {
-                $vendorQuery->where('region_zone_id', $location['zone_id']);
-            } elseif ($location && ! empty($location['city_id'])) {
-                $vendorQuery->where('city_id', $location['city_id']);
-            }
+            $this->applyVendorLocationScope($vendorQuery, $location);
         });
 
         $query->where(function ($stockQuery) {
@@ -1001,11 +996,12 @@ class StorefrontController extends Controller
         return $cache[$pincode];
     }
 
-    private function vendorsForPincode(?string $pincode)
+    private function vendorsForLocation(?array $location, ?string $pincode)
     {
         $query = Vendor::query()
-            ->where('status', 'active')
-            ->orderBy('vendor_name');
+            ->where('status', 'active');
+
+        $this->applyVendorLocationScope($query, $location);
 
         if ($pincode) {
             $query->where(function ($vendorQuery) use ($pincode) {
@@ -1014,7 +1010,47 @@ class StorefrontController extends Controller
             });
         }
 
-        return $query->get(['id', 'vendor_name', 'pincode']);
+        return $query->orderBy('vendor_name')->get(['id', 'vendor_name', 'pincode']);
+    }
+
+    private function applyVendorLocationScope($query, ?array $location): void
+    {
+        if (! $location) {
+            return;
+        }
+
+        if (! empty($location['country_id'])) {
+            $query->where('country_id', $location['country_id']);
+        }
+
+        if (! empty($location['city_id'])) {
+            $query->where('city_id', $location['city_id']);
+        }
+
+        if (! empty($location['zone_id'])) {
+            $query->where('region_zone_id', $location['zone_id']);
+        }
+    }
+
+    private function vendorMatchesLocation(?Vendor $vendor, ?array $location): bool
+    {
+        if (! $vendor || ! $location) {
+            return false;
+        }
+
+        if (! empty($location['country_id']) && (int) $vendor->country_id !== (int) $location['country_id']) {
+            return false;
+        }
+
+        if (! empty($location['city_id']) && (int) $vendor->city_id !== (int) $location['city_id']) {
+            return false;
+        }
+
+        if (! empty($location['zone_id']) && (int) $vendor->region_zone_id !== (int) $location['zone_id']) {
+            return false;
+        }
+
+        return true;
     }
 
     private function hardLocation(): ?array
@@ -1275,7 +1311,9 @@ class StorefrontController extends Controller
 
     private function ensureAddable(Product $product): void
     {
-        if (! $this->hardLocation()) {
+        $location = $this->hardLocation();
+
+        if (! $location) {
             throw ValidationException::withMessages([
                 'location' => 'Please enter your delivery location to add items.',
             ]);
@@ -1285,6 +1323,12 @@ class StorefrontController extends Controller
 
         if ($product->vendor?->status !== 'active') {
             throw ValidationException::withMessages(['product' => 'Vendor is currently unavailable.']);
+        }
+
+        if (! $this->vendorMatchesLocation($product->vendor, $location)) {
+            throw ValidationException::withMessages([
+                'location' => 'This product is not available for your selected location.',
+            ]);
         }
 
         if ($product->inventory?->inventory_mode === 'internal' && (int) $product->inventory->stock_quantity <= 0) {
