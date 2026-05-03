@@ -79,7 +79,7 @@ class TaxController extends Controller
 
     public function destroy(Tax $tax)
     {
-        $tax->delete();
+        $this->deleteFromDatabase($tax);
 
         return redirect()->route('admin.taxes.index')->with('success', 'Tax deleted successfully.');
     }

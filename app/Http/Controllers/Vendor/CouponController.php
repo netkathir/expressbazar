@@ -90,7 +90,7 @@ class CouponController extends Controller
     public function destroy(Coupon $coupon)
     {
         $this->authorizeVendorCoupon($coupon);
-        $coupon->delete();
+        $this->deleteFromDatabase($coupon);
 
         return redirect()->route('vendor.coupons.index')->with('success', 'Coupon deleted successfully.');
     }

@@ -92,11 +92,11 @@ class CountryController extends Controller
 
     public function destroy(Request $request, Country $country)
     {
-        if ($country->cities()->exists()) {
+        if ($country->cities()->withTrashed()->exists()) {
             return back()->withErrors(['delete' => 'Country is mapped with cities and cannot be deleted.']);
         }
 
-        $country->delete();
+        $this->deleteFromDatabase($country);
 
         return redirect()->route('admin.countries.index')->with('success', 'Country deleted successfully.');
     }

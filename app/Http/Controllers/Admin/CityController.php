@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\CustomerAddress;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -112,11 +113,11 @@ class CityController extends Controller
 
     public function destroy(City $city)
     {
-        if ($city->zones()->exists()) {
-            return back()->withErrors(['delete' => 'City is mapped with regions/vendors and cannot be deleted.']);
+        if ($city->zones()->withTrashed()->exists() || CustomerAddress::where('city_id', $city->id)->exists()) {
+            return back()->withErrors(['delete' => 'City is mapped with regions/vendors/customer addresses and cannot be deleted.']);
         }
 
-        $city->delete();
+        $this->deleteFromDatabase($city);
 
         return redirect()->route('admin.cities.index')->with('success', 'City deleted successfully.');
     }

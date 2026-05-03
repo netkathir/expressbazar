@@ -235,8 +235,12 @@
                         });
 
                         (async () => {
-                            await loadCities(selectedCountry, selectedCity);
-                            await loadZones(selectedCountry, selectedCity, selectedZone);
+                            const initialCountry = selectedCountry || countrySelect.value;
+
+                            await loadCities(initialCountry, selectedCity);
+
+                            const initialCity = selectedCity || citySelect.value;
+                            await loadZones(initialCountry, initialCity, selectedZone);
                         })();
                     })();
                 </script>

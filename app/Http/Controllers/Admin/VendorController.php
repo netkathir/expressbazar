@@ -7,6 +7,7 @@ use App\Mail\VendorCredentialsMail;
 use App\Mail\VendorSetupMail;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Product;
 use App\Models\RegionZone;
 use App\Models\Role;
 use App\Models\Vendor;
@@ -124,7 +125,11 @@ class VendorController extends Controller
 
     public function destroy(Vendor $vendor)
     {
-        $vendor->delete();
+        if (Product::withTrashed()->where('vendor_id', $vendor->id)->exists()) {
+            return back()->withErrors(['delete' => 'Vendor is mapped with products and cannot be deleted.']);
+        }
+
+        $this->deleteFromDatabase($vendor);
 
         return redirect()->route('admin.vendors.index')->with('success', 'Vendor deleted successfully.');
     }

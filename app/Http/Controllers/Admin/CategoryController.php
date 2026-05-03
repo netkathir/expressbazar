@@ -81,8 +81,12 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        if ($category->subcategories()->withTrashed()->exists() || $category->products()->withTrashed()->exists()) {
+            return back()->withErrors(['delete' => 'Category is mapped with subcategories/products and cannot be deleted.']);
+        }
+
         $this->deleteImage($category->image_path);
-        $category->delete();
+        $this->deleteFromDatabase($category);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');
     }

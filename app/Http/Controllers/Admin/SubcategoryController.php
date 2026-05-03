@@ -79,7 +79,7 @@ class SubcategoryController extends Controller
 
     public function destroy(Subcategory $subcategory)
     {
-        $subcategory->delete();
+        $this->deleteFromDatabase($subcategory);
 
         return redirect()->route('admin.subcategories.index')->with('success', 'Subcategory deleted successfully.');
     }

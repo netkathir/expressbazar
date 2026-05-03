@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\DeliveryConfig;
 use App\Models\RegionZone;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -118,7 +120,11 @@ class RegionZoneController extends Controller
 
     public function destroy(RegionZone $zone)
     {
-        $zone->delete();
+        if (Vendor::withTrashed()->where('region_zone_id', $zone->id)->exists() || DeliveryConfig::where('zone_id', $zone->id)->exists()) {
+            return back()->withErrors(['delete' => 'Region / zone is mapped with vendors/delivery settings and cannot be deleted.']);
+        }
+
+        $this->deleteFromDatabase($zone);
 
         return redirect()->route('admin.zones.index')->with('success', 'Region / zone deleted successfully.');
     }

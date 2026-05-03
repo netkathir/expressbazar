@@ -130,7 +130,7 @@ class ProductController extends Controller
     {
         $this->authorizeVendorProduct($product);
         $this->deleteImages($product);
-        $product->delete();
+        $this->deleteFromDatabase($product);
 
         return redirect()->route('vendor.products.index')->with('success', 'Product deleted successfully.');
     }
