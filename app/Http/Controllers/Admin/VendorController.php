@@ -167,10 +167,18 @@ class VendorController extends Controller
 
     private function validateVendor(Request $request, ?Vendor $vendor = null): array
     {
+        $request->merge([
+            'vendor_name' => trim((string) $request->input('vendor_name')),
+            'email' => mb_strtolower(trim((string) $request->input('email'))),
+            'phone' => preg_replace('/\s+/', '', (string) $request->input('phone')),
+            'pincode' => trim((string) $request->input('pincode')),
+        ]);
+
         $data = $request->validate([
             'vendor_name' => [
                 'required',
                 'string',
+                'min:2',
                 'max:255',
                 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,\'()\-\/]+$/',
             ],
@@ -207,10 +215,8 @@ class VendorController extends Controller
             ]);
         }
 
-        $data['pincode'] = mb_strtoupper(trim((string) ($data['pincode'] ?? ''))) ?: null;
-        $data['email'] = mb_strtolower(trim((string) $data['email']));
-        $data['phone'] = trim((string) ($data['phone'] ?? '')) ?: null;
-        $data['vendor_name'] = trim((string) $data['vendor_name']);
+        $data['pincode'] = mb_strtoupper((string) ($data['pincode'] ?? '')) ?: null;
+        $data['phone'] = (string) ($data['phone'] ?? '') ?: null;
         $data['zone_id'] = $data['region_zone_id'];
 
         return $data;

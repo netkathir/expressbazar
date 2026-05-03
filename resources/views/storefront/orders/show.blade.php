@@ -6,7 +6,7 @@
     @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
-            <nav class="sf-breadcrumbs">Home <span>›</span> My Orders <span>›</span> {{ $order->order_number }}</nav>
+            <nav class="sf-breadcrumbs">Home <span>&rsaquo;</span> My Orders <span>&rsaquo;</span> {{ $order->order_number }}</nav>
 
             <div class="sf-info-card mb-4">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
@@ -16,7 +16,7 @@
                         <div class="text-secondary">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
                     </div>
                     <div class="text-end">
-                        <div class="fw-semibold fs-4">₹{{ number_format((float) $order->total_amount, 0) }}</div>
+                        <div class="fw-semibold fs-4">&#8377;{{ number_format((float) $order->total_amount, 0) }}</div>
                         <span class="badge rounded-pill text-bg-{{ $displayPaymentStatus === 'paid' ? 'success' : ($displayPaymentStatus === 'cancelled' ? 'secondary' : 'warning') }}">
                             {{ ucfirst($displayPaymentStatus) }}
                         </span>
@@ -31,12 +31,19 @@
                     <div class="d-grid gap-3">
                         @foreach ($order->items as $item)
                             <div class="sf-sidepanel p-3">
-                                <div class="d-flex justify-content-between gap-3">
-                                    <div>
-                                        <div class="fw-semibold">{{ $item->item_name }}</div>
-                                        <div class="small text-secondary">{{ $item->quantity }} × ₹{{ number_format((float) $item->price, 0) }}</div>
+                                <div class="d-flex justify-content-between gap-3 align-items-center">
+                                    <div class="d-flex gap-3 align-items-center">
+                                        @if ($item->product)
+                                            <a href="{{ route('storefront.product', $item->product) }}" class="flex-shrink-0">
+                                                <img src="{{ $item->product->images->first() ? asset($item->product->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $item->item_name }}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 10px;">
+                                            </a>
+                                        @endif
+                                        <div>
+                                            <a href="{{ $item->product ? route('storefront.product', $item->product) : '#' }}" class="fw-semibold text-decoration-none text-dark">{{ $item->item_name }}</a>
+                                            <div class="small text-secondary">{{ $item->quantity }} &times; &#8377;{{ number_format((float) $item->price, 0) }}</div>
+                                        </div>
                                     </div>
-                                    <div class="fw-semibold">₹{{ number_format((float) $item->subtotal, 0) }}</div>
+                                    <div class="fw-semibold">&#8377;{{ number_format((float) $item->subtotal, 0) }}</div>
                                 </div>
                             </div>
                         @endforeach
@@ -49,7 +56,7 @@
                         <dt>Vendor</dt><dd>{{ $order->vendor?->vendor_name ?? '-' }}</dd>
                         <dt>Payment Method</dt><dd>{{ ucfirst($latestPayment?->payment_method ?? 'cod') }}</dd>
                         <dt>Payment Status</dt><dd>{{ ucfirst($displayPaymentStatus) }}</dd>
-                        <dt>Delivery Charge</dt><dd>₹{{ number_format((float) $order->delivery_charge, 0) }}</dd>
+                        <dt>Delivery Charge</dt><dd>&#8377;{{ number_format((float) $order->delivery_charge, 0) }}</dd>
                         <dt>Order Status</dt><dd id="order-status-summary">{{ ucfirst($order->order_status) }}</dd>
                     </dl>
 

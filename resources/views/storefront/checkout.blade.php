@@ -104,11 +104,11 @@
                             <hr>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Item Total</span>
-                                <strong data-item-total>{{ number_format($cartTotals['itemTotal'], 0) }}</strong>
+                                <strong data-item-total>&#8377;{{ number_format($cartTotals['itemTotal'], 0) }}</strong>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Delivery Fee</span>
-                                <strong data-delivery-total>{{ number_format($cartTotals['delivery'], 0) }}</strong>
+                                <strong data-delivery-total>&#8377;{{ number_format($cartTotals['delivery'], 0) }}</strong>
                             </div>
                             @if (($cartTotals['discount'] ?? 0) > 0)
                                 <div class="d-flex justify-content-between mb-2 text-success">
@@ -167,7 +167,7 @@
             const grandNode = document.querySelector('[data-grand-total]');
 
             if (deliveryNode) {
-                deliveryNode.textContent = delivery.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                deliveryNode.textContent = `₹${delivery.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
             }
 
             if (grandNode) {

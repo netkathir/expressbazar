@@ -101,7 +101,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount Type</label>
-                    <select name="discount_type" class="form-select">
+                    <select name="discount_type" class="form-select" id="discountType">
                         <option value="">None</option>
                         <option value="percentage" @selected(old('discount_type', $product->discount_type) === 'percentage')>Percentage</option>
                         <option value="fixed" @selected(old('discount_type', $product->discount_type) === 'fixed')>Fixed Amount</option>
@@ -109,7 +109,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount Value</label>
-                    <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control">
+                    <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Inventory Mode</label>
@@ -120,11 +120,11 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount Start</label>
-                    <input type="date" name="discount_start_date" value="{{ old('discount_start_date', optional($product->discount_start_date)->format('Y-m-d')) }}" class="form-control">
+                    <input type="date" name="discount_start_date" value="{{ old('discount_start_date', optional($product->discount_start_date)->format('Y-m-d')) }}" class="form-control" id="discountStartDate">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount End</label>
-                    <input type="date" name="discount_end_date" value="{{ old('discount_end_date', optional($product->discount_end_date)->format('Y-m-d')) }}" class="form-control">
+                    <input type="date" name="discount_end_date" value="{{ old('discount_end_date', optional($product->discount_end_date)->format('Y-m-d')) }}" class="form-control" id="discountEndDate">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Stock Qty</label>
@@ -174,5 +174,31 @@
                 preview.style.display = 'none';
             }
         }
+
+        (() => {
+            const discountType = document.getElementById('discountType');
+            const discountValue = document.getElementById('discountValue');
+            const dateFields = [
+                document.getElementById('discountStartDate'),
+                document.getElementById('discountEndDate'),
+            ].filter(Boolean);
+
+            const syncDiscountDates = () => {
+                const hasDiscount = Boolean(discountType?.value) && Number(discountValue?.value || 0) > 0;
+
+                dateFields.forEach((field) => {
+                    field.disabled = !hasDiscount;
+                    if (!hasDiscount) {
+                        field.value = '';
+                        field.classList.remove('is-invalid');
+                        field.removeAttribute('aria-invalid');
+                    }
+                });
+            };
+
+            discountType?.addEventListener('change', syncDiscountDates);
+            discountValue?.addEventListener('input', syncDiscountDates);
+            syncDiscountDates();
+        })();
     </script>
 @endpush

@@ -191,6 +191,15 @@ class ProductController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
+        if (empty($data['discount_type']) || empty($data['discount_value'])) {
+            $data['discount_type'] = null;
+            $data['discount_value'] = null;
+            $data['discount_start_date'] = null;
+            $data['discount_end_date'] = null;
+
+            return $data;
+        }
+
         if (! empty($data['discount_value'])) {
             if (($data['discount_type'] ?? null) === 'percentage' && $data['discount_value'] > 100) {
                 throw ValidationException::withMessages(['discount_value' => 'Percentage discount cannot exceed 100.']);

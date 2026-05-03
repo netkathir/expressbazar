@@ -30,7 +30,8 @@
         }
 
         const label = labelFor(control);
-        if (!label || label.querySelector('.required-symbol')) {
+        const labelText = (label?.textContent || '').trim();
+        if (!label || label.querySelector('.required-symbol') || /\*$/.test(labelText)) {
             control.dataset.requiredMarkerReady = 'true';
             return;
         }

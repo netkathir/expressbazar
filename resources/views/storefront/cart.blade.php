@@ -39,8 +39,20 @@
                     <div class="d-flex justify-content-between mb-2"><span>Delivery Fee</span><strong>₹{{ number_format($cartTotals['delivery'], 0) }}</strong></div>
                     <hr>
                     <div class="d-flex justify-content-between"><span class="fw-semibold">To Pay</span><strong class="fs-5">₹{{ number_format($cartTotals['grandTotal'], 0) }}</strong></div>
-                    <a href="{{ route('storefront.checkout') }}" class="btn btn-danger w-100 rounded-pill mt-3">Proceed to Checkout</a>
-                    <div class="text-secondary small mt-2">Exact delivery validation is checked before checkout.</div>
+                    <a href="{{ route('storefront.checkout') }}" class="btn btn-danger w-100 rounded-pill mt-3">
+                        @auth
+                            Proceed to Checkout
+                        @else
+                            Login to Checkout
+                        @endauth
+                    </a>
+                    <div class="text-secondary small mt-2">
+                        @auth
+                            Exact delivery validation is checked before checkout.
+                        @else
+                            Please login or register before payment.
+                        @endauth
+                    </div>
                 </div>
             </div>
         </section>

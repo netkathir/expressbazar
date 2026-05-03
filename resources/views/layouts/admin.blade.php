@@ -47,31 +47,29 @@
             @endunless
             @if ($panelUser)
                 @php
-                    $adminUnreadNotifications = (! $isVendorPanel && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
-                        ? auth()->user()->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->latest()->limit(5)->get()
+                    $stockUnreadNotifications = \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                        ? $panelUser->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->latest()->limit(5)->get()
                         : collect();
-                    $adminUnreadCount = (! $isVendorPanel && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
-                        ? auth()->user()->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->count()
+                    $stockUnreadCount = \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                        ? $panelUser->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->count()
                         : 0;
                 @endphp
-                @unless ($isVendorPanel)
-                    <div class="dropdown">
-                        <button class="btn btn-light btn-icon btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
-                            <i class="ti ti-bell"></i>
-                            <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $adminUnreadCount ? '' : 'd-none' }}">{{ $adminUnreadCount }}</span>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
-                            <div class="small fw-semibold px-2 py-1">Notifications</div>
-                            <div id="notification-list">
-                                @forelse ($adminUnreadNotifications as $note)
-                                    <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
-                                @empty
-                                    <div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>
-                                @endforelse
-                            </div>
+                <div class="dropdown">
+                    <button class="btn btn-light btn-icon btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                        <i class="ti ti-bell"></i>
+                        <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $stockUnreadCount ? '' : 'd-none' }}">{{ $stockUnreadCount }}</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
+                        <div class="small fw-semibold px-2 py-1">Notifications</div>
+                        <div id="notification-list">
+                            @forelse ($stockUnreadNotifications as $note)
+                                <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
+                            @empty
+                                <div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>
+                            @endforelse
                         </div>
                     </div>
-                @endunless
+                </div>
                 <div class="dropdown admin-profile-dropdown">
                     <button class="btn admin-profile-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open admin account menu">
                         <span class="sf-avatar sf-avatar-sm">
@@ -144,7 +142,7 @@
                         <div class="d-flex align-items-start gap-3">
                             <i class="ti ti-circle-check fs-4" aria-hidden="true"></i>
                             <div class="flex-grow-1">{{ session('success') }}</div>
-                            <button type="button" class="btn-close" data-admin-flash-close aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-admin-flash-close aria-label="Close notification"></button>
                         </div>
                     </div>
                 </div>
@@ -185,10 +183,10 @@
                 }
             });
 
-            setTimeout(close, 4500);
+            setTimeout(close, 3000);
         })();
     </script>
-    @auth
+    @if (! $isVendorPanel && auth()->check())
         <script>
             (function () {
                 const countEl = document.getElementById('notification-count');
@@ -227,7 +225,7 @@
                 }, 10000);
             })();
         </script>
-    @endauth
+    @endif
     @stack('scripts')
 </body>
 </html>

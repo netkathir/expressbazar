@@ -47,12 +47,6 @@
                 @endif
             </div>
 
-            @unless ($cartEntry)
-                <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart sf-card-plus">
-                    @csrf
-                    <button type="submit" aria-label="Add {{ $product->product_name }} to cart">+</button>
-                </form>
-            @endunless
         </div>
     </div>
 </article>

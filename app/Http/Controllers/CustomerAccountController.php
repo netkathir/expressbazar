@@ -35,7 +35,7 @@ class CustomerAccountController extends Controller
             'addresses' => $user->addresses()->with(['country', 'city', 'zone'])->latest()->get(),
             'orders' => Order::query()
                 ->where('customer_id', $user->id)
-                ->with(['vendor', 'items', 'payments'])
+                ->with(['vendor', 'items.product.images', 'payments'])
                 ->latest('placed_at')
                 ->latest('id')
                 ->limit(5)
@@ -85,7 +85,7 @@ class CustomerAccountController extends Controller
 
         $orders = Order::query()
             ->where('customer_id', $user->id)
-            ->with(['vendor', 'items', 'payments'])
+            ->with(['vendor', 'items.product.images', 'payments'])
             ->latest('placed_at')
             ->latest('id')
             ->paginate(12)
@@ -105,7 +105,7 @@ class CustomerAccountController extends Controller
 
         return view('storefront.orders.show', [
             'title' => 'Order Details',
-            'order' => $order->load(['vendor', 'items.product.vendor', 'items.product.inventory', 'payments']),
+            'order' => $order->load(['vendor', 'items.product.vendor', 'items.product.inventory', 'items.product.images', 'payments']),
             'user' => $user,
         ]);
     }

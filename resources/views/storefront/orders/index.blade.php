@@ -21,12 +21,29 @@
                     @php($latestPayment = $order->payments->last())
                     @php($orderStatus = mb_strtolower((string) $order->order_status))
                     @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
+                    @php($firstItem = $order->items->first())
                     <div class="sf-info-card">
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                            <div>
-                                <div class="fw-semibold fs-5">{{ $order->order_number }}</div>
+                            <div class="d-flex gap-3 align-items-start">
+                                @if ($firstItem?->product)
+                                    <a href="{{ route('storefront.product', $firstItem->product) }}" class="flex-shrink-0">
+                                        <img src="{{ $firstItem->product->images->first() ? asset($firstItem->product->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $firstItem->item_name }}" style="width: 68px; height: 68px; object-fit: cover; border-radius: 10px;">
+                                    </a>
+                                @endif
+                                <div>
+                                    <div class="text-secondary small">Order ID</div>
+                                    <div class="fw-semibold fs-5">{{ $order->order_number }}</div>
+                                    @if ($firstItem)
+                                        <a href="{{ $firstItem->product ? route('storefront.product', $firstItem->product) : route('storefront.orders.show', $order) }}" class="fw-semibold text-decoration-none text-dark">
+                                            {{ $firstItem->item_name }}
+                                        </a>
+                                        @if ($order->items->count() > 1)
+                                            <div class="small text-secondary">+{{ $order->items->count() - 1 }} more item(s)</div>
+                                        @endif
+                                    @endif
                                 <div class="text-secondary small">{{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
                                 <div class="text-secondary small">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
+                                </div>
                             </div>
                             <div class="text-end">
                                 <div class="fw-semibold fs-4">₹{{ number_format((float) $order->total_amount, 0) }}</div>

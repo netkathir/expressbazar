@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Category' : 'Edit Category' }}</h1>
                 </div>
-                <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.categories.store') : route('admin.categories.update', $category) }}" enctype="multipart/form-data" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.categories.store') : route('admin.categories.update', $category) }}" enctype="multipart/form-data" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -18,7 +18,16 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Category Name</label>
-                    <input type="text" name="category_name" value="{{ old('category_name', $category->category_name) }}" class="form-control" required>
+                    <input
+                        type="text"
+                        name="category_name"
+                        value="{{ old('category_name', $category->category_name) }}"
+                        class="form-control"
+                        required
+                        minlength="2"
+                        pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,'()\-\/]+$"
+                        title="Use letters, numbers, spaces, and common category symbols only."
+                    >
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Status</label>

@@ -627,8 +627,22 @@ class StorefrontController extends Controller
         }
 
         $currentQuantity = (int) ($cart[$product->id]['quantity'] ?? 0);
+        $requestedQuantity = $currentQuantity + $quantity;
+
+        $product->loadMissing('inventory');
+        if ($product->inventory?->inventory_mode === 'internal' && (int) $product->inventory->stock_quantity < $requestedQuantity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not enough stock available',
+                'cartCount' => $this->cartCount(),
+                'drawerHtml' => $this->renderCartDrawer(),
+                'cartState' => $this->cartState(),
+                'cartTotals' => $this->cartTotals(),
+            ], 422);
+        }
+
         $cart[$product->id] = [
-            'quantity' => $currentQuantity + $quantity,
+            'quantity' => $requestedQuantity,
         ];
 
         session()->put('storefront.cart', $cart);
@@ -641,6 +655,12 @@ class StorefrontController extends Controller
             'drawerHtml' => $this->renderCartDrawer(),
             'cartState' => $this->cartState(),
             'cartTotals' => $this->cartTotals(),
+            'cartItem' => [
+                'productId' => $product->id,
+                'quantity' => $requestedQuantity,
+                'unitPrice' => (float) ($product->final_price ?: $product->price),
+                'subtotal' => (float) ($product->final_price ?: $product->price) * $requestedQuantity,
+            ],
         ]);
     }
 

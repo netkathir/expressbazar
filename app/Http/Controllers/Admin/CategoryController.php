@@ -89,10 +89,23 @@ class CategoryController extends Controller
 
     private function validateCategory(Request $request, ?Category $category = null): array
     {
+        $request->merge([
+            'category_name' => trim((string) $request->input('category_name')),
+        ]);
+
         return $request->validate([
-            'category_name' => ['required', 'string', 'max:255', Rule::unique('categories', 'category_name')->ignore($category?->id)],
+            'category_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:255',
+                'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,\'()\-\/]+$/',
+                Rule::unique('categories', 'category_name')->ignore($category?->id),
+            ],
             'image' => ['nullable', 'image', 'max:2048'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'category_name.regex' => 'Category name must include letters or numbers and cannot contain unsupported special characters.',
         ]);
     }
 

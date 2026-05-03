@@ -8,6 +8,7 @@ use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\ProductInventory;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Notifications\LowStockNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -105,15 +106,9 @@ class InventoryService
             return;
         }
 
-        if (is_null($inventory->low_stock_threshold)) {
-            $this->resolveLowStockAlert($inventory);
-
-            return;
-        }
-
         $product = $inventory->product;
         $currentStock = (int) $inventory->stock_quantity;
-        $threshold = (int) $inventory->low_stock_threshold;
+        $threshold = is_null($inventory->low_stock_threshold) ? 0 : (int) $inventory->low_stock_threshold;
 
         if ($currentStock > $threshold) {
             $this->resolveLowStockAlert($inventory);
@@ -133,6 +128,12 @@ class InventoryService
                     ->where('role', '!=', 'customer')
                     ->get()
                     ->each(fn (User $admin) => $admin->notify(new LowStockNotification($product, $inventory)));
+
+                Vendor::query()
+                    ->whereKey($product->vendor_id)
+                    ->where('status', 'active')
+                    ->get()
+                    ->each(fn (Vendor $vendor) => $vendor->notify(new LowStockNotification($product, $inventory)));
             }
 
             $product->forceFill(['is_low_stock' => true])->save();

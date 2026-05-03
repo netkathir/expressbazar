@@ -124,6 +124,7 @@ function updateCartUi(payload = {}) {
     }
 
     updateCartPage(payload);
+    updateProductControls(payload);
 }
 
 function cartUrl(template, productId) {
@@ -178,6 +179,35 @@ function updateCartPage(payload = {}) {
         summaryEls[1].textContent = formatCartAmount(payload.cartTotals.delivery);
         summaryEls[2].textContent = formatCartAmount(payload.cartTotals.grandTotal);
     }
+}
+
+function updateProductControls(payload = {}) {
+    const item = payload.cartItem;
+    if (!item?.productId) {
+        return;
+    }
+
+    const productId = String(item.productId);
+    const quantity = Number(item.quantity || 0);
+
+    document.querySelectorAll(`.js-add-to-cart[action$="/${productId}"]`).forEach((form) => {
+        const stepper = document.createElement('div');
+        stepper.className = form.classList.contains('sf-card-add') ? 'sf-stepper sf-stepper-ghost' : 'sf-stepper';
+        stepper.innerHTML = `
+            <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="${escapeHtml(productId)}">-</button>
+            <span class="sf-stepper-value" data-cart-stepper-value>${quantity}</span>
+            <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="1" data-product="${escapeHtml(productId)}">+</button>
+        `;
+        form.replaceWith(stepper);
+    });
+
+    document.querySelectorAll(`.js-cart-adjust[data-product="${productId}"]`)
+        .forEach((button) => {
+            const value = button.closest('.sf-stepper')?.querySelector('.sf-stepper-value');
+            if (value) {
+                value.textContent = String(quantity);
+            }
+        });
 }
 
 function showLocationModal() {

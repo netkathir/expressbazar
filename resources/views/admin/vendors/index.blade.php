@@ -84,7 +84,12 @@
                                 <a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit vendor" title="Edit vendor">
                                     <i class="ti ti-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.vendors.destroy', $vendor) }}" method="POST" class="d-inline js-delete-vendor-form">
+                                <form
+                                    action="{{ route('admin.vendors.destroy', $vendor) }}"
+                                    method="POST"
+                                    class="d-inline js-confirm-delete"
+                                    data-confirm-message="Delete this {{ $vendor->status === 'active' ? 'active ' : '' }}vendor?"
+                                >
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete vendor" title="Delete vendor">
@@ -106,16 +111,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        document.querySelectorAll('.js-delete-vendor-form').forEach((form) => {
-            form.addEventListener('submit', (event) => {
-                if (!confirm('Delete this vendor?')) {
-                    event.preventDefault();
-                    event.stopImmediatePropagation();
-                }
-            });
-        });
-    </script>
-@endpush

@@ -7,7 +7,7 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Vendor' : 'Edit Vendor' }}</h1>
                 </div>
-                <a href="{{ route('admin.vendors.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.vendors.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
             <form
@@ -15,6 +15,7 @@
                 action="{{ $mode === 'create' ? route('admin.vendors.store') : route('admin.vendors.update', $vendor) }}"
                 class="row g-3"
                 id="vendorForm"
+                data-dirty-check
                 data-city-url="{{ route('admin.vendors.cities') }}"
                 data-zone-url="{{ route('admin.vendors.zones') }}"
                 data-selected-country="{{ old('country_id', $vendor->country_id) }}"
@@ -34,7 +35,8 @@
                         value="{{ old('vendor_name', $vendor->vendor_name) }}"
                         class="form-control"
                         required
-                        pattern="(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,'()\-\/]+"
+                        pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,'()\-\/]+$"
+                        minlength="2"
                         title="Use letters, numbers, spaces, and common business symbols only."
                     >
                 </div>
@@ -73,7 +75,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Inventory Mode</label>
                     <select name="inventory_mode" class="form-select" required>
-                        <option value="" disabled hidden>Select inventory mode</option>
+                        <option value="" disabled hidden>Choose mode</option>
                         <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode ?: 'internal') === 'internal')>Internal</option>
                         <option value="epos" @selected(old('inventory_mode', $vendor->inventory_mode) === 'epos')>EPOS</option>
                     </select>
@@ -88,6 +90,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Panel Role</label>
                     <select name="role" class="form-select" required>
+                        <option value="" disabled hidden>Choose role</option>
                         @foreach ($roles as $role)
                             <option value="{{ $role->role_name }}" @selected(old('role', $vendor->role ?: 'vendor') === $role->role_name)>{{ \Illuminate\Support\Str::headline($role->role_name) }}</option>
                         @endforeach
@@ -101,7 +104,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Country</label>
                     <select name="country_id" class="form-select" required id="countryId">
-                        <option value="" disabled hidden>Select country</option>
+                        <option value="" disabled hidden>Choose country</option>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
                         @endforeach
@@ -110,13 +113,13 @@
                 <div class="col-md-4">
                     <label class="form-label">City</label>
                     <select name="city_id" class="form-select" required id="cityId">
-                        <option value="" disabled hidden>Select city</option>
+                        <option value="" disabled hidden>Choose city</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Region / Zone</label>
                     <select name="region_zone_id" class="form-select" required id="zoneId">
-                        <option value="" disabled hidden>Select zone</option>
+                        <option value="" disabled hidden>Choose zone</option>
                     </select>
                 </div>
                 <div class="col-md-6">
@@ -175,8 +178,8 @@
                         };
 
                         async function loadCities(countryId, cityId = '') {
-                            citySelect.innerHTML = '<option value="" disabled hidden>Select city</option>';
-                            zoneSelect.innerHTML = '<option value="" disabled hidden>Select zone</option>';
+                            citySelect.innerHTML = '<option value="" disabled hidden>Choose city</option>';
+                            zoneSelect.innerHTML = '<option value="" disabled hidden>Choose zone</option>';
 
                             if (!countryId) {
                                 return;
@@ -197,7 +200,7 @@
                         }
 
                         async function loadZones(countryId, cityId, zoneId = '') {
-                            zoneSelect.innerHTML = '<option value="" disabled hidden>Select zone</option>';
+                            zoneSelect.innerHTML = '<option value="" disabled hidden>Choose zone</option>';
 
                             if (!countryId || !cityId) {
                                 return;

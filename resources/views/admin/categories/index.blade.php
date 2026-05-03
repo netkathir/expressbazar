@@ -60,7 +60,12 @@
                                 <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit category" title="Edit category">
                                     <i class="ti ti-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this category?');">
+                                <form
+                                    action="{{ route('admin.categories.destroy', $category) }}"
+                                    method="POST"
+                                    class="d-inline js-confirm-delete"
+                                    data-confirm-message="Delete this {{ $category->status === 'active' ? 'active ' : '' }}category?"
+                                >
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete category" title="Delete category">
