@@ -24,7 +24,9 @@ class CustomerController extends Controller
                     $subQuery->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
-                });
+                })
+                    ->orderByRaw('CASE WHEN name LIKE ? OR email LIKE ? OR phone LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%', $search.'%'])
+                    ->orderBy('name');
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()
@@ -141,11 +143,20 @@ class CustomerController extends Controller
 
     private function validateCustomer(Request $request, ?User $customer = null): array
     {
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'email' => trim((string) $request->input('email')),
+            'phone' => trim((string) $request->input('phone')),
+        ]);
+
         return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customer?->id)],
+            'name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z])[A-Za-z .\'-]+$/'],
+            'email' => ['required', 'email:rfc', 'regex:/^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$/i', 'max:255', Rule::unique('users', 'email')->ignore($customer?->id)],
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'name.regex' => 'Name may contain only letters, spaces, apostrophes, dots, and hyphens.',
+            'email.regex' => 'Enter a valid email address with a valid domain extension.',
         ]);
     }
 }

@@ -2,7 +2,7 @@
 @php($cartEntry = $cartMap[$product->id] ?? null)
 @php($basePrice = (float) $product->price)
 @php($salePrice = (float) ($product->final_price ?: $product->price))
-@php($hasDiscount = $basePrice > 0 && $salePrice > 0 && $salePrice < $basePrice)
+@php($hasDiscount = $product->discount_type === 'percentage' && $basePrice > 0 && $salePrice > 0 && $salePrice < $basePrice)
 @php($discountPercent = $hasDiscount ? max(1, (int) round((($basePrice - $salePrice) / $basePrice) * 100)) : null)
 @php($currentPincode = request('pincode') ?: request('postcode') ?: ($pincode ?? null))
 @php($pincodeQuery = array_filter([

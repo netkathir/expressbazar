@@ -11,17 +11,17 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Coupon' : 'Edit Coupon' }}</h1>
                 </div>
-                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $coupon) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $coupon) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
                 @endif
 
                 <div class="col-md-4">
-                    <label class="form-label">Coupon Code</label>
+                    <label class="form-label">Create Coupon Code</label>
                     <input type="text" name="code" value="{{ old('code', $coupon->code) }}" class="form-control text-uppercase" placeholder="WELCOME10" required>
                 </div>
                 <div class="col-md-4">
@@ -32,12 +32,18 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Discount Value</label>
-                    <input type="number" name="value" step="0.01" min="0.01" value="{{ old('value', $coupon->value) }}" class="form-control" required>
+                    <label class="form-label" id="couponValueLabel">Discount Value (%)</label>
+                    <div class="input-group">
+                        <input type="number" name="value" step="0.01" min="0.01" value="{{ old('value', $coupon->value) }}" class="form-control" required>
+                        <span class="input-group-text" id="couponValueSuffix">%</span>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Minimum Order</label>
-                    <input type="number" name="min_order" step="0.01" min="0" value="{{ old('min_order', $coupon->min_order) }}" class="form-control" placeholder="Optional">
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" name="min_order" step="0.01" min="0" value="{{ old('min_order', $coupon->min_order) }}" class="form-control" placeholder="Optional">
+                    </div>
                 </div>
                 @if ($isVendorPanel)
                     <input type="hidden" name="vendor_id" value="{{ auth('vendor')->id() }}">
@@ -71,3 +77,30 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const type = document.querySelector('[name="type"]');
+            const label = document.getElementById('couponValueLabel');
+            const suffix = document.getElementById('couponValueSuffix');
+
+            const sync = () => {
+                if (!type || !label || !suffix) {
+                    return;
+                }
+
+                if (type.value === 'fixed') {
+                    label.textContent = 'Discount Value (Amount)';
+                    suffix.textContent = '₹';
+                } else {
+                    label.textContent = 'Discount Value (%)';
+                    suffix.textContent = '%';
+                }
+            };
+
+            type?.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
+@endpush

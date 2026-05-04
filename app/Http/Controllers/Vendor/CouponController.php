@@ -102,16 +102,23 @@ class CouponController extends Controller
 
     private function validateCoupon(Request $request, ?Coupon $coupon = null): array
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:64', Rule::unique('coupons', 'code')->ignore($coupon?->id)],
-            'type' => ['required', Rule::in(['fixed', 'percentage'])],
-            'value' => ['required', 'numeric', 'min:0.01'],
-            'min_order' => ['nullable', 'numeric', 'min:0'],
-            'expires_at' => ['nullable', 'date'],
-            'is_active' => ['nullable'],
+        $request->merge([
+            'code' => strtoupper(trim((string) $request->input('code'))),
         ]);
 
-        $data['code'] = strtoupper(trim($data['code']));
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:64', 'regex:/^[A-Z0-9_-]+$/', Rule::unique('coupons', 'code')->ignore($coupon?->id)],
+            'type' => ['required', Rule::in(['fixed', 'percentage'])],
+            'value' => ['required', 'numeric', 'min:0.01', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'min_order' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'expires_at' => ['nullable', 'date'],
+            'is_active' => ['nullable'],
+        ], [
+            'code.regex' => 'Coupon code may contain only letters, numbers, underscores, and hyphens.',
+            'value.regex' => 'Discount value can have up to two decimal places.',
+            'min_order.regex' => 'Minimum order can have up to two decimal places.',
+        ]);
+
         $data['min_order'] = $data['min_order'] ?? null;
         $data['is_active'] = $request->boolean('is_active');
 

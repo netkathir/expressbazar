@@ -18,7 +18,9 @@ class TaxController extends Controller
                 $search = trim((string) $request->string('search'));
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('tax_name', 'like', "%{$search}%");
-                });
+                })
+                    ->orderByRaw('CASE WHEN tax_name LIKE ? THEN 0 ELSE 1 END', [$search.'%'])
+                    ->orderBy('tax_name');
             })
             ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
@@ -86,12 +88,22 @@ class TaxController extends Controller
 
     private function validateTax(Request $request, ?Tax $tax = null): array
     {
+        $request->merge([
+            'tax_name' => trim((string) $request->input('tax_name')),
+            'region_name' => trim((string) $request->input('region_name')),
+        ]);
+
         return $request->validate([
-            'tax_name' => ['required', 'string', 'max:255', Rule::unique('taxes', 'tax_name')->ignore($tax?->id)],
-            'tax_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
-            'country_id' => ['nullable', 'exists:countries,id'],
-            'region_name' => ['nullable', 'string', 'max:255'],
+            'tax_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/', Rule::unique('taxes', 'tax_name')->ignore($tax?->id)],
+            'tax_percentage' => ['required', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,2})?$/'],
+            'country_id' => ['nullable', 'exists:countries,id', 'required_with:region_name'],
+            'region_name' => ['nullable', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'tax_name.regex' => 'Tax name must include letters or numbers and cannot contain unsupported special characters.',
+            'tax_percentage.regex' => 'Percentage can have up to two decimal places.',
+            'country_id.required_with' => 'Select a country before entering a region.',
+            'region_name.regex' => 'Region must include letters or numbers and cannot contain unsupported special characters.',
         ]);
     }
 }

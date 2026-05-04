@@ -161,6 +161,22 @@
         </div>
     </main>
 
+    <div class="modal fade" id="adminConfirmModal" tabindex="-1" aria-labelledby="adminConfirmModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="adminConfirmModalTitle">Confirm action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-secondary" data-admin-confirm-message>Are you sure?</div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-admin-confirm-cancel>Cancel</button>
+                    <button type="button" class="btn btn-danger" data-admin-confirm-ok>Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('admin-theme/js/admin.js') }}"></script>
     <script src="{{ asset('js/inline-validation.js') }}"></script>

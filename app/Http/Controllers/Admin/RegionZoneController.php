@@ -24,7 +24,9 @@ class RegionZoneController extends Controller
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('zone_name', 'like', "%{$search}%")
                         ->orWhere('zone_code', 'like', "%{$search}%");
-                });
+                })
+                    ->orderByRaw('CASE WHEN zone_name LIKE ? OR zone_code LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%'])
+                    ->orderBy('zone_name');
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()
@@ -54,14 +56,7 @@ class RegionZoneController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'country_id' => ['required', 'exists:countries,id'],
-            'city_id' => ['required', 'exists:cities,id'],
-            'zone_name' => ['required', 'string', 'max:255'],
-            'zone_code' => ['nullable', 'string', 'max:100'],
-            'delivery_available' => ['required', 'boolean'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
+        $data = $this->validateZone($request);
 
         $duplicate = RegionZone::where('city_id', $data['city_id'])
             ->whereRaw('LOWER(zone_name) = ?', [strtolower($data['zone_name'])])
@@ -93,14 +88,7 @@ class RegionZoneController extends Controller
 
     public function update(Request $request, RegionZone $zone)
     {
-        $data = $request->validate([
-            'country_id' => ['required', 'exists:countries,id'],
-            'city_id' => ['required', 'exists:cities,id'],
-            'zone_name' => ['required', 'string', 'max:255'],
-            'zone_code' => ['nullable', 'string', 'max:100'],
-            'delivery_available' => ['required', 'boolean'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
+        $data = $this->validateZone($request);
 
         $duplicate = RegionZone::where('city_id', $data['city_id'])
             ->whereRaw('LOWER(zone_name) = ?', [strtolower($data['zone_name'])])
@@ -127,5 +115,38 @@ class RegionZoneController extends Controller
         $this->deleteFromDatabase($zone);
 
         return redirect()->route('admin.zones.index')->with('success', 'Region / zone deleted successfully.');
+    }
+
+    private function validateZone(Request $request): array
+    {
+        $request->merge([
+            'zone_name' => trim((string) $request->input('zone_name')),
+            'zone_code' => strtoupper(trim((string) $request->input('zone_code'))),
+        ]);
+
+        $data = $request->validate([
+            'country_id' => ['required', 'exists:countries,id'],
+            'city_id' => ['required', 'exists:cities,id'],
+            'zone_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .\'()\/-]+$/'],
+            'zone_code' => ['nullable', 'string', 'max:20', 'regex:/^[A-Z0-9-]+$/'],
+            'delivery_available' => ['required', 'boolean'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'zone_name.regex' => 'Zone name must include letters or numbers and cannot contain unsupported special characters.',
+            'zone_code.regex' => 'Zone code may contain only letters, numbers, and hyphens.',
+        ]);
+
+        $cityMatchesCountry = City::query()
+            ->whereKey($data['city_id'])
+            ->where('country_id', $data['country_id'])
+            ->exists();
+
+        if (! $cityMatchesCountry) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'city_id' => 'Selected city must belong to the selected country.',
+            ]);
+        }
+
+        return $data;
     }
 }

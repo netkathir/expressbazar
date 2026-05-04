@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Region / Zone' : 'Edit Region / Zone' }}</h1>
                 </div>
-                <a href="{{ route('admin.zones.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.zones.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.zones.store') : route('admin.zones.update', $zone) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.zones.store') : route('admin.zones.update', $zone) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -36,11 +36,11 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Zone Name</label>
-                    <input type="text" name="zone_name" value="{{ old('zone_name', $zone->zone_name) }}" class="form-control" required>
+                    <input type="text" name="zone_name" value="{{ old('zone_name', $zone->zone_name) }}" class="form-control" required pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .'()\/-]+$">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Zone Code</label>
-                    <input type="text" name="zone_code" value="{{ old('zone_code', $zone->zone_code) }}" class="form-control">
+                    <input type="text" name="zone_code" value="{{ old('zone_code', $zone->zone_code) }}" class="form-control text-uppercase" maxlength="20" pattern="^[A-Za-z0-9-]+$">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Delivery Available</label>

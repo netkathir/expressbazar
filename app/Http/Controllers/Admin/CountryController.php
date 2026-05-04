@@ -19,7 +19,9 @@ class CountryController extends Controller
                     $subQuery->where('country_name', 'like', "%{$search}%")
                         ->orWhere('country_code', 'like', "%{$search}%")
                         ->orWhere('currency', 'like', "%{$search}%");
-                });
+                })
+                    ->orderByRaw('CASE WHEN country_name LIKE ? OR country_code LIKE ? OR currency LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%', $search.'%'])
+                    ->orderBy('country_name');
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->string('status'));
@@ -47,13 +49,7 @@ class CountryController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'country_name' => ['required', 'string', 'max:255', 'unique:countries,country_name'],
-            'country_code' => ['required', 'string', 'max:10', 'unique:countries,country_code'],
-            'currency' => ['required', 'string', 'max:20'],
-            'timezone' => ['nullable', 'string', 'max:100'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
+        $data = $this->validateCountry($request);
 
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
@@ -75,13 +71,7 @@ class CountryController extends Controller
 
     public function update(Request $request, Country $country)
     {
-        $data = $request->validate([
-            'country_name' => ['required', 'string', 'max:255', Rule::unique('countries', 'country_name')->ignore($country->id)],
-            'country_code' => ['required', 'string', 'max:10', Rule::unique('countries', 'country_code')->ignore($country->id)],
-            'currency' => ['required', 'string', 'max:20'],
-            'timezone' => ['nullable', 'string', 'max:100'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
+        $data = $this->validateCountry($request, $country);
 
         $data['updated_by'] = $request->user()?->id;
 
@@ -99,5 +89,27 @@ class CountryController extends Controller
         $this->deleteFromDatabase($country);
 
         return redirect()->route('admin.countries.index')->with('success', 'Country deleted successfully.');
+    }
+
+    private function validateCountry(Request $request, ?Country $country = null): array
+    {
+        $request->merge([
+            'country_name' => trim((string) $request->input('country_name')),
+            'country_code' => strtoupper(trim((string) $request->input('country_code'))),
+            'currency' => strtoupper(trim((string) $request->input('currency'))),
+            'timezone' => trim((string) $request->input('timezone')),
+        ]);
+
+        return $request->validate([
+            'country_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z])[A-Za-z .\'()-]+$/', Rule::unique('countries', 'country_name')->ignore($country?->id)],
+            'country_code' => ['required', 'string', 'regex:/^[A-Z]{2,3}$/', Rule::unique('countries', 'country_code')->ignore($country?->id)],
+            'currency' => ['required', 'string', 'regex:/^[A-Z]{3}$/'],
+            'timezone' => ['nullable', 'string', 'max:100'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'country_name.regex' => 'Country name may contain only letters, spaces, apostrophes, dots, parentheses, and hyphens.',
+            'country_code.regex' => 'Country code must be 2 or 3 letters.',
+            'currency.regex' => 'Currency must be a 3-letter code such as INR or GBP.',
+        ]);
     }
 }

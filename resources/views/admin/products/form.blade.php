@@ -11,10 +11,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Product' : 'Edit Product' }}</h1>
                 </div>
-                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $product) }}" class="row g-3" enctype="multipart/form-data">
+            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $product) }}" class="row g-3" enctype="multipart/form-data" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -108,8 +108,11 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Discount Value</label>
-                    <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue">
+                    <label class="form-label" id="discountValueLabel">Discount Value</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue">
+                        <span class="input-group-text" id="discountValueSuffix">Value</span>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Inventory Mode</label>
@@ -128,7 +131,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Stock Qty</label>
-                    <input type="number" min="0" name="stock_quantity" value="{{ old('stock_quantity', $product->inventory?->stock_quantity) }}" class="form-control">
+                    <input type="number" min="0" name="stock_quantity" value="{{ old('stock_quantity', $product->inventory?->stock_quantity) }}" class="form-control" required>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Unit</label>
@@ -156,32 +159,57 @@
 @push('scripts')
     <script>
         function removeProductImage(imageId) {
-            if (!confirm('Delete this image?')) {
-                return;
-            }
+            window.adminConfirm('Delete this image?', {
+                title: 'Delete image',
+                confirmText: 'Delete',
+                confirmClass: 'btn-danger',
+            }).then((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
 
-            const input = document.getElementById('remove_image_ids');
-            const preview = document.getElementById('product-image-preview-' + imageId);
-            const ids = input.value ? input.value.split(',').filter(Boolean) : [];
+                const input = document.getElementById('remove_image_ids');
+                const preview = document.getElementById('product-image-preview-' + imageId);
+                const ids = input.value ? input.value.split(',').filter(Boolean) : [];
 
-            if (!ids.includes(String(imageId))) {
-                ids.push(String(imageId));
-            }
+                if (!ids.includes(String(imageId))) {
+                    ids.push(String(imageId));
+                }
 
-            input.value = ids.join(',');
+                input.value = ids.join(',');
 
-            if (preview) {
-                preview.style.display = 'none';
-            }
+                if (preview) {
+                    preview.style.display = 'none';
+                }
+            });
         }
 
         (() => {
             const discountType = document.getElementById('discountType');
             const discountValue = document.getElementById('discountValue');
+            const discountValueLabel = document.getElementById('discountValueLabel');
+            const discountValueSuffix = document.getElementById('discountValueSuffix');
             const dateFields = [
                 document.getElementById('discountStartDate'),
                 document.getElementById('discountEndDate'),
             ].filter(Boolean);
+
+            const syncDiscountValueLabel = () => {
+                if (!discountType || !discountValueLabel || !discountValueSuffix) {
+                    return;
+                }
+
+                if (discountType.value === 'percentage') {
+                    discountValueLabel.textContent = 'Discount Value (%)';
+                    discountValueSuffix.textContent = '%';
+                } else if (discountType.value === 'fixed') {
+                    discountValueLabel.textContent = 'Discount Value (Amount)';
+                    discountValueSuffix.textContent = '₹';
+                } else {
+                    discountValueLabel.textContent = 'Discount Value';
+                    discountValueSuffix.textContent = 'Value';
+                }
+            };
 
             const syncDiscountDates = () => {
                 const hasDiscount = Boolean(discountType?.value) && Number(discountValue?.value || 0) > 0;
@@ -196,8 +224,12 @@
                 });
             };
 
-            discountType?.addEventListener('change', syncDiscountDates);
+            discountType?.addEventListener('change', () => {
+                syncDiscountValueLabel();
+                syncDiscountDates();
+            });
             discountValue?.addEventListener('input', syncDiscountDates);
+            syncDiscountValueLabel();
             syncDiscountDates();
         })();
     </script>

@@ -79,17 +79,24 @@ class CouponController extends Controller
 
     private function validateCoupon(Request $request, ?Coupon $coupon = null): array
     {
+        $request->merge([
+            'code' => strtoupper(trim((string) $request->input('code'))),
+        ]);
+
         $data = $request->validate([
-            'code' => ['required', 'string', 'max:64', Rule::unique('coupons', 'code')->ignore($coupon?->id)],
+            'code' => ['required', 'string', 'max:64', 'regex:/^[A-Z0-9_-]+$/', Rule::unique('coupons', 'code')->ignore($coupon?->id)],
             'type' => ['required', Rule::in(['fixed', 'percentage'])],
-            'value' => ['required', 'numeric', 'min:0.01'],
-            'min_order' => ['nullable', 'numeric', 'min:0'],
+            'value' => ['required', 'numeric', 'min:0.01', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'min_order' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'vendor_id' => ['nullable', 'exists:vendors,id'],
             'expires_at' => ['nullable', 'date'],
             'is_active' => ['nullable'],
+        ], [
+            'code.regex' => 'Coupon code may contain only letters, numbers, underscores, and hyphens.',
+            'value.regex' => 'Discount value can have up to two decimal places.',
+            'min_order.regex' => 'Minimum order can have up to two decimal places.',
         ]);
 
-        $data['code'] = strtoupper(trim($data['code']));
         $data['min_order'] = $data['min_order'] ?? null;
         $data['vendor_id'] = $data['vendor_id'] ?? null;
         $data['is_active'] = $request->boolean('is_active');

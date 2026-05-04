@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Customer' : 'Edit Customer' }}</h1>
                 </div>
-                <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.customers.store') : route('admin.customers.update', $customer) }}" class="row g-3" novalidate>
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.customers.store') : route('admin.customers.update', $customer) }}" class="row g-3" novalidate data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -18,14 +18,14 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" value="{{ old('name', $customer->name) }}" class="form-control" required>
+                    <input type="text" name="name" value="{{ old('name', $customer->name) }}" class="form-control" required pattern="^(?=.*[A-Za-z])[A-Za-z .'-]+$" title="Use letters, spaces, dots, apostrophes, and hyphens only.">
                     @error('name')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" class="form-control" required>
+                    <input type="email" name="email" value="{{ old('email', $customer->email) }}" class="form-control" required pattern="^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$">
                     @error('email')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror

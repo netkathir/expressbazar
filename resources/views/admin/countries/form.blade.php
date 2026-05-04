@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Country' : 'Edit Country' }}</h1>
                 </div>
-                <a href="{{ route('admin.countries.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.countries.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.countries.store') : route('admin.countries.update', $country) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.countries.store') : route('admin.countries.update', $country) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -18,15 +18,15 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Country Name</label>
-                    <input type="text" name="country_name" value="{{ old('country_name', $country->country_name) }}" class="form-control" required>
+                    <input type="text" name="country_name" value="{{ old('country_name', $country->country_name) }}" class="form-control" required pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Country Code</label>
-                    <input type="text" name="country_code" value="{{ old('country_code', $country->country_code) }}" class="form-control" required>
+                    <input type="text" name="country_code" value="{{ old('country_code', $country->country_code) }}" class="form-control text-uppercase" required maxlength="3" pattern="^[A-Za-z]{2,3}$">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Currency</label>
-                    <input type="text" name="currency" value="{{ old('currency', $country->currency) }}" class="form-control" required>
+                    <input type="text" name="currency" value="{{ old('currency', $country->currency) }}" class="form-control text-uppercase" required maxlength="3" pattern="^[A-Za-z]{3}$">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Timezone</label>

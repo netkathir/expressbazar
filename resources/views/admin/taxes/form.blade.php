@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Tax' : 'Edit Tax' }}</h1>
                 </div>
-                <a href="{{ route('admin.taxes.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.taxes.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.taxes.store') : route('admin.taxes.update', $tax) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.taxes.store') : route('admin.taxes.update', $tax) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -18,7 +18,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Tax Name</label>
-                    <input type="text" name="tax_name" value="{{ old('tax_name', $tax->tax_name) }}" class="form-control" required>
+                    <input type="text" name="tax_name" value="{{ old('tax_name', $tax->tax_name) }}" class="form-control" required pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&'()\/-]+$">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Percentage</label>
@@ -42,7 +42,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Region</label>
-                    <input type="text" name="region_name" value="{{ old('region_name', $tax->region_name) }}" class="form-control" placeholder="Optional region or zone name">
+                    <input type="text" name="region_name" value="{{ old('region_name', $tax->region_name) }}" class="form-control" placeholder="Optional region or zone name" pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&'()\/-]+$">
                 </div>
                 <div class="col-12">
                     <button class="btn btn-primary" type="submit">{{ $mode === 'create' ? 'Save Tax' : 'Update Tax' }}</button>

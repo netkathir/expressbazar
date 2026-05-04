@@ -162,6 +162,9 @@ class ProductController extends Controller
     private function validateProduct(Request $request, ?Product $product = null): array
     {
         $vendorId = Auth::guard('vendor')->id();
+        $request->merge([
+            'product_name' => trim((string) $request->input('product_name')),
+        ]);
 
         $data = $request->validate([
             'product_name' => [
@@ -176,19 +179,23 @@ class ProductController extends Controller
             'category_id' => ['required', 'exists:categories,id'],
             'subcategory_id' => ['nullable', 'exists:subcategories,id'],
             'tax_id' => ['nullable', 'exists:taxes,id'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'discount_type' => ['nullable', Rule::in(['percentage', 'fixed'])],
-            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'discount_value' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'discount_start_date' => ['nullable', 'date'],
             'discount_end_date' => ['nullable', 'date'],
             'inventory_mode' => ['required', Rule::in(['internal', 'epos'])],
-            'stock_quantity' => ['nullable', 'integer', 'min:0'],
+            'stock_quantity' => ['required_if:inventory_mode,internal', 'integer', 'min:0'],
             'unit' => ['nullable', Rule::in(['kg', 'nos', 'pieces'])],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'max:2048'],
             'remove_image_ids' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'price.regex' => 'Price can have up to two decimal places.',
+            'discount_value.regex' => 'Discount value can have up to two decimal places.',
+            'stock_quantity.required_if' => 'Stock quantity is required for internal inventory products.',
         ]);
 
         if (empty($data['discount_type']) || empty($data['discount_value'])) {

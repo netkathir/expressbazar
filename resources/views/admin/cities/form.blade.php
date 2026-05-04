@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add City' : 'Edit City' }}</h1>
                 </div>
-                <a href="{{ route('admin.cities.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.cities.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.cities.store') : route('admin.cities.update', $city) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.cities.store') : route('admin.cities.update', $city) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -27,15 +27,15 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">State / Province</label>
-                    <input type="text" name="state" value="{{ old('state', $city->state) }}" class="form-control">
+                    <input type="text" name="state" value="{{ old('state', $city->state) }}" class="form-control" pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">City Name</label>
-                    <input type="text" name="city_name" value="{{ old('city_name', $city->city_name) }}" class="form-control" required>
+                    <input type="text" name="city_name" value="{{ old('city_name', $city->city_name) }}" class="form-control" required pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">City Code</label>
-                    <input type="text" name="city_code" value="{{ old('city_code', $city->city_code) }}" class="form-control">
+                    <input type="text" name="city_code" value="{{ old('city_code', $city->city_code) }}" class="form-control text-uppercase" maxlength="10" pattern="^[A-Za-z0-9-]+$">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Status</label>

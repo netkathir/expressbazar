@@ -22,7 +22,9 @@ class CityController extends Controller
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('city_name', 'like', "%{$search}%")
                         ->orWhere('city_code', 'like', "%{$search}%");
-                });
+                })
+                    ->orderByRaw('CASE WHEN city_name LIKE ? OR city_code LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%'])
+                    ->orderBy('city_name');
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()
@@ -50,13 +52,7 @@ class CityController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'country_id' => ['required', 'exists:countries,id'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'city_name' => ['required', 'string', 'max:255'],
-            'city_code' => ['nullable', 'string', 'max:50'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
+        $data = $this->validateCity($request);
 
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
@@ -87,13 +83,7 @@ class CityController extends Controller
 
     public function update(Request $request, City $city)
     {
-        $data = $request->validate([
-            'country_id' => ['required', 'exists:countries,id'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'city_name' => ['required', 'string', 'max:255'],
-            'city_code' => ['nullable', 'string', 'max:50'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
+        $data = $this->validateCity($request);
 
         $duplicate = City::where('country_id', $data['country_id'])
             ->whereRaw('LOWER(city_name) = ?', [strtolower($data['city_name'])])
@@ -120,5 +110,26 @@ class CityController extends Controller
         $this->deleteFromDatabase($city);
 
         return redirect()->route('admin.cities.index')->with('success', 'City deleted successfully.');
+    }
+
+    private function validateCity(Request $request): array
+    {
+        $request->merge([
+            'state' => trim((string) $request->input('state')),
+            'city_name' => trim((string) $request->input('city_name')),
+            'city_code' => strtoupper(trim((string) $request->input('city_code'))),
+        ]);
+
+        return $request->validate([
+            'country_id' => ['required', 'exists:countries,id'],
+            'state' => ['nullable', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z])[A-Za-z .\'()-]+$/'],
+            'city_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z])[A-Za-z .\'()-]+$/'],
+            'city_code' => ['nullable', 'string', 'max:10', 'regex:/^[A-Z0-9-]+$/'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'state.regex' => 'State may contain only letters, spaces, apostrophes, dots, parentheses, and hyphens.',
+            'city_name.regex' => 'City name may contain only letters, spaces, apostrophes, dots, parentheses, and hyphens.',
+            'city_code.regex' => 'City code may contain only letters, numbers, and hyphens.',
+        ]);
     }
 }

@@ -79,7 +79,9 @@ class StorefrontController extends Controller
 
     public function product(Request $request, Product $product)
     {
-        $product->load(['category', 'subcategory', 'vendor', 'images', 'inventory', 'tax']);
+        $product->load(['category', 'subcategory', 'vendor.country', 'vendor.city', 'vendor.zone', 'images', 'inventory', 'tax']);
+
+        abort_if(! $this->isStorefrontProductAvailable($product), 404);
 
         return view('storefront.product', $this->storefrontData($request, $product->product_name, [
             'product' => $product,
@@ -917,6 +919,12 @@ class StorefrontController extends Controller
     {
         $query->whereHas('vendor', function ($vendorQuery) use ($location) {
             $vendorQuery->where('status', 'active');
+            $vendorQuery->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'));
+            $vendorQuery->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'));
+            $vendorQuery->where(function ($zoneStatusQuery) {
+                $zoneStatusQuery->whereNull('region_zone_id')
+                    ->orWhereHas('zone', fn ($zoneQuery) => $zoneQuery->where('status', 'active'));
+            });
             $this->applyVendorLocationScope($vendorQuery, $location);
         });
 
@@ -1354,6 +1362,27 @@ class StorefrontController extends Controller
         if ($product->inventory?->inventory_mode === 'internal' && (int) $product->inventory->stock_quantity <= 0) {
             throw ValidationException::withMessages(['product' => 'Product is out of stock.']);
         }
+    }
+
+    private function isStorefrontProductAvailable(Product $product): bool
+    {
+        if ($product->status !== 'active' || $product->vendor?->status !== 'active') {
+            return false;
+        }
+
+        if ($product->vendor?->country?->status !== 'active' || $product->vendor?->city?->status !== 'active') {
+            return false;
+        }
+
+        if ($product->vendor?->zone && $product->vendor->zone->status !== 'active') {
+            return false;
+        }
+
+        if ($product->inventory?->inventory_mode === 'internal' && (int) $product->inventory->stock_quantity <= 0) {
+            return false;
+        }
+
+        return true;
     }
 
     private function renderCartDrawer(): string
