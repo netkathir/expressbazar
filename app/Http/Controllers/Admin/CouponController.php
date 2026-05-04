@@ -18,6 +18,7 @@ class CouponController extends Controller
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->where('code', 'like', "%{$search}%");
+                $this->prioritizePrefixSearch($query, ['code'], $search);
             })
             ->when($request->filled('type'), fn ($query) => $query->where('type', $request->string('type')))
             ->when($request->filled('status'), fn ($query) => $query->where('is_active', $request->string('status') === 'active'))

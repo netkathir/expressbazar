@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Delivery Config' : 'Edit Delivery Config' }}</h1>
                 </div>
-                <a href="{{ route('admin.delivery.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.delivery.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.delivery.store') : route('admin.delivery.update', $config) }}" class="row g-3" id="delivery-form"
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.delivery.store') : route('admin.delivery.update', $config) }}" class="row g-3" id="delivery-form" data-dirty-check
                   data-city-url="{{ route('admin.vendors.cities') }}"
                   data-zone-url="{{ route('admin.vendors.zones') }}"
                   data-selected-country="{{ old('country_id', $config->country_id) }}"

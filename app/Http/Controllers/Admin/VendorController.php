@@ -33,6 +33,7 @@ class VendorController extends Controller
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['vendor_name', 'email', 'phone'], $search);
             })
             ->when($request->filled('inventory_mode'), fn ($query) => $query->where('inventory_mode', $request->string('inventory_mode')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
@@ -187,7 +188,13 @@ class VendorController extends Controller
                 'max:255',
                 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9\s&.,\'()\-\/]+$/',
             ],
-            'email' => ['required', 'email', 'max:255', Rule::unique('vendors', 'email')->ignore($vendor?->id)],
+            'email' => [
+                'required',
+                'email',
+                'regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+                'max:255',
+                Rule::unique('vendors', 'email')->ignore($vendor?->id),
+            ],
             'role' => ['required', 'exists:roles,role_name'],
             'phone' => ['nullable', 'regex:/^[0-9]{10,15}$/'],
             'address' => ['nullable', 'string'],
@@ -202,6 +209,7 @@ class VendorController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
             'vendor_name.regex' => 'Vendor name must include letters or numbers and cannot contain unsupported special characters.',
+            'email.regex' => 'Enter a valid email address with domain and extension.',
             'phone.regex' => 'Phone must contain only 10 to 15 digits.',
             'pincode.regex' => 'Pincode must be exactly 6 digits.',
         ]);

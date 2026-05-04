@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Payment' : 'Edit Payment' }}</h1>
                 </div>
-                <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.payments.store') : route('admin.payments.update', $payment) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.payments.store') : route('admin.payments.update', $payment) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')

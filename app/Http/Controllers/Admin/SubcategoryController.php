@@ -19,6 +19,7 @@ class SubcategoryController extends Controller
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('subcategory_name', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['subcategory_name'], $search);
             })
             ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->integer('category_id')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))

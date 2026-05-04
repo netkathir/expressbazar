@@ -9,7 +9,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('admin.system-config.update') }}" class="row g-3">
+            <form method="POST" action="{{ route('admin.system-config.update') }}" class="row g-3" data-dirty-check>
                 @csrf
                 @method('PUT')
 

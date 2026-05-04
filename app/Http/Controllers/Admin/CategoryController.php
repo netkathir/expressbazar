@@ -16,6 +16,7 @@ class CategoryController extends Controller
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->where('category_name', 'like', "%{$search}%");
+                $this->prioritizePrefixSearch($query, ['category_name'], $search);
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()

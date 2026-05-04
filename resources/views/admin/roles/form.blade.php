@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Role' : 'Edit Role' }}</h1>
                 </div>
-                <a href="{{ route('admin.roles.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.roles.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.roles.store') : route('admin.roles.update', $role) }}">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.roles.store') : route('admin.roles.update', $role) }}" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')

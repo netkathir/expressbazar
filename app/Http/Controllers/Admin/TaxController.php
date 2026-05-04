@@ -19,6 +19,7 @@ class TaxController extends Controller
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('tax_name', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['tax_name'], $search);
             })
             ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))

@@ -11,10 +11,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Product' : 'Edit Product' }}</h1>
                 </div>
-                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $product) }}" class="row g-3" enctype="multipart/form-data">
+            <form method="POST" action="{{ $mode === 'create' ? route($routePrefix.'.store') : route($routePrefix.'.update', $product) }}" class="row g-3" enctype="multipart/form-data" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')

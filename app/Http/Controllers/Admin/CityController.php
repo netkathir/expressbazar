@@ -23,6 +23,7 @@ class CityController extends Controller
                     $subQuery->where('city_name', 'like', "%{$search}%")
                         ->orWhere('city_code', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['city_name', 'city_code'], $search);
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()

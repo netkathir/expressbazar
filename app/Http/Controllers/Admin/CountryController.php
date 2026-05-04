@@ -20,6 +20,7 @@ class CountryController extends Controller
                         ->orWhere('country_code', 'like', "%{$search}%")
                         ->orWhere('currency', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['country_name', 'country_code', 'currency'], $search);
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->string('status'));
@@ -48,11 +49,21 @@ class CountryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'country_name' => ['required', 'string', 'max:255', 'unique:countries,country_name'],
+            'country_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z\s]+$/',
+                'unique:countries,country_name',
+            ],
             'country_code' => ['required', 'string', 'max:10', 'unique:countries,country_code'],
-            'currency' => ['required', 'string', 'max:20'],
+            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'timezone' => ['nullable', 'string', 'max:100'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'country_name.regex' => 'Country name may contain letters and spaces only.',
+            'currency.size' => 'Currency must be exactly 3 characters.',
+            'currency.regex' => 'Currency must use a valid ISO 4217 code with 3 uppercase letters.',
         ]);
 
         $data['created_by'] = $request->user()?->id;

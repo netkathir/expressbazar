@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Adjust Stock' : 'Edit Stock' }}</h1>
                 </div>
-                <a href="{{ route('admin.inventory.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.inventory.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.inventory.store') : route('admin.inventory.update', $inventory) }}" class="row g-3">
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.inventory.store') : route('admin.inventory.update', $inventory) }}" class="row g-3" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')

@@ -25,6 +25,7 @@ class ProductController extends Controller
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->where('product_name', 'like', "%{$search}%");
+                $this->prioritizePrefixSearch($query, ['product_name'], $search);
             })
             ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->integer('category_id')))
             ->when($request->filled('vendor_id'), fn ($query) => $query->where('vendor_id', $request->integer('vendor_id')))

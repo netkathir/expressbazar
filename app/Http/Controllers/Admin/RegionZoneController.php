@@ -25,6 +25,7 @@ class RegionZoneController extends Controller
                     $subQuery->where('zone_name', 'like', "%{$search}%")
                         ->orWhere('zone_code', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['zone_name', 'zone_code'], $search);
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()

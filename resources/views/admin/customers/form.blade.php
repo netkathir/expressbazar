@@ -7,10 +7,10 @@
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Customer' : 'Edit Customer' }}</h1>
                 </div>
-                <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">Back</a>
+                <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.customers.store') : route('admin.customers.update', $customer) }}" class="row g-3" novalidate>
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.customers.store') : route('admin.customers.update', $customer) }}" class="row g-3" novalidate data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
