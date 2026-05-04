@@ -15,9 +15,7 @@ class CategoryController extends Controller
         $categories = Category::query()
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
-                $query->where('category_name', 'like', "%{$search}%")
-                    ->orderByRaw('CASE WHEN category_name LIKE ? THEN 0 ELSE 1 END', [$search.'%'])
-                    ->orderBy('category_name');
+                $query->where('category_name', 'like', "%{$search}%");
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()

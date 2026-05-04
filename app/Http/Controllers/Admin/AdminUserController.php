@@ -35,6 +35,7 @@ class AdminUserController extends Controller
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
                 });
+                $this->prioritizePrefixSearch($query, ['name', 'email', 'phone'], $search);
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('role'), fn ($query) => $query->where('role', $request->string('role')))

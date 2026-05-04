@@ -28,7 +28,7 @@
                 @endif
 
                 <div class="col-md-6">
-                    <label class="form-label">Vendor Name</label>
+                    <label class="form-label">Vendor Name <span class="text-danger">*</span></label>
                     <input
                         type="text"
                         name="vendor_name"
@@ -41,8 +41,16 @@
                     >
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" value="{{ old('email', $vendor->email) }}" class="form-control" required>
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input
+                        type="email"
+                        name="email"
+                        value="{{ old('email', $vendor->email) }}"
+                        class="form-control"
+                        required
+                        pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                        title="Enter a valid email address with domain and extension."
+                    >
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Phone</label>
@@ -73,7 +81,7 @@
                     >
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Inventory Mode</label>
+                    <label class="form-label">Inventory Mode <span class="text-danger">*</span></label>
                     <select name="inventory_mode" class="form-select" required>
                         <option value="" disabled hidden>Choose mode</option>
                         <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode ?: 'internal') === 'internal')>Internal</option>
@@ -81,14 +89,14 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Status</label>
+                    <label class="form-label">Status <span class="text-danger">*</span></label>
                     <select name="status" class="form-select" required>
                         <option value="active" @selected(old('status', $vendor->status ?: 'active') === 'active')>Active</option>
                         <option value="inactive" @selected(old('status', $vendor->status) === 'inactive')>Inactive</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Panel Role</label>
+                    <label class="form-label">Panel Role <span class="text-danger">*</span></label>
                     <select name="role" class="form-select" required>
                         <option value="" disabled hidden>Choose role</option>
                         @foreach ($roles as $role)
@@ -102,25 +110,29 @@
                     <textarea name="address" class="form-control" rows="3">{{ old('address', $vendor->address) }}</textarea>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Country</label>
-                    <select name="country_id" class="form-select" required id="countryId">
-                        <option value="" disabled hidden>Choose country</option>
-                        @foreach ($countries as $country)
-                            <option value="{{ $country->id }}" @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Country <span class="text-danger">*</span></label>
+                    <div class="select-field-placeholder-wrap">
+                        <select name="country_id" class="form-select" required id="countryId" data-placeholder-target="country">
+                            @foreach ($countries as $country)
+                                <option value="{{ $country->id }}" @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
+                            @endforeach
+                        </select>
+                        <span class="select-field-placeholder" data-select-placeholder>Select country</span>
+                    </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">City</label>
-                    <select name="city_id" class="form-select" required id="cityId">
-                        <option value="" disabled hidden>Choose city</option>
-                    </select>
+                    <label class="form-label">City <span class="text-danger">*</span></label>
+                    <div class="select-field-placeholder-wrap">
+                        <select name="city_id" class="form-select" required id="cityId" data-placeholder-target="city"></select>
+                        <span class="select-field-placeholder" data-select-placeholder>Select city</span>
+                    </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Region / Zone</label>
-                    <select name="region_zone_id" class="form-select" required id="zoneId">
-                        <option value="" disabled hidden>Choose zone</option>
-                    </select>
+                    <label class="form-label">Region / Zone <span class="text-danger">*</span></label>
+                    <div class="select-field-placeholder-wrap">
+                        <select name="region_zone_id" class="form-select" required id="zoneId" data-placeholder-target="zone"></select>
+                        <span class="select-field-placeholder" data-select-placeholder>Select zone</span>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">API URL</label>
@@ -177,12 +189,31 @@
                             return option;
                         };
 
+                        const createPlaceholderOption = (label) => {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = label;
+                            option.disabled = true;
+                            option.hidden = true;
+                            option.selected = true;
+                            return option;
+                        };
+
+                        const syncPlaceholder = (select) => {
+                            const placeholder = select.closest('.select-field-placeholder-wrap')?.querySelector('[data-select-placeholder]');
+                            if (placeholder) {
+                                placeholder.hidden = Boolean(select.value);
+                            }
+                        };
+
                         async function loadCities(countryId, cityId = '') {
-                            citySelect.innerHTML = '<option value="" disabled hidden>Choose city</option>';
-                            zoneSelect.innerHTML = '<option value="" disabled hidden>Choose zone</option>';
+                            citySelect.innerHTML = '';
+                            zoneSelect.innerHTML = '';
+                            syncPlaceholder(citySelect);
+                            syncPlaceholder(zoneSelect);
 
                             if (!countryId) {
-                                return;
+                                return '';
                             }
 
                             const response = await fetch(`${cityUrl}?country_id=${encodeURIComponent(countryId)}`, {
@@ -194,13 +225,32 @@
                             }
 
                             const payload = await response.json();
-                            (payload.data || []).forEach((item) => {
+                            const cities = payload.data || [];
+
+                            if (cities.length !== 1) {
+                                citySelect.appendChild(createPlaceholderOption('Select city'));
+                            }
+
+                            cities.forEach((item) => {
                                 citySelect.appendChild(createOption(String(item.id), item.city_name, String(item.id) === String(cityId)));
                             });
+
+                            const resolvedCityId = cityId || (cities.length === 1 ? String(cities[0].id) : '');
+                            if (resolvedCityId) {
+                                citySelect.value = resolvedCityId;
+                            }
+
+                            if (!resolvedCityId && cities.length > 1) {
+                                citySelect.value = '';
+                            }
+
+                            syncPlaceholder(citySelect);
+                            return resolvedCityId;
                         }
 
                         async function loadZones(countryId, cityId, zoneId = '') {
-                            zoneSelect.innerHTML = '<option value="" disabled hidden>Choose zone</option>';
+                            zoneSelect.innerHTML = '';
+                            syncPlaceholder(zoneSelect);
 
                             if (!countryId || !cityId) {
                                 return;
@@ -215,32 +265,74 @@
                             }
 
                             const payload = await response.json();
-                            (payload.data || []).forEach((item) => {
+                            const zones = payload.data || [];
+
+                            if (zones.length !== 1) {
+                                zoneSelect.appendChild(createPlaceholderOption('Select zone'));
+                            }
+
+                            zones.forEach((item) => {
                                 zoneSelect.appendChild(createOption(String(item.id), item.zone_name, String(item.id) === String(zoneId)));
                             });
+
+                            const resolvedZoneId = zoneId || (zones.length === 1 ? String(zones[0].id) : '');
+                            if (resolvedZoneId) {
+                                zoneSelect.value = resolvedZoneId;
+                            }
+
+                            if (!resolvedZoneId && zones.length > 1) {
+                                zoneSelect.value = '';
+                            }
+
+                            syncPlaceholder(zoneSelect);
                         }
 
                         countrySelect.addEventListener('change', async () => {
                             const countryId = countrySelect.value;
                             citySelect.value = '';
                             zoneSelect.value = '';
-                            await loadCities(countryId);
+                            syncPlaceholder(countrySelect);
+                            syncPlaceholder(citySelect);
+                            syncPlaceholder(zoneSelect);
+                            const selectedCityId = await loadCities(countryId);
+                            if (selectedCityId) {
+                                await loadZones(countryId, selectedCityId);
+                            }
                         });
 
                         citySelect.addEventListener('change', async () => {
                             const countryId = countrySelect.value;
                             const cityId = citySelect.value;
                             zoneSelect.value = '';
+                            syncPlaceholder(citySelect);
+                            syncPlaceholder(zoneSelect);
                             await loadZones(countryId, cityId);
                         });
 
+                        zoneSelect.addEventListener('change', () => {
+                            syncPlaceholder(zoneSelect);
+                        });
+
+                        zoneSelect.addEventListener('input', () => {
+                            syncPlaceholder(zoneSelect);
+                        });
+
                         (async () => {
-                            const initialCountry = selectedCountry || countrySelect.value;
+                            const initialCountry = selectedCountry || '';
+                            countrySelect.value = initialCountry;
+                            syncPlaceholder(countrySelect);
 
-                            await loadCities(initialCountry, selectedCity);
-
-                            const initialCity = selectedCity || citySelect.value;
-                            await loadZones(initialCountry, initialCity, selectedZone);
+                            if (initialCountry) {
+                                const initialCity = await loadCities(initialCountry, selectedCity);
+                                await loadZones(initialCountry, initialCity, selectedZone);
+                                syncPlaceholder(citySelect);
+                                syncPlaceholder(zoneSelect);
+                            } else {
+                                citySelect.innerHTML = '';
+                                zoneSelect.innerHTML = '';
+                                syncPlaceholder(citySelect);
+                                syncPlaceholder(zoneSelect);
+                            }
                         })();
                     })();
                 </script>

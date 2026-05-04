@@ -24,9 +24,14 @@ class CustomerController extends Controller
                     $subQuery->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
+<<<<<<< HEAD
                 })
                     ->orderByRaw('CASE WHEN name LIKE ? OR email LIKE ? OR phone LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%', $search.'%'])
                     ->orderBy('name');
+=======
+                });
+                $this->prioritizePrefixSearch($query, ['name', 'email', 'phone'], $search);
+>>>>>>> b613057478c82536e6c638344512541362616b16
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()

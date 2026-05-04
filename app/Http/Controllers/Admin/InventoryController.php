@@ -18,6 +18,15 @@ class InventoryController extends Controller
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->whereHas('product', fn ($sub) => $sub->where('product_name', 'like', "%{$search}%"));
+                $query->orderByRaw(
+                    "CASE WHEN EXISTS (
+                        SELECT 1
+                        FROM products
+                        WHERE products.id = product_inventory.product_id
+                          AND LOWER(COALESCE(products.product_name, '')) LIKE ?
+                    ) THEN 0 ELSE 1 END",
+                    [mb_strtolower($search).'%']
+                );
             })
             ->when($request->filled('inventory_mode'), fn ($query) => $query->where('inventory_mode', $request->string('inventory_mode')))
             ->when($request->boolean('low_stock'), function ($query) {

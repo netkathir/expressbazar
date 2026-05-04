@@ -328,6 +328,10 @@ body.admin-shell {
     line-height: 1.45;
 }
 
+#adminDeleteConfirmModal .modal-dialog.modal-delete-confirm {
+    margin: 1rem auto 0;
+}
+
 .hero-card,
 .soft-panel,
 .metric-card,
@@ -434,6 +438,30 @@ body.admin-shell {
     display: block;
     margin-top: .35rem;
     font-size: .78rem;
+}
+
+.admin-shell .select-field-placeholder-wrap {
+    position: relative;
+}
+
+.admin-shell .select-field-placeholder-wrap .form-select {
+    position: relative;
+    z-index: 2;
+}
+
+.admin-shell .select-field-placeholder {
+    position: absolute;
+    left: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--admin-muted);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 3;
+}
+
+.admin-shell .select-field-placeholder[hidden] {
+    display: none;
 }
 
 .workflow-list {

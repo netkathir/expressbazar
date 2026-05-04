@@ -4,6 +4,21 @@ const topbar = document.getElementById('topbar');
 const toggleBtn = document.getElementById('toggleBtn');
 const mobileBtn = document.getElementById('mobileBtn');
 const overlay = document.getElementById('overlay');
+const deleteConfirmModalEl = document.getElementById('adminDeleteConfirmModal');
+const deleteConfirmMessageEl = document.getElementById('adminDeleteConfirmMessage');
+const deleteConfirmButtonEl = document.getElementById('adminDeleteConfirmButton');
+const backConfirmModalEl = document.getElementById('adminBackConfirmModal');
+const backConfirmMessageEl = document.getElementById('adminBackConfirmMessage');
+const backConfirmButtonEl = document.getElementById('adminBackConfirmButton');
+const deleteConfirmModal = deleteConfirmModalEl && window.bootstrap
+    ? new bootstrap.Modal(deleteConfirmModalEl)
+    : null;
+const backConfirmModal = backConfirmModalEl && window.bootstrap
+    ? new bootstrap.Modal(backConfirmModalEl)
+    : null;
+let pendingDeleteForm = null;
+let pendingBackLink = null;
+window.__adminBypassBeforeUnload = false;
 
 const setDesktopSidebarState = (collapsed) => {
     sidebar?.classList.toggle('collapsed', collapsed);
@@ -46,6 +61,7 @@ if (overlay) {
     });
 }
 
+<<<<<<< HEAD
 window.adminConfirm = (message, options = {}) => new Promise((resolve) => {
     const modalElement = document.getElementById('adminConfirmModal');
 
@@ -105,12 +121,96 @@ document.addEventListener('submit', (event) => {
         ? submittedForm
         : submittedForm?.querySelector('input[name="_method"][value="DELETE" i]') ? submittedForm : null;
 
+=======
+const isDeleteForm = (form) => {
+>>>>>>> b613057478c82536e6c638344512541362616b16
     if (!form || form.dataset.confirmed === 'true') {
+        return false;
+    }
+
+    if (form.classList.contains('js-confirm-delete') || form.dataset.confirmMessage) {
+        return true;
+    }
+
+    if (form.getAttribute('onsubmit')?.includes('confirm(')) {
+        return true;
+    }
+
+    const methodField = form.querySelector('input[name="_method"]');
+    return methodField?.value?.toUpperCase() === 'DELETE';
+};
+
+const openDeleteConfirm = (form) => {
+    if (!deleteConfirmModal || !deleteConfirmMessageEl || !deleteConfirmButtonEl) {
+        return false;
+    }
+
+    pendingDeleteForm = form;
+    deleteConfirmMessageEl.textContent = form.dataset.confirmMessage || 'Delete this item?';
+    deleteConfirmModal.show();
+    return true;
+};
+
+if (deleteConfirmButtonEl) {
+    deleteConfirmButtonEl.addEventListener('click', () => {
+        if (!pendingDeleteForm) {
+            return;
+        }
+
+        const form = pendingDeleteForm;
+        pendingDeleteForm = null;
+        form.dataset.confirmed = 'true';
+        deleteConfirmModal?.hide();
+        form.submit();
+    });
+}
+
+if (deleteConfirmModalEl) {
+    deleteConfirmModalEl.addEventListener('hidden.bs.modal', () => {
+        pendingDeleteForm = null;
+    });
+}
+
+const openBackConfirm = (link, message) => {
+    if (!backConfirmModal || !backConfirmMessageEl || !backConfirmButtonEl) {
+        return false;
+    }
+
+    pendingBackLink = link;
+    backConfirmMessageEl.textContent = message || link.dataset.confirmMessage || 'Are you sure you want to go back without editing?';
+    backConfirmModal.show();
+    return true;
+};
+
+if (backConfirmButtonEl) {
+    backConfirmButtonEl.addEventListener('click', () => {
+        if (!pendingBackLink) {
+            return;
+        }
+
+        const link = pendingBackLink;
+        pendingBackLink = null;
+        window.__adminBypassBeforeUnload = true;
+        backConfirmModal?.hide();
+        window.location.href = link.href;
+    });
+}
+
+if (backConfirmModalEl) {
+    backConfirmModalEl.addEventListener('hidden.bs.modal', () => {
+        pendingBackLink = null;
+    });
+}
+
+document.addEventListener('submit', (event) => {
+    const form = event.target instanceof HTMLFormElement ? event.target : event.target.closest('form');
+    if (!isDeleteForm(form)) {
         return;
     }
 
     event.preventDefault();
     event.stopImmediatePropagation();
+<<<<<<< HEAD
 
     const message = form.dataset.confirmMessage || 'Delete this item?';
     window.adminConfirm(message, {
@@ -125,6 +225,17 @@ document.addEventListener('submit', (event) => {
         form.dataset.confirmed = 'true';
         HTMLFormElement.prototype.submit.call(form);
     });
+=======
+
+    if (openDeleteConfirm(form)) {
+        return;
+    }
+
+    if (window.confirm(form.dataset.confirmMessage || 'Delete this item?')) {
+        form.dataset.confirmed = 'true';
+        form.submit();
+    }
+>>>>>>> b613057478c82536e6c638344512541362616b16
 }, true);
 
 document.querySelectorAll('form[data-dirty-check]').forEach((form) => {
@@ -143,11 +254,12 @@ document.querySelectorAll('form[data-dirty-check]').forEach((form) => {
 
     document.querySelectorAll('[data-dirty-back]').forEach((link) => {
         link.addEventListener('click', (event) => {
-            if (!isDirty || isSubmitting) {
+            if (isSubmitting) {
                 return;
             }
 
             event.preventDefault();
+<<<<<<< HEAD
             window.adminConfirm('You have unsaved changes. Leave this page?', {
                 title: 'Unsaved changes',
                 confirmText: 'Leave page',
@@ -157,11 +269,27 @@ document.querySelectorAll('form[data-dirty-check]').forEach((form) => {
                     window.location.href = link.href;
                 }
             });
+=======
+
+            const message = isDirty
+                ? 'You have unsaved changes. Are you sure you want to go back without saving?'
+                : 'Are you sure you want to go back without editing?';
+
+            if (openBackConfirm(link, message)) {
+                return;
+            }
+
+            if (!window.confirm(message)) {
+                return;
+            }
+
+            window.location.href = link.href;
+>>>>>>> b613057478c82536e6c638344512541362616b16
         });
     });
 
     window.addEventListener('beforeunload', (event) => {
-        if (!isDirty || isSubmitting) {
+        if (!isDirty || isSubmitting || window.__adminBypassBeforeUnload) {
             return;
         }
 

@@ -19,9 +19,14 @@ class CountryController extends Controller
                     $subQuery->where('country_name', 'like', "%{$search}%")
                         ->orWhere('country_code', 'like', "%{$search}%")
                         ->orWhere('currency', 'like', "%{$search}%");
+<<<<<<< HEAD
                 })
                     ->orderByRaw('CASE WHEN country_name LIKE ? OR country_code LIKE ? OR currency LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%', $search.'%'])
                     ->orderBy('country_name');
+=======
+                });
+                $this->prioritizePrefixSearch($query, ['country_name', 'country_code', 'currency'], $search);
+>>>>>>> b613057478c82536e6c638344512541362616b16
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->string('status'));
@@ -49,7 +54,27 @@ class CountryController extends Controller
 
     public function store(Request $request)
     {
+<<<<<<< HEAD
         $data = $this->validateCountry($request);
+=======
+        $data = $request->validate([
+            'country_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z\s]+$/',
+                'unique:countries,country_name',
+            ],
+            'country_code' => ['required', 'string', 'max:10', 'unique:countries,country_code'],
+            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'timezone' => ['nullable', 'string', 'max:100'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'country_name.regex' => 'Country name may contain letters and spaces only.',
+            'currency.size' => 'Currency must be exactly 3 characters.',
+            'currency.regex' => 'Currency must use a valid ISO 4217 code with 3 uppercase letters.',
+        ]);
+>>>>>>> b613057478c82536e6c638344512541362616b16
 
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
