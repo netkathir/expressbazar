@@ -24,14 +24,8 @@ class RegionZoneController extends Controller
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('zone_name', 'like', "%{$search}%")
                         ->orWhere('zone_code', 'like', "%{$search}%");
-<<<<<<< HEAD
-                })
-                    ->orderByRaw('CASE WHEN zone_name LIKE ? OR zone_code LIKE ? THEN 0 ELSE 1 END', [$search.'%', $search.'%'])
-                    ->orderBy('zone_name');
-=======
                 });
                 $this->prioritizePrefixSearch($query, ['zone_name', 'zone_code'], $search);
->>>>>>> b613057478c82536e6c638344512541362616b16
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()

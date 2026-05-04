@@ -18,14 +18,8 @@ class TaxController extends Controller
                 $search = trim((string) $request->string('search'));
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('tax_name', 'like', "%{$search}%");
-<<<<<<< HEAD
-                })
-                    ->orderByRaw('CASE WHEN tax_name LIKE ? THEN 0 ELSE 1 END', [$search.'%'])
-                    ->orderBy('tax_name');
-=======
                 });
                 $this->prioritizePrefixSearch($query, ['tax_name'], $search);
->>>>>>> b613057478c82536e6c638344512541362616b16
             })
             ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))

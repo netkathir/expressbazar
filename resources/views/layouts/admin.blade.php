@@ -161,19 +161,6 @@
         </div>
     </main>
 
-<<<<<<< HEAD
-    <div class="modal fade" id="adminConfirmModal" tabindex="-1" aria-labelledby="adminConfirmModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="adminConfirmModalTitle">Confirm action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-secondary" data-admin-confirm-message>Are you sure?</div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-admin-confirm-cancel>Cancel</button>
-                    <button type="button" class="btn btn-danger" data-admin-confirm-ok>Confirm</button>
-=======
     <div class="modal fade" id="adminDeleteConfirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-delete-confirm">
             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -205,7 +192,6 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">No</button>
                     <button type="button" class="btn btn-primary" id="adminBackConfirmButton">Yes</button>
->>>>>>> b613057478c82536e6c638344512541362616b16
                 </div>
             </div>
         </div>
