@@ -209,8 +209,12 @@ function updateProductControls(payload = {}) {
     const quantity = Number(item.quantity || 0);
 
     document.querySelectorAll(`.js-add-to-cart[action$="/${productId}"]`).forEach((form) => {
+        if (form.classList.contains('sf-card-add')) {
+            return;
+        }
+
         const stepper = document.createElement('div');
-        stepper.className = form.classList.contains('sf-card-add') ? 'sf-stepper sf-stepper-ghost' : 'sf-stepper';
+        stepper.className = 'sf-stepper';
         stepper.innerHTML = `
             <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="${escapeHtml(productId)}">-</button>
             <span class="sf-stepper-value" data-cart-stepper-value>${quantity}</span>

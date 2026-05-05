@@ -1,5 +1,4 @@
 @php($image = $product->images->first())
-@php($cartEntry = $cartMap[$product->id] ?? null)
 @php($basePrice = (float) $product->price)
 @php($salePrice = (float) ($product->final_price ?: $product->price))
 @php($hasDiscount = $product->discount_type === 'percentage' && $basePrice > 0 && $salePrice > 0 && $salePrice < $basePrice)
@@ -16,18 +15,10 @@
             <img src="{{ $image ? asset($image->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $product->product_name }}">
         </a>
 
-        @if ($cartEntry)
-            <div class="sf-stepper sf-stepper-ghost">
-                <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="{{ $product->id }}">-</button>
-                <span class="sf-stepper-value">{{ $cartEntry['quantity'] }}</span>
-                <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="1" data-product="{{ $product->id }}">+</button>
-            </div>
-        @else
-            <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart sf-card-add">
-                @csrf
-                <button type="submit" class="btn btn-sm rounded-pill px-3">ADD</button>
-            </form>
-        @endif
+        <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart sf-card-add">
+            @csrf
+            <button type="submit" class="btn btn-sm rounded-pill px-3">ADD</button>
+        </form>
     </div>
 
     <div class="sf-product-body">

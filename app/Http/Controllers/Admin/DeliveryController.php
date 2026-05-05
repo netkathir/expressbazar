@@ -13,17 +13,36 @@ use Illuminate\Validation\ValidationException;
 
 class DeliveryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $configs = DeliveryConfig::query()
             ->with(['country', 'city', 'zone'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim((string) $request->string('search'));
+
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->whereHas('country', fn ($countryQuery) => $countryQuery->where('country_name', 'like', "%{$search}%"))
+                        ->orWhereHas('city', fn ($cityQuery) => $cityQuery->where('city_name', 'like', "%{$search}%"))
+                        ->orWhereHas('zone', function ($zoneQuery) use ($search) {
+                            $zoneQuery->where('zone_name', 'like', "%{$search}%")
+                                ->orWhere('zone_code', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+            ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
+            ->when($request->filled('delivery_available'), fn ($query) => $query->where('delivery_available', $request->boolean('delivery_available')))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.delivery.index', [
             'title' => 'Delivery & Logistics',
             'activeMenu' => 'delivery',
             'configs' => $configs,
+            'countries' => Country::orderBy('country_name')->get(),
+            'cities' => City::orderBy('city_name')->get(),
         ]);
     }
 
