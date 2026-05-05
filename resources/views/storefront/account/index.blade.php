@@ -29,20 +29,55 @@
                                 @php($latestPayment = $order->payments->last())
                                 @php($orderStatus = mb_strtolower((string) $order->order_status))
                                 @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
-                                <div class="sf-sidepanel p-3">
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                        <div>
+                                @php($firstItem = $order->items->first())
+                                @php($firstProduct = $firstItem?->product)
+                                @php($productImage = $firstProduct?->images->first())
+                                @php($productUrl = $firstProduct ? route('storefront.product', $firstProduct) : null)
+                                <div class="sf-sidepanel sf-recent-order p-3">
+                                    <div class="sf-recent-order-row">
+                                        <div class="sf-recent-order-product">
+                                            @if ($productUrl)
+                                                <a href="{{ $productUrl }}" class="sf-recent-order-image" aria-label="View {{ $firstItem?->item_name }}">
+                                                    <img src="{{ $productImage ? asset($productImage->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $firstItem?->item_name ?? $order->order_number }}">
+                                                </a>
+                                            @else
+                                                <div class="sf-recent-order-image" aria-hidden="true">
+                                                    <img src="{{ asset('admin-theme/assets/images/product-1.png') }}" alt="">
+                                                </div>
+                                            @endif
+                                            <div class="sf-recent-order-copy">
                                             <div class="fw-semibold">{{ $order->order_number }}</div>
-                                            <div class="small text-secondary">{{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
-                                            <div class="small text-secondary">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
+                                            @if ($firstItem)
+                                                @if ($productUrl)
+                                                    <a href="{{ $productUrl }}" class="sf-recent-order-title">{{ $firstItem->item_name }}</a>
+                                                @else
+                                                    <div class="sf-recent-order-title">{{ $firstItem->item_name ?: 'Product unavailable' }}</div>
+                                                    <div class="small text-secondary">Product unavailable</div>
+                                                @endif
+                                            @else
+                                                <div class="sf-recent-order-title">Order items unavailable</div>
+                                            @endif
+                                            <div class="small text-secondary">By: {{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
+                                            <div class="sf-recent-order-details">
+                                                <span>Qty: {{ $firstItem?->quantity ?? 0 }}</span>
+                                                <strong>&#8377;{{ number_format((float) ($firstItem?->price ?? $order->total_amount), 0) }}</strong>
+                                            </div>
+                                            </div>
                                         </div>
-                                <div class="text-end">
-                                    <div class="fw-semibold">₹{{ number_format((float) $order->total_amount, 0) }}</div>
+
+                                <div class="sf-recent-order-status">
+                                    <div class="small text-secondary">Status</div>
+                                    <strong>{{ ucfirst($order->order_status) }}</strong>
                                     <span class="badge rounded-pill text-bg-{{ $displayPaymentStatus === 'paid' ? 'success' : ($displayPaymentStatus === 'cancelled' ? 'secondary' : 'warning') }}">
                                         {{ ucfirst($displayPaymentStatus) }}
                                     </span>
-                                    <div class="small text-secondary mt-1">Order status: {{ ucfirst($order->order_status) }}</div>
-                                    <div class="mt-2">
+                                </div>
+
+                                <div class="sf-recent-order-total">
+                                    <div class="small text-secondary">Total Amount</div>
+                                    <strong>&#8377;{{ number_format((float) $order->total_amount, 0) }}</strong>
+                                    <div class="small text-secondary">Placed {{ optional($order->placed_at)->format('d M Y') }}</div>
+                                    <div>
                                         <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-sm btn-outline-dark rounded-pill">View</a>
                                     </div>
                                 </div>
