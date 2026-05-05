@@ -25,6 +25,7 @@ class SendTemplateNotification
         $template = $this->templates->findActive($event->trigger, $event->data['channel'] ?? 'email');
 
         if (! $template) {
+            $this->sendFallbackEmail($event);
             return;
         }
 
@@ -69,6 +70,67 @@ class SendTemplateNotification
 
             $this->logNotification($template->id, $event->data, $template->channel, $message, 'failed', $exception->getMessage());
         }
+    }
+
+    private function sendFallbackEmail(TriggerNotificationEvent $event): void
+    {
+        $email = $event->data['email'] ?? null;
+
+        if (! $email) {
+            return;
+        }
+
+        $fallback = $this->fallbackTemplate($event->trigger, $event->data);
+
+        if (! $fallback) {
+            return;
+        }
+
+        try {
+            Mail::to($email)->send(new GenericTemplateMail($fallback['subject'], $fallback['message']));
+            $this->logNotification(null, $event->data, 'email', $fallback['message'], 'sent');
+        } catch (Throwable $exception) {
+            Log::error('Fallback template notification failed.', [
+                'trigger' => $event->trigger,
+                'email' => $email,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $this->logNotification(null, $event->data, 'email', $fallback['message'], 'failed', $exception->getMessage());
+        }
+    }
+
+    private function fallbackTemplate(string $trigger, array $data): ?array
+    {
+        $orderNumber = $data['order_number'] ?? $data['order_id'] ?? '';
+        $amount = $data['amount'] ?? $data['total_amount'] ?? '';
+        $name = $data['name'] ?? 'Customer';
+        $status = $data['status'] ?? $data['order_status'] ?? '';
+        $vendorName = $data['vendor_name'] ?? 'Express Bazar';
+
+        return match ($trigger) {
+            'ORDER_CONFIRMED' => [
+                'subject' => "Your order #{$orderNumber} is confirmed",
+                'message' => "Hello {$name},\n\nYour order #{$orderNumber} has been confirmed.\n\nTotal: {$amount}\n\nThank you for shopping with us.",
+            ],
+            'ORDER_RECEIVED_VENDOR' => [
+                'subject' => "New order received #{$orderNumber}",
+                'message' => "Hello {$name},\n\nA new order #{$orderNumber} has been received.\n\nCustomer: ".($data['customer_name'] ?? '-')."\nTotal: {$amount}",
+            ],
+            'ORDER_STATUS_UPDATE' => [
+                'subject' => "Order #{$orderNumber} is now {$status}",
+                'message' => "Hello {$name},\n\nYour order #{$orderNumber} status has been updated to {$status}.\n\nVendor: {$vendorName}\nTotal: {$amount}",
+            ],
+            'ORDER_DELIVERED' => [
+                'subject' => "Your order #{$orderNumber} has been delivered",
+                'message' => "Hello {$name},\n\nYour order #{$orderNumber} has been delivered successfully.\n\nThank you for shopping with us.",
+            ],
+            'PAYMENT_SUCCESS' => [
+                'subject' => "Payment successful for order #{$orderNumber}",
+                'message' => "Hello {$name},\n\nPayment was successful for order #{$orderNumber}.\n\nAmount: {$amount}",
+            ],
+            default => null,
+        };
     }
 
     private function sendEmail(NotificationTemplate $template, string $message, array $data): bool

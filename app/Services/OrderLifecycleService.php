@@ -59,11 +59,7 @@ class OrderLifecycleService
 
         $order->update($updates);
         $this->log($order, $from, $to, $changedBy, $note);
-        $this->dispatchVendorStatusNotification($order->fresh(['vendor']), $to);
-
-        if ($to === 'delivered') {
-            $this->dispatchDeliveredNotification($order->fresh(['customer']));
-        }
+        $this->dispatchCustomerStatusNotification($order->fresh(['customer', 'vendor']), $to);
     }
 
     public function log(Order $order, ?string $from, string $to, ?int $changedBy = null, ?string $note = null): void
@@ -77,7 +73,7 @@ class OrderLifecycleService
         ]);
     }
 
-    private function dispatchDeliveredNotification(Order $order): void
+    private function dispatchCustomerStatusNotification(Order $order, string $status): void
     {
         try {
             $customer = $order->customer;
@@ -86,7 +82,9 @@ class OrderLifecycleService
                 return;
             }
 
-            event(new TriggerNotificationEvent('ORDER_DELIVERED', [
+            $trigger = $status === 'delivered' ? 'ORDER_DELIVERED' : 'ORDER_STATUS_UPDATE';
+
+            event(new TriggerNotificationEvent($trigger, [
                 'recipient_type' => 'customer',
                 'recipient_id' => $customer->id,
                 'email' => $customer->email,
@@ -94,41 +92,14 @@ class OrderLifecycleService
                 'name' => $customer->name,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'amount' => number_format((float) $order->total_amount, 2),
-                'total_amount' => number_format((float) $order->total_amount, 2),
-            ]));
-        } catch (Throwable $exception) {
-            Log::error('Order delivered template notification dispatch failed.', [
-                'order_id' => $order->id,
-                'error' => $exception->getMessage(),
-            ]);
-        }
-    }
-
-    private function dispatchVendorStatusNotification(Order $order, string $status): void
-    {
-        try {
-            $vendor = $order->vendor;
-
-            if (! $vendor) {
-                return;
-            }
-
-            event(new TriggerNotificationEvent('ORDER_STATUS_UPDATE', [
-                'recipient_type' => 'vendor',
-                'recipient_id' => $vendor->id,
-                'email' => $vendor->email,
-                'phone' => $vendor->phone,
-                'name' => $vendor->vendor_name,
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
                 'status' => ucfirst($status),
                 'order_status' => ucfirst($status),
+                'vendor_name' => $order->vendor?->vendor_name ?? 'Express Bazar',
                 'amount' => number_format((float) $order->total_amount, 2),
                 'total_amount' => number_format((float) $order->total_amount, 2),
             ]));
         } catch (Throwable $exception) {
-            Log::error('Order status vendor notification dispatch failed.', [
+            Log::error('Order status customer notification dispatch failed.', [
                 'order_id' => $order->id,
                 'status' => $status,
                 'error' => $exception->getMessage(),

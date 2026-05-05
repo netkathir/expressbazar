@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers\Vendor;
 
-use App\Events\TriggerNotificationEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\VendorOrderWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class OrderController extends Controller
 {
@@ -97,8 +94,6 @@ class OrderController extends Controller
             'delivered' => app(VendorOrderWorkflowService::class)->markDelivered($order),
             default => abort(422, 'Unsupported vendor order action.'),
         };
-
-        $this->dispatchCustomerStatusNotification($order->fresh(['customer', 'vendor']), $status);
     }
 
     private function authorizeVendorOrder(Order $order): void
@@ -106,35 +101,4 @@ class OrderController extends Controller
         abort_if((int) $order->vendor_id !== (int) Auth::guard('vendor')->id(), 404);
     }
 
-    private function dispatchCustomerStatusNotification(Order $order, string $status): void
-    {
-        try {
-            $customer = $order->customer;
-
-            if (! $customer) {
-                return;
-            }
-
-            event(new TriggerNotificationEvent('ORDER_STATUS_UPDATE', [
-                'recipient_type' => 'customer',
-                'recipient_id' => $customer->id,
-                'email' => $customer->email,
-                'phone' => $customer->phone,
-                'name' => $customer->name,
-                'vendor_name' => $order->vendor?->vendor_name,
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'status' => ucfirst($status),
-                'order_status' => ucfirst($status),
-                'amount' => number_format((float) $order->total_amount, 2),
-                'total_amount' => number_format((float) $order->total_amount, 2),
-            ]));
-        } catch (Throwable $exception) {
-            Log::error('Vendor order status notification failed.', [
-                'order_id' => $order->id,
-                'status' => $status,
-                'error' => $exception->getMessage(),
-            ]);
-        }
-    }
 }

@@ -22,6 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'vendor' => VendorAccess::class,
             'verify.checkout.email' => EnsureEmailVerifiedForCheckout::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'otp/verify',
+            'otp/resend',
+            'forgot-password/verify-otp',
+            'forgot-password/send-otp',
+            'admin/forgot-password/verify-otp',
+            'admin/forgot-password/send-otp',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
