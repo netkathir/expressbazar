@@ -29,6 +29,17 @@
                     <i class="ti ti-chevron-down ms-1"></i>
                 </button>
 
+                <div class="dropdown sf-vendor-selector js-vendor-selector {{ empty($location ?? null) ? 'd-none' : '' }}">
+                    <button class="sf-vendor-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-building-store me-1"></i>
+                        <span class="js-selected-vendor-text">All Vendors</span>
+                        <i class="ti ti-chevron-down ms-1"></i>
+                    </button>
+                    <ul class="dropdown-menu sf-vendor-menu js-vendor-list">
+                        <li class="dropdown-item text-muted">Loading...</li>
+                    </ul>
+                </div>
+
                 <form action="{{ route('storefront.search') }}" method="GET" class="sf-search-form js-search-form">
                     <i class="ti ti-search"></i>
                     <input type="search" id="search-box" class="js-search-input" name="q" placeholder="Search for products, categories or brands" value="{{ request('q') }}" autocomplete="off">
@@ -259,15 +270,18 @@
             cartRemoveUrlTemplate: @json(route('storefront.cart.remove', ['product' => '__ID__'])),
             cartClearUrl: @json(route('storefront.cart.clear')),
             cartMergeUrl: @json(route('storefront.cart.merge')),
+            homeUrl: @json(route('user.home')),
             locationUrl: @json(route('storefront.location')),
             locationCitiesUrl: @json(route('storefront.location.cities')),
             locationZonesUrl: @json(route('storefront.location.zones')),
+            vendorsByLocationUrl: @json(route('storefront.vendors-by-location')),
             searchSuggestionsUrl: @json(route('storefront.search.suggestions')),
             notificationsUrl: @json(auth()->check() ? route('notifications.index') : null),
             notificationReadUrlTemplate: @json(auth()->check() ? route('notifications.read', ['id' => '__ID__']) : null),
             logoutUrl: @json(route('storefront.logout')),
             uiMessages: @json(config('ui_messages')),
             initialLocation: @json($location ?? null),
+            initialSelectedVendorId: @json((string) ($selectedVendorId ?? request('vendor_id', ''))),
             initialCartState: @json($cartState ?? []),
             guestCartMerged: @json((bool) session('guest_cart_merged')),
             currentUserRole: @json(auth()->user()->role ?? null),

@@ -12,8 +12,13 @@ const locationForm = document.querySelector('.js-location-form');
 const countrySelect = document.querySelector('.js-country-select');
 const citySelect = document.querySelector('.js-city-select');
 const zoneSelect = document.querySelector('.js-zone-select');
+const vendorSelector = document.querySelector('.js-vendor-selector');
+const vendorList = document.querySelector('.js-vendor-list');
+const selectedVendorText = document.querySelector('.js-selected-vendor-text');
 const guestCartKey = 'expressbazar.guestCart';
 const legacyGuestCartKey = 'guest_cart';
+const selectedVendorIdKey = 'expressbazar.selectedVendorId';
+const selectedVendorNameKey = 'expressbazar.selectedVendorName';
 window.storefrontAjaxFilters = true;
 
 function uiMessage(key, fallback) {
@@ -347,6 +352,132 @@ function escapeHtml(value) {
     return div.innerHTML;
 }
 
+function selectedVendorIdFromUrl() {
+    return new URL(window.location.href).searchParams.get('vendor_id') || '';
+}
+
+function savedVendorId() {
+    try {
+        return localStorage.getItem(selectedVendorIdKey) || '';
+    } catch (error) {
+        return '';
+    }
+}
+
+function saveSelectedVendor(id, name) {
+    try {
+        if (id) {
+            localStorage.setItem(selectedVendorIdKey, String(id));
+            localStorage.setItem(selectedVendorNameKey, String(name || ''));
+        } else {
+            localStorage.removeItem(selectedVendorIdKey);
+            localStorage.removeItem(selectedVendorNameKey);
+        }
+    } catch (error) {
+        // Ignore storage errors.
+    }
+}
+
+function clearSelectedVendor() {
+    saveSelectedVendor('', '');
+    if (selectedVendorText) {
+        selectedVendorText.textContent = 'All Vendors';
+    }
+}
+
+function isVendorFilterablePage() {
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+
+    return path === '/'
+        || path === '/search'
+        || path.startsWith('/categories/')
+        || path.startsWith('/subcategories/');
+}
+
+function vendorFilterUrl(vendorId) {
+    const target = new URL(isVendorFilterablePage() ? window.location.href : (config.homeUrl || '/'), window.location.origin);
+
+    if (vendorId) {
+        target.searchParams.set('vendor_id', vendorId);
+    } else {
+        target.searchParams.delete('vendor_id');
+    }
+
+    return target;
+}
+
+function reloadWithoutVendorFilter() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('vendor_id');
+    window.location.href = url.toString();
+}
+
+function applyVendorFilter(vendorId) {
+    window.location.href = vendorFilterUrl(vendorId).toString();
+}
+
+async function loadVendors() {
+    if (!vendorSelector || !vendorList || !selectedVendorText || !config.vendorsByLocationUrl) {
+        return;
+    }
+
+    if (!config.initialLocation) {
+        vendorSelector.classList.add('d-none');
+        clearSelectedVendor();
+        return;
+    }
+
+    vendorSelector.classList.remove('d-none');
+    vendorList.innerHTML = '<li class="dropdown-item text-muted">Loading...</li>';
+
+    try {
+        const vendors = await fetchJson(config.vendorsByLocationUrl);
+        const requestedVendorId = String(config.initialSelectedVendorId || selectedVendorIdFromUrl() || '');
+        const storedVendorId = savedVendorId();
+        const activeVendorId = requestedVendorId || storedVendorId;
+        const activeVendor = Array.isArray(vendors)
+            ? vendors.find((vendor) => String(vendor.id) === activeVendorId)
+            : null;
+
+        if (!Array.isArray(vendors) || vendors.length === 0) {
+            clearSelectedVendor();
+            vendorList.innerHTML = '<li class="dropdown-item text-danger">No vendors available</li>';
+            return;
+        }
+
+        const items = vendors.map((vendor) => {
+            const id = escapeHtml(vendor.id);
+            const name = escapeHtml(vendor.name);
+            const activeClass = String(vendor.id) === activeVendorId ? ' active' : '';
+
+            return `<li><button type="button" class="dropdown-item js-vendor-item${activeClass}" data-id="${id}" data-name="${name}">${name}</button></li>`;
+        });
+
+        vendorList.innerHTML = [
+            '<li><button type="button" class="dropdown-item js-vendor-item" data-id="" data-name="All Vendors">All Vendors</button></li>',
+            '<li><hr class="dropdown-divider"></li>',
+            ...items,
+        ].join('');
+
+        if (activeVendor) {
+            selectedVendorText.textContent = activeVendor.name;
+            saveSelectedVendor(activeVendor.id, activeVendor.name);
+
+            if (!requestedVendorId && storedVendorId && isVendorFilterablePage()) {
+                applyVendorFilter(storedVendorId);
+            }
+        } else {
+            clearSelectedVendor();
+
+            if (requestedVendorId && isVendorFilterablePage()) {
+                applyVendorFilter('');
+            }
+        }
+    } catch (error) {
+        vendorList.innerHTML = '<li class="dropdown-item text-danger">Unable to load vendors</li>';
+    }
+}
+
 async function loadFilteredProducts(form) {
     const productList = document.querySelector('.js-product-list');
     if (!productList || !form) {
@@ -599,6 +730,20 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
+    const vendorItem = event.target.closest('.js-vendor-item');
+    if (vendorItem) {
+        event.preventDefault();
+        const vendorId = vendorItem.dataset.id || '';
+        const vendorName = vendorItem.dataset.name || vendorItem.textContent.trim() || 'All Vendors';
+
+        saveSelectedVendor(vendorId, vendorName);
+        if (selectedVendorText) {
+            selectedVendorText.textContent = vendorId ? vendorName : 'All Vendors';
+        }
+        applyVendorFilter(vendorId);
+        return;
+    }
+
     const addForm = event.target.closest('.js-add-to-cart');
     if (addForm) {
         event.preventDefault();
@@ -733,7 +878,8 @@ document.addEventListener('submit', async (event) => {
                 if (retry.response.ok) {
                     updateCartUi(retry.payload);
                     locationModal?.hide();
-                    window.location.reload();
+                    clearSelectedVendor();
+                    reloadWithoutVendorFilter();
                 }
             }
         } else if (payload?.message) {
@@ -748,7 +894,8 @@ document.addEventListener('submit', async (event) => {
 
     updateCartUi(payload);
     locationModal?.hide();
-    window.location.reload();
+    clearSelectedVendor();
+    reloadWithoutVendorFilter();
 });
 
 countrySelect?.addEventListener('change', async () => {
@@ -863,6 +1010,8 @@ document.addEventListener('click', (event) => {
 if (config.initialLocation) {
     syncLocationInputs(config.initialLocation);
 }
+
+loadVendors();
 
 if (config.notificationsUrl) {
     loadNotifications();

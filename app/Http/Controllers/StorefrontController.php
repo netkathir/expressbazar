@@ -610,6 +610,28 @@ class StorefrontController extends Controller
         }
     }
 
+    public function vendorsByLocation(): JsonResponse
+    {
+        try {
+            $location = $this->browsingLocation();
+
+            if (! $location) {
+                return response()->json([]);
+            }
+
+            $vendors = $this->vendorsForLocation($location, $this->activePincode())
+                ->map(fn (Vendor $vendor) => [
+                    'id' => $vendor->id,
+                    'name' => $vendor->vendor_name,
+                ])
+                ->values();
+
+            return response()->json($vendors);
+        } catch (Throwable $exception) {
+            return $this->apiError($exception);
+        }
+    }
+
     public function addToCart(Request $request, Product $product): JsonResponse
     {
         $this->ensureAddable($product);
@@ -807,6 +829,7 @@ class StorefrontController extends Controller
             ->with(['category', 'products' => function ($query) use ($location, $pincode) {
                 $this->applyProductScope($query, $location);
                 $this->applyPincodeScope($query, $pincode);
+                $this->applySelectedVendorScope($query);
             }])
             ->orderBy('subcategory_name')
             ->limit(6)
@@ -895,14 +918,7 @@ class StorefrontController extends Controller
 
         $this->applyProductScope($query, $location);
         $this->applyPincodeScope($query, $this->activePincode());
-
-        if (request()->filled('vendor_id')) {
-            $vendorId = request()->integer('vendor_id');
-
-            if ($vendorId > 0) {
-                $query->where('vendor_id', $vendorId);
-            }
-        }
+        $this->applySelectedVendorScope($query);
 
         if (request('sort') === 'price_low') {
             $query->orderByRaw('COALESCE(final_price, price) asc');
@@ -913,6 +929,19 @@ class StorefrontController extends Controller
         }
 
         return $query;
+    }
+
+    private function applySelectedVendorScope($query): void
+    {
+        if (! request()->filled('vendor_id')) {
+            return;
+        }
+
+        $vendorId = request()->integer('vendor_id');
+
+        if ($vendorId > 0) {
+            $query->where('vendor_id', $vendorId);
+        }
     }
 
     private function applyProductScope($query, ?array $location): void

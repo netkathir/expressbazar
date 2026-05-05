@@ -84,6 +84,7 @@ Route::get('/cart', [StorefrontController::class, 'cart'])->name('storefront.car
 Route::post('/location', [StorefrontController::class, 'setLocation'])->name('storefront.location');
 Route::get('/location/cities', [StorefrontController::class, 'cities'])->name('storefront.location.cities');
 Route::get('/location/zones', [StorefrontController::class, 'zones'])->name('storefront.location.zones');
+Route::get('/vendors-by-location', [StorefrontController::class, 'vendorsByLocation'])->name('storefront.vendors-by-location');
 Route::post('/cart/items/{product}', [StorefrontController::class, 'addToCart'])->name('storefront.cart.add');
 Route::patch('/cart/items/{product}', [StorefrontController::class, 'updateCart'])->name('storefront.cart.update');
 Route::delete('/cart/items/{product}', [StorefrontController::class, 'removeFromCart'])->name('storefront.cart.remove');

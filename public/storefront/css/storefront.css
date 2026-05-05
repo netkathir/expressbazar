@@ -62,7 +62,7 @@ body.storefront-shell {
 
 .sf-searchbar {
     display: grid;
-    grid-template-columns: auto auto 1fr auto;
+    grid-template-columns: auto auto minmax(150px, auto) 1fr auto;
     gap: 14px;
     align-items: center;
     min-height: 76px;
@@ -103,6 +103,7 @@ body.storefront-shell {
 }
 
 .sf-location-btn,
+.sf-vendor-btn,
 .sf-action-link,
 .sf-search-form {
     height: 48px;
@@ -118,6 +119,47 @@ body.storefront-shell {
     font-weight: 600;
     gap: .35rem;
     white-space: nowrap;
+}
+
+.sf-vendor-selector {
+    min-width: 160px;
+}
+
+.sf-vendor-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 220px;
+    padding: 0 14px;
+    color: var(--sf-purple);
+    font-weight: 600;
+    gap: .35rem;
+    white-space: nowrap;
+}
+
+.sf-vendor-btn .js-selected-vendor-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sf-vendor-menu {
+    min-width: 220px;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--sf-border);
+    border-radius: 16px;
+    box-shadow: var(--sf-shadow);
+}
+
+.sf-vendor-menu .dropdown-item {
+    font-weight: 600;
+}
+
+.sf-vendor-menu .dropdown-item.active,
+.sf-vendor-menu .dropdown-item:active {
+    background: var(--sf-purple);
+    color: #fff;
 }
 
 .sf-search-form {
