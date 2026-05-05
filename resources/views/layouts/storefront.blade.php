@@ -231,6 +231,27 @@
         </div>
     </div>
 
+    <div class="modal fade" id="checkoutAuthModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold">Login required</h5>
+                        <div class="text-secondary small">Please login or register before payment.</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3 text-secondary">Your cart will be kept while you continue to your account.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('storefront.login') }}" class="btn btn-danger rounded-pill px-4">Login</a>
+                        <a href="{{ route('storefront.register') }}" class="btn btn-outline-dark rounded-pill px-4">Register</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.storefrontConfig = {
             cartAddUrlTemplate: @json(route('storefront.cart.add', ['product' => '__ID__'])),

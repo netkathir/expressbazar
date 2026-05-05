@@ -53,6 +53,14 @@ body.admin-shell {
     letter-spacing: 0;
 }
 
+.admin-page-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.8rem, 2vw, 2.15rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #0b1f44;
+}
+
 .admin-shell main h2.h4,
 .admin-shell main h2.h5 {
     font-size: 1.1rem;

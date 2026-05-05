@@ -1,6 +1,7 @@
 @extends('layouts.storefront')
 
 @section('content')
+    @php($canCheckout = auth()->check() && auth()->user()->role === 'customer')
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-3">
             <nav class="sf-breadcrumbs">Home <span>›</span> Cart</nav>
@@ -39,19 +40,19 @@
                     <div class="d-flex justify-content-between mb-2"><span>Delivery Fee</span><strong>₹{{ number_format($cartTotals['delivery'], 0) }}</strong></div>
                     <hr>
                     <div class="d-flex justify-content-between"><span class="fw-semibold">To Pay</span><strong class="fs-5">₹{{ number_format($cartTotals['grandTotal'], 0) }}</strong></div>
-                    <a href="{{ route('storefront.checkout') }}" class="btn btn-danger w-100 rounded-pill mt-3">
-                        @auth
+                    <a href="{{ route('storefront.checkout') }}" class="btn btn-danger w-100 rounded-pill mt-3 {{ $canCheckout ? '' : 'js-checkout-auth-required' }}">
+                        @if ($canCheckout)
                             Proceed to Checkout
                         @else
                             Login to Checkout
-                        @endauth
+                        @endif
                     </a>
                     <div class="text-secondary small mt-2">
-                        @auth
+                        @if ($canCheckout)
                             Exact delivery validation is checked before checkout.
                         @else
                             Please login or register before payment.
-                        @endauth
+                        @endif
                     </div>
                 </div>
             </div>

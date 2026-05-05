@@ -6,6 +6,8 @@ const cartCountEls = document.querySelectorAll('.js-cart-count');
 const locationLabelEls = document.querySelectorAll('.js-location-label');
 const locationModalEl = document.getElementById('locationModal');
 const locationModal = locationModalEl ? new bootstrap.Modal(locationModalEl) : null;
+const checkoutAuthModalEl = document.getElementById('checkoutAuthModal');
+const checkoutAuthModal = checkoutAuthModalEl ? new bootstrap.Modal(checkoutAuthModalEl) : null;
 const locationForm = document.querySelector('.js-location-form');
 const countrySelect = document.querySelector('.js-country-select');
 const citySelect = document.querySelector('.js-city-select');
@@ -125,6 +127,22 @@ function updateCartUi(payload = {}) {
 
     updateCartPage(payload);
     updateProductControls(payload);
+}
+
+function guestCartCount() {
+    return normalizeCartState(getGuestCartState())
+        .reduce((total, item) => total + item.quantity, 0);
+}
+
+function hydrateGuestCartCount() {
+    if (!shouldMirrorGuestCart() || Number(document.body.dataset.cartCount || 0) > 0) {
+        return;
+    }
+
+    const count = guestCartCount();
+    if (count > 0) {
+        updateCartUi({ cartCount: count });
+    }
 }
 
 function cartUrl(template, productId) {
@@ -535,6 +553,20 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
+    const checkoutAuthTrigger = event.target.closest('.js-checkout-auth-required');
+    if (checkoutAuthTrigger) {
+        event.preventDefault();
+        const serverCart = normalizeCartState(config.initialCartState || []);
+        const cartToPreserve = serverCart.length > 0 ? serverCart : getGuestCartState();
+
+        if (cartToPreserve.length > 0) {
+            setGuestCartState(cartToPreserve);
+        }
+
+        checkoutAuthModal?.show();
+        return;
+    }
+
     const closeCartTrigger = event.target.closest('.js-close-cart');
     if (closeCartTrigger) {
         event.preventDefault();
@@ -840,3 +872,5 @@ if (config.currentUserRole === 'customer' && config.guestCartMerged) {
 } else if (Array.isArray(config.initialCartState) && config.initialCartState.length > 0) {
     setGuestCartState(config.initialCartState);
 }
+
+hydrateGuestCartCount();

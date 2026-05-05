@@ -4,7 +4,7 @@
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-                <h1 class="h3 mb-1">Vendor Master</h1>
+                <h1 class="h3 mb-1 admin-page-title">Vendor Master</h1>
             </div>
             <a href="{{ route('admin.vendors.create') }}" class="btn btn-primary">Add Vendor</a>
         </div>
