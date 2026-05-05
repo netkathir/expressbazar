@@ -609,6 +609,89 @@ body.admin-shell {
     color: #ff3333 !important;
 }
 
+.admin-shell .admin-zones-table {
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    table-layout: fixed;
+}
+
+.admin-shell .admin-zones-name-col {
+    width: 15%;
+}
+
+.admin-shell .admin-zones-country-col {
+    width: 10%;
+}
+
+.admin-shell .admin-zones-city-col {
+    width: 10%;
+}
+
+.admin-shell .admin-zones-code-col {
+    width: auto;
+}
+
+.admin-shell .admin-zones-delivery-col {
+    width: 96px;
+}
+
+.admin-shell .admin-zones-status-col {
+    width: 104px;
+}
+
+.admin-shell .admin-zones-actions-col {
+    width: 118px;
+}
+
+.admin-shell .admin-zones-table th,
+.admin-shell .admin-zones-table td {
+    overflow: hidden;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .admin-zones-table thead th,
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .admin-zones-table tbody td {
+    padding-left: .85rem;
+    padding-right: .85rem;
+}
+
+.admin-shell .admin-zones-text-cell,
+.admin-shell .admin-zones-code-cell {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.admin-shell .admin-zones-code-cell {
+    white-space: normal;
+}
+
+.admin-shell .admin-zones-table td:nth-child(5),
+.admin-shell .admin-zones-table td:nth-child(6) {
+    white-space: nowrap;
+}
+
+.admin-shell .admin-zones-actions-cell {
+    overflow: visible !important;
+    padding-right: 1rem !important;
+    white-space: nowrap;
+}
+
+.admin-shell .admin-zones-actions-cell form {
+    display: inline-flex;
+    margin-left: .25rem;
+    vertical-align: middle;
+}
+
+@media (max-width: 991.98px) {
+    .admin-shell .admin-zones-table-wrap {
+        overflow-x: auto;
+    }
+
+    .admin-shell .admin-zones-table {
+        min-width: 760px;
+    }
+}
+
 .admin-shell main > .container-fluid > .shell-card > .table-responsive + .card-body {
     padding: .75rem 1rem;
     border-top: 1px solid rgba(229, 231, 235, .78);

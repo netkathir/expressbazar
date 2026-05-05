@@ -52,33 +52,42 @@
     </div>
 
     <div class="card shell-card">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+        <div class="table-responsive admin-zones-table-wrap">
+            <table class="table table-hover align-middle mb-0 admin-zones-table">
+                <colgroup>
+                    <col class="admin-zones-name-col">
+                    <col class="admin-zones-country-col">
+                    <col class="admin-zones-city-col">
+                    <col class="admin-zones-code-col">
+                    <col class="admin-zones-delivery-col">
+                    <col class="admin-zones-status-col">
+                    <col class="admin-zones-actions-col">
+                </colgroup>
                 <thead>
                     <tr>
-                        <th>Zone Name</th>
-                        <th>Country</th>
-                        <th>City</th>
-                        <th>Zone Code</th>
-                        <th>Delivery</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th class="admin-zones-name-col">Zone Name</th>
+                        <th class="admin-zones-country-col">Country</th>
+                        <th class="admin-zones-city-col">City</th>
+                        <th class="admin-zones-code-col">Zone Code</th>
+                        <th class="admin-zones-delivery-col">Delivery</th>
+                        <th class="admin-zones-status-col">Status</th>
+                        <th class="admin-zones-actions-col text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($zones as $zone)
                         <tr>
-                            <td class="fw-semibold">{{ $zone->zone_name }}</td>
+                            <td class="fw-semibold admin-zones-text-cell">{{ $zone->zone_name }}</td>
                             <td>{{ $zone->country?->country_name }}</td>
                             <td>{{ $zone->city?->city_name }}</td>
-                            <td>{{ $zone->zone_code ?: '-' }}</td>
+                            <td class="admin-zones-code-cell">{{ $zone->zone_code ?: '-' }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $zone->delivery_available ? 'success' : 'warning' }}">
                                     {{ $zone->delivery_available ? 'Yes' : 'No' }}
                                 </span>
                             </td>
                             <td><span class="badge text-bg-{{ $zone->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($zone->status) }}</span></td>
-                            <td class="text-end">
+                            <td class="admin-zones-actions-cell text-end">
                                 <a href="{{ route('admin.zones.edit', $zone) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit zone" title="Edit zone">
                                     <i class="ti ti-pencil"></i>
                                 </a>

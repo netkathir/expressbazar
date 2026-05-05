@@ -15,10 +15,16 @@ class CountryController extends Controller
             ->withCount('cities')
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
-                $query->where(function ($subQuery) use ($search) {
+                $currencyCodes = $this->currencyCodesMatching($search);
+
+                $query->where(function ($subQuery) use ($search, $currencyCodes) {
                     $subQuery->where('country_name', 'like', "%{$search}%")
                         ->orWhere('country_code', 'like', "%{$search}%")
                         ->orWhere('currency', 'like', "%{$search}%");
+
+                    if ($currencyCodes !== []) {
+                        $subQuery->orWhereIn('currency', $currencyCodes);
+                    }
                 });
                 $this->prioritizePrefixSearch($query, ['country_name', 'country_code', 'currency'], $search);
             })
@@ -110,5 +116,86 @@ class CountryController extends Controller
             'country_code.regex' => 'Country code must be 2 or 3 letters.',
             'currency.regex' => 'Currency must be a 3-letter code such as INR or GBP.',
         ]);
+    }
+
+    private function currencyCodesMatching(string $search): array
+    {
+        $needle = mb_strtolower(trim($search));
+
+        if ($needle === '') {
+            return [];
+        }
+
+        $currencies = [
+            'AED' => ['د.إ', 'United Arab Emirates Dirham'],
+            'AFN' => ['؋', 'Afghan Afghani'],
+            'ALL' => ['L', 'Albanian Lek'],
+            'AMD' => ['֏', 'Armenian Dram'],
+            'AOA' => ['Kz', 'Angolan Kwanza'],
+            'ARS' => ['$', 'Argentine Peso'],
+            'AUD' => ['$', 'Australian Dollar'],
+            'AZN' => ['₼', 'Azerbaijani Manat'],
+            'BDT' => ['৳', 'Bangladeshi Taka'],
+            'BGN' => ['лв', 'Bulgarian Lev'],
+            'BHD' => ['.د.ب', 'Bahraini Dinar'],
+            'BRL' => ['R$', 'Brazilian Real'],
+            'BSD' => ['$', 'Bahamian Dollar'],
+            'BYN' => ['Br', 'Belarusian Ruble'],
+            'CAD' => ['$', 'Canadian Dollar'],
+            'CHF' => ['Fr', 'Swiss Franc'],
+            'CLP' => ['$', 'Chilean Peso'],
+            'CNY' => ['¥', 'Chinese Yuan'],
+            'COP' => ['$', 'Colombian Peso'],
+            'CZK' => ['Kč', 'Czech Koruna'],
+            'DKK' => ['kr', 'Danish Krone'],
+            'DZD' => ['د.ج', 'Algerian Dinar'],
+            'EGP' => ['£', 'Egyptian Pound'],
+            'EUR' => ['€', 'Euro'],
+            'GBP' => ['£', 'British Pound'],
+            'GEL' => ['₾', 'Georgian Lari'],
+            'GHS' => ['₵', 'Ghanaian Cedi'],
+            'HKD' => ['$', 'Hong Kong Dollar'],
+            'HUF' => ['Ft', 'Hungarian Forint'],
+            'IDR' => ['Rp', 'Indonesian Rupiah'],
+            'ILS' => ['₪', 'Israeli New Shekel'],
+            'INR' => ['₹', 'Indian Rupee'],
+            'ISK' => ['kr', 'Icelandic Krona'],
+            'JOD' => ['د.ا', 'Jordanian Dinar'],
+            'JPY' => ['¥', 'Japanese Yen'],
+            'KES' => ['KSh', 'Kenyan Shilling'],
+            'KHR' => ['៛', 'Cambodian Riel'],
+            'KRW' => ['₩', 'South Korean Won'],
+            'KWD' => ['د.ك', 'Kuwaiti Dinar'],
+            'LKR' => ['Rs', 'Sri Lankan Rupee'],
+            'MXN' => ['$', 'Mexican Peso'],
+            'MYR' => ['RM', 'Malaysian Ringgit'],
+            'NGN' => ['₦', 'Nigerian Naira'],
+            'NOK' => ['kr', 'Norwegian Krone'],
+            'NPR' => ['Rs', 'Nepalese Rupee'],
+            'NZD' => ['$', 'New Zealand Dollar'],
+            'OMR' => ['ر.ع.', 'Omani Rial'],
+            'PHP' => ['₱', 'Philippine Peso'],
+            'PKR' => ['Rs', 'Pakistani Rupee'],
+            'PLN' => ['zł', 'Polish Zloty'],
+            'QAR' => ['ر.ق', 'Qatari Riyal'],
+            'RON' => ['lei', 'Romanian Leu'],
+            'RUB' => ['₽', 'Russian Ruble'],
+            'SAR' => ['﷼', 'Saudi Riyal'],
+            'SEK' => ['kr', 'Swedish Krona'],
+            'SGD' => ['$', 'Singapore Dollar'],
+            'THB' => ['฿', 'Thai Baht'],
+            'TRY' => ['₺', 'Turkish Lira'],
+            'TWD' => ['$', 'Taiwan Dollar'],
+            'UAH' => ['₴', 'Ukrainian Hryvnia'],
+            'USD' => ['$', 'US Dollar'],
+            'VND' => ['₫', 'Vietnamese Dong'],
+            'ZAR' => ['R', 'South African Rand'],
+        ];
+
+        return array_keys(array_filter($currencies, function (array $currency, string $code) use ($needle) {
+            $haystack = mb_strtolower($code.' '.$currency[0].' '.$currency[1]);
+
+            return str_contains($haystack, $needle);
+        }, ARRAY_FILTER_USE_BOTH));
     }
 }

@@ -309,6 +309,72 @@
                 { code: 'ZAR', name: 'South African Rand' },
             ];
 
+            const currencySymbols = {
+                AED: 'د.إ',
+                AFN: '؋',
+                ALL: 'L',
+                AMD: '֏',
+                AOA: 'Kz',
+                ARS: '$',
+                AUD: '$',
+                AZN: '₼',
+                BDT: '৳',
+                BGN: 'лв',
+                BHD: '.د.ب',
+                BRL: 'R$',
+                BSD: '$',
+                BYN: 'Br',
+                CAD: '$',
+                CHF: 'Fr',
+                CLP: '$',
+                CNY: '¥',
+                COP: '$',
+                CZK: 'Kč',
+                DKK: 'kr',
+                DZD: 'د.ج',
+                EGP: '£',
+                EUR: '€',
+                GBP: '£',
+                GEL: '₾',
+                GHS: '₵',
+                HKD: '$',
+                HUF: 'Ft',
+                IDR: 'Rp',
+                ILS: '₪',
+                INR: '₹',
+                ISK: 'kr',
+                JOD: 'د.ا',
+                JPY: '¥',
+                KES: 'KSh',
+                KHR: '៛',
+                KRW: '₩',
+                KWD: 'د.ك',
+                LKR: 'Rs',
+                MXN: '$',
+                MYR: 'RM',
+                NGN: '₦',
+                NOK: 'kr',
+                NPR: 'Rs',
+                NZD: '$',
+                OMR: 'ر.ع.',
+                PHP: '₱',
+                PKR: 'Rs',
+                PLN: 'zł',
+                QAR: 'ر.ق',
+                RON: 'lei',
+                RUB: '₽',
+                SAR: '﷼',
+                SEK: 'kr',
+                SGD: '$',
+                THB: '฿',
+                TRY: '₺',
+                TWD: '$',
+                UAH: '₴',
+                USD: '$',
+                VND: '₫',
+                ZAR: 'R',
+            };
+
             const existingName = @json(old('country_name', $country->country_name));
             const existingCode = @json(old('country_code', $country->country_code));
             const existingCurrency = @json(old('currency', $country->currency));
@@ -335,7 +401,10 @@
                     return;
                 }
 
-                $currency.append(new Option(`${currency.code} - ${currency.name}`, currency.code, false, false));
+                const symbol = currency.symbol || currencySymbols[currency.code] || '';
+                const label = [currency.code, symbol, currency.name].filter(Boolean).join(' - ');
+
+                $currency.append(new Option(label, currency.code, false, false));
             }
 
             function escapeSelector(value) {
@@ -350,12 +419,14 @@
             }
 
             if (existingCurrency) {
-                appendCurrency({ code: existingCurrency, name: existingCurrency });
+                const existingCurrencyData = currencies.find((currency) => currency.code === existingCurrency);
+                appendCurrency(existingCurrencyData || { code: existingCurrency, name: existingCurrency });
             }
 
             $countryName.select2({
                 placeholder: 'Select Country',
                 width: '100%',
+                allowClear: true,
             });
 
             $countryCode.select2({
@@ -366,11 +437,18 @@
             $currency.select2({
                 placeholder: 'Select Currency',
                 width: '100%',
+                allowClear: true,
             });
 
             $countryName.on('change', function () {
                 const code = $(this).find(':selected').data('code');
                 const currency = $(this).find(':selected').data('currency');
+
+                if (!$(this).val()) {
+                    $countryCode.val(null).trigger('change.select2');
+                    $currency.val(null).trigger('change.select2');
+                    return;
+                }
 
                 if (code && $countryCode.val() !== String(code)) {
                     $countryCode.val(code).trigger('change.select2');

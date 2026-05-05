@@ -6,7 +6,7 @@
             <div>
                 <h1 class="h3 mb-1">Delivery & Logistics</h1>
             </div>
-            <a href="{{ route('admin.delivery.create') }}" class="btn btn-primary">Add Delivery Config</a>
+            <a href="{{ route('admin.delivery.create') }}" class="btn btn-primary">Add Delivery</a>
         </div>
     </div>
 

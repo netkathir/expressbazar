@@ -1,6 +1,74 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $currencyDisplay = [
+            'AED' => ['symbol' => 'د.إ', 'name' => 'United Arab Emirates Dirham'],
+            'AFN' => ['symbol' => '؋', 'name' => 'Afghan Afghani'],
+            'ALL' => ['symbol' => 'L', 'name' => 'Albanian Lek'],
+            'AMD' => ['symbol' => '֏', 'name' => 'Armenian Dram'],
+            'AOA' => ['symbol' => 'Kz', 'name' => 'Angolan Kwanza'],
+            'ARS' => ['symbol' => '$', 'name' => 'Argentine Peso'],
+            'AUD' => ['symbol' => '$', 'name' => 'Australian Dollar'],
+            'AZN' => ['symbol' => '₼', 'name' => 'Azerbaijani Manat'],
+            'BDT' => ['symbol' => '৳', 'name' => 'Bangladeshi Taka'],
+            'BGN' => ['symbol' => 'лв', 'name' => 'Bulgarian Lev'],
+            'BHD' => ['symbol' => '.د.ب', 'name' => 'Bahraini Dinar'],
+            'BRL' => ['symbol' => 'R$', 'name' => 'Brazilian Real'],
+            'BSD' => ['symbol' => '$', 'name' => 'Bahamian Dollar'],
+            'BYN' => ['symbol' => 'Br', 'name' => 'Belarusian Ruble'],
+            'CAD' => ['symbol' => '$', 'name' => 'Canadian Dollar'],
+            'CHF' => ['symbol' => 'Fr', 'name' => 'Swiss Franc'],
+            'CLP' => ['symbol' => '$', 'name' => 'Chilean Peso'],
+            'CNY' => ['symbol' => '¥', 'name' => 'Chinese Yuan'],
+            'COP' => ['symbol' => '$', 'name' => 'Colombian Peso'],
+            'CZK' => ['symbol' => 'Kč', 'name' => 'Czech Koruna'],
+            'DKK' => ['symbol' => 'kr', 'name' => 'Danish Krone'],
+            'DZD' => ['symbol' => 'د.ج', 'name' => 'Algerian Dinar'],
+            'EGP' => ['symbol' => '£', 'name' => 'Egyptian Pound'],
+            'EUR' => ['symbol' => '€', 'name' => 'Euro'],
+            'GBP' => ['symbol' => '£', 'name' => 'British Pound'],
+            'GEL' => ['symbol' => '₾', 'name' => 'Georgian Lari'],
+            'GHS' => ['symbol' => '₵', 'name' => 'Ghanaian Cedi'],
+            'HKD' => ['symbol' => '$', 'name' => 'Hong Kong Dollar'],
+            'HUF' => ['symbol' => 'Ft', 'name' => 'Hungarian Forint'],
+            'IDR' => ['symbol' => 'Rp', 'name' => 'Indonesian Rupiah'],
+            'ILS' => ['symbol' => '₪', 'name' => 'Israeli New Shekel'],
+            'INR' => ['symbol' => '₹', 'name' => 'Indian Rupee'],
+            'ISK' => ['symbol' => 'kr', 'name' => 'Icelandic Krona'],
+            'JOD' => ['symbol' => 'د.ا', 'name' => 'Jordanian Dinar'],
+            'JPY' => ['symbol' => '¥', 'name' => 'Japanese Yen'],
+            'KES' => ['symbol' => 'KSh', 'name' => 'Kenyan Shilling'],
+            'KHR' => ['symbol' => '៛', 'name' => 'Cambodian Riel'],
+            'KRW' => ['symbol' => '₩', 'name' => 'South Korean Won'],
+            'KWD' => ['symbol' => 'د.ك', 'name' => 'Kuwaiti Dinar'],
+            'LKR' => ['symbol' => 'Rs', 'name' => 'Sri Lankan Rupee'],
+            'MXN' => ['symbol' => '$', 'name' => 'Mexican Peso'],
+            'MYR' => ['symbol' => 'RM', 'name' => 'Malaysian Ringgit'],
+            'NGN' => ['symbol' => '₦', 'name' => 'Nigerian Naira'],
+            'NOK' => ['symbol' => 'kr', 'name' => 'Norwegian Krone'],
+            'NPR' => ['symbol' => 'Rs', 'name' => 'Nepalese Rupee'],
+            'NZD' => ['symbol' => '$', 'name' => 'New Zealand Dollar'],
+            'OMR' => ['symbol' => 'ر.ع.', 'name' => 'Omani Rial'],
+            'PHP' => ['symbol' => '₱', 'name' => 'Philippine Peso'],
+            'PKR' => ['symbol' => 'Rs', 'name' => 'Pakistani Rupee'],
+            'PLN' => ['symbol' => 'zł', 'name' => 'Polish Zloty'],
+            'QAR' => ['symbol' => 'ر.ق', 'name' => 'Qatari Riyal'],
+            'RON' => ['symbol' => 'lei', 'name' => 'Romanian Leu'],
+            'RUB' => ['symbol' => '₽', 'name' => 'Russian Ruble'],
+            'SAR' => ['symbol' => '﷼', 'name' => 'Saudi Riyal'],
+            'SEK' => ['symbol' => 'kr', 'name' => 'Swedish Krona'],
+            'SGD' => ['symbol' => '$', 'name' => 'Singapore Dollar'],
+            'THB' => ['symbol' => '฿', 'name' => 'Thai Baht'],
+            'TRY' => ['symbol' => '₺', 'name' => 'Turkish Lira'],
+            'TWD' => ['symbol' => '$', 'name' => 'Taiwan Dollar'],
+            'UAH' => ['symbol' => '₴', 'name' => 'Ukrainian Hryvnia'],
+            'USD' => ['symbol' => '$', 'name' => 'US Dollar'],
+            'VND' => ['symbol' => '₫', 'name' => 'Vietnamese Dong'],
+            'ZAR' => ['symbol' => 'R', 'name' => 'South African Rand'],
+        ];
+    @endphp
+
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
@@ -48,10 +116,16 @@
                 </thead>
                 <tbody>
                     @forelse ($countries as $country)
+                        @php($currencyMeta = $currencyDisplay[$country->currency] ?? null)
                         <tr>
                             <td class="fw-semibold">{{ $country->country_name }}</td>
                             <td>{{ $country->country_code }}</td>
-                            <td>{{ $country->currency }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ $country->currency }}{{ $currencyMeta ? ' - '.$currencyMeta['symbol'] : '' }}</div>
+                                @if ($currencyMeta)
+                                    <div class="small text-secondary">{{ $currencyMeta['name'] }}</div>
+                                @endif
+                            </td>
                             <td><span class="badge text-bg-{{ $country->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($country->status) }}</span></td>
                             <td>{{ $country->cities_count }}</td>
                             <td class="text-end">
