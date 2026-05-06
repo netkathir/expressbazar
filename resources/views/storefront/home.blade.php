@@ -6,6 +6,9 @@
             'pincode' => $pincode ?? null,
             'vendor_id' => $selectedVendorId ?? request('vendor_id'),
         ], fn ($value) => filled($value)))
+        @php($search = $search ?? '')
+        @php($isSearch = filled($search))
+        @php($selectedVendorProducts = $selectedVendorProducts ?? collect())
         @php($showNoPincodeData = !empty($pincode ?? null) && !($hasPincodeProducts ?? true))
         <section class="container-fluid px-3 px-lg-4 pt-0">
             <div class="sf-category-strip-header">
@@ -25,6 +28,47 @@
             </div>
         </section>
 
+        @if (!$isSearch && ($selectedVendor ?? null) && $selectedVendorProducts->isNotEmpty())
+            <section class="container-fluid px-3 px-lg-4 mt-4">
+                <div class="sf-section-header">
+                    <div>
+                        <h3>{{ $selectedVendor->vendor_name }}</h3>
+                        <p class="text-secondary mb-0">Products from your selected vendor</p>
+                    </div>
+                </div>
+                <div class="sf-rail-wrap">
+                    <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll vendor products left">
+                        <i class="ti ti-chevron-left"></i>
+                    </button>
+                    <div class="sf-product-rail">
+                        @foreach ($selectedVendorProducts as $product)
+                            @include('storefront.partials.product-card', ['product' => $product])
+                        @endforeach
+                    </div>
+                    <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll vendor products right">
+                        <i class="ti ti-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+        @endif
+
+        @if ($isSearch)
+            <section class="container-fluid px-3 px-lg-4 mt-4">
+                <div class="sf-section-header">
+                    <div>
+                        <h3>Search Results</h3>
+                        <p class="text-secondary mb-0">Results for "{{ $search }}"</p>
+                    </div>
+                    <a href="{{ route('user.home', $filterQuery) }}" class="btn btn-sm btn-light ms-2">Clear</a>
+                </div>
+                <div class="sf-grid js-product-list" id="product-list">
+                    @include('storefront.partials.product-grid', [
+                        'products' => $searchResults,
+                        'emptyMessage' => 'No results found',
+                    ])
+                </div>
+            </section>
+        @else
         <section class="container-fluid px-3 px-lg-4 mt-3">
             <div class="sf-hero-grid">
                 <div class="sf-hero-card sf-hero-card-soft">
@@ -48,8 +92,9 @@
                 </div>
             </div>
         </section>
+        @endif
 
-        @if (($banners ?? collect())->isNotEmpty())
+        @if (!$isSearch && ($banners ?? collect())->isNotEmpty())
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <div class="sf-banner-grid">
                     @foreach ($banners as $banner)
@@ -67,11 +112,11 @@
             </section>
         @endif
 
-        @if ($showNoPincodeData)
+        @if (!$isSearch && $showNoPincodeData)
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <x-empty-state>{{ config('ui_messages.no_products') }}</x-empty-state>
             </section>
-        @else
+        @elseif (!$isSearch)
             @if (($discountedProducts ?? collect())->isNotEmpty())
                 <section class="container-fluid px-3 px-lg-4 mt-4">
                     <div class="sf-section-header">

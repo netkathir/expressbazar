@@ -40,9 +40,12 @@
                     </ul>
                 </div>
 
-                <form action="{{ route('storefront.search') }}" method="GET" class="sf-search-form js-search-form">
+                <form action="{{ route('user.home') }}" method="GET" class="sf-search-form js-search-form">
                     <i class="ti ti-search"></i>
-                    <input type="search" id="search-box" class="js-search-input" name="q" placeholder="Search for products, categories or brands" value="{{ request('q') }}" autocomplete="off">
+                    <input type="search" id="searchInput" class="js-search-input" name="search" placeholder="Search for products, categories or brands" value="{{ request('search', request('q')) }}" autocomplete="off">
+                    @if (request()->filled('vendor_id'))
+                        <input type="hidden" name="vendor_id" value="{{ request('vendor_id') }}">
+                    @endif
                     <div class="sf-search-suggestions js-search-suggestions" hidden></div>
                 </form>
 
@@ -282,6 +285,7 @@
             uiMessages: @json(config('ui_messages')),
             initialLocation: @json($location ?? null),
             initialSelectedVendorId: @json((string) ($selectedVendorId ?? request('vendor_id', ''))),
+            resetHomeVendorFilterOnLoad: @json(request()->routeIs('user.home') && request()->filled('vendor_id')),
             initialCartState: @json($cartState ?? []),
             guestCartMerged: @json((bool) session('guest_cart_merged')),
             currentUserRole: @json(auth()->user()->role ?? null),

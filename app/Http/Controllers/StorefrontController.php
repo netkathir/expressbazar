@@ -34,7 +34,16 @@ class StorefrontController extends Controller
 {
     public function home(Request $request)
     {
-        return view('storefront.home', $this->storefrontData($request, 'Home'));
+        $search = trim((string) $request->string('search'));
+
+        if ($search !== '') {
+            $this->rememberRecentSearch($search);
+        }
+
+        return view('storefront.home', $this->storefrontData($request, 'Home', [
+            'search' => $search,
+            'searchResults' => $search !== '' ? $this->searchResults($search) : collect(),
+        ]));
     }
 
     public function category(Request $request, Category $category)
@@ -487,8 +496,8 @@ class StorefrontController extends Controller
     public function setLocation(Request $request)
     {
         $data = $request->validate([
-            'country_id' => ['required', 'exists:countries,id'],
-            'city_id' => ['required', 'exists:cities,id'],
+            'country_id' => ['required', Rule::exists('countries', 'id')->where('status', 'active')],
+            'city_id' => ['required', Rule::exists('cities', 'id')->where('status', 'active')],
             'zone_id' => ['nullable', 'exists:regions_zones,id'],
             'postcode' => ['nullable', 'string', 'max:32'],
             'force_clear' => ['nullable'],
@@ -499,6 +508,8 @@ class StorefrontController extends Controller
                 ->whereRaw('LOWER(zone_code) = ?', [mb_strtolower(trim($data['postcode']))])
                 ->where('status', 'active')
                 ->where('delivery_available', true)
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+                ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
                 ->first();
 
             if (! $zone) {
@@ -580,6 +591,7 @@ class StorefrontController extends Controller
         try {
             $cities = City::query()
                 ->where('status', 'active')
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
                 ->when($request->filled('country_id'), function ($query) use ($request) {
                     $query->where('country_id', $request->integer('country_id'));
                 })
@@ -598,6 +610,8 @@ class StorefrontController extends Controller
             $zones = RegionZone::query()
                 ->where('status', 'active')
                 ->where('delivery_available', true)
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+                ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
                 ->when($request->filled('city_id'), function ($query) use ($request) {
                     $query->where('city_id', $request->integer('city_id'));
                 })
@@ -780,6 +794,7 @@ class StorefrontController extends Controller
         $pincode = $this->activePincode();
         $selectedVendorId = $request->filled('vendor_id') ? $request->integer('vendor_id') : null;
         $featuredSections = $this->featuredSections($location);
+        $selectedVendor = $selectedVendorId ? $this->activeVendor($selectedVendorId, $location, $pincode) : null;
         $categories = Category::query()
             ->where('status', 'active')
             ->withCount('products')
@@ -793,6 +808,8 @@ class StorefrontController extends Controller
             'locationLabel' => $this->locationLabel(),
             'pincode' => $pincode,
             'selectedVendorId' => $selectedVendorId,
+            'selectedVendor' => $selectedVendor,
+            'selectedVendorProducts' => $selectedVendor ? $this->vendorProducts($selectedVendor, $location) : collect(),
             'vendors' => $this->vendorsForLocation($location, $pincode),
             'hasPincodeProducts' => ! $pincode || $this->productsQuery($location)->exists(),
             'cartCount' => $this->cartCount(),
@@ -864,7 +881,18 @@ class StorefrontController extends Controller
     {
         return $this->productsQuery($this->browsingLocation())
             ->when($keyword !== '', function ($query) use ($keyword) {
-                $query->where('product_name', 'like', "%{$keyword}%");
+                $query->where(function ($searchQuery) use ($keyword) {
+                    $searchQuery->where('product_name', 'like', "%{$keyword}%")
+                        ->orWhereHas('category', function ($categoryQuery) use ($keyword) {
+                            $categoryQuery->where('status', 'active')
+                                ->where('category_name', 'like', "%{$keyword}%");
+                        });
+                })
+                    ->orderByRaw(
+                        'CASE WHEN product_name LIKE ? THEN 1 ELSE 2 END',
+                        ["%{$keyword}%"]
+                    )
+                    ->orderBy('product_name');
             })
             ->limit(48)
             ->get();
@@ -907,6 +935,14 @@ class StorefrontController extends Controller
         return $this->productsQuery($this->browsingLocation())
             ->where('subcategory_id', $subcategory->id)
             ->limit(60)
+            ->get();
+    }
+
+    private function vendorProducts(Vendor $vendor, ?array $location)
+    {
+        return $this->productsQuery($location)
+            ->where('vendor_id', $vendor->id)
+            ->limit(12)
             ->get();
     }
 
@@ -1056,7 +1092,13 @@ class StorefrontController extends Controller
     private function vendorsForLocation(?array $location, ?string $pincode)
     {
         $query = Vendor::query()
-            ->where('status', 'active');
+            ->where('status', 'active')
+            ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+            ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+            ->where(function ($zoneStatusQuery) {
+                $zoneStatusQuery->whereNull('region_zone_id')
+                    ->orWhereHas('zone', fn ($zoneQuery) => $zoneQuery->where('status', 'active'));
+            });
 
         $this->applyVendorLocationScope($query, $location);
 
@@ -1068,6 +1110,12 @@ class StorefrontController extends Controller
         }
 
         return $query->orderBy('vendor_name')->get(['id', 'vendor_name', 'pincode']);
+    }
+
+    private function activeVendor(int $vendorId, ?array $location, ?string $pincode): ?Vendor
+    {
+        return $this->vendorsForLocation($location, $pincode)
+            ->firstWhere('id', $vendorId);
     }
 
     private function applyVendorLocationScope($query, ?array $location): void
@@ -1112,14 +1160,32 @@ class StorefrontController extends Controller
 
     private function hardLocation(): ?array
     {
-        return session('storefront.location');
+        $location = session('storefront.location');
+
+        if (! is_array($location)) {
+            return null;
+        }
+
+        $location = $this->activeLocationOrNull($location);
+
+        if (! $location) {
+            session()->forget(['storefront.location', 'storefront.soft_location', 'user_pincode']);
+        }
+
+        return $location;
     }
 
     private function softLocation(): ?array
     {
         $stored = session('storefront.soft_location');
         if (is_array($stored)) {
-            return $stored;
+            $location = $this->activeLocationOrNull($stored);
+
+            if ($location) {
+                return array_merge($location, ['mode' => 'soft']);
+            }
+
+            session()->forget('storefront.soft_location');
         }
 
         $city = $this->defaultCityFromIp();
@@ -1138,6 +1204,46 @@ class StorefrontController extends Controller
         session()->put('storefront.soft_location', $soft);
 
         return $soft;
+    }
+
+    private function activeLocationOrNull(array $location): ?array
+    {
+        if (empty($location['country_id']) || empty($location['city_id'])) {
+            return null;
+        }
+
+        $city = City::query()
+            ->whereKey($location['city_id'])
+            ->where('country_id', $location['country_id'])
+            ->where('status', 'active')
+            ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+            ->first();
+
+        if (! $city) {
+            return null;
+        }
+
+        $zoneId = ! empty($location['zone_id']) ? (int) $location['zone_id'] : null;
+
+        if ($zoneId) {
+            $zoneExists = RegionZone::query()
+                ->whereKey($zoneId)
+                ->where('country_id', $location['country_id'])
+                ->where('city_id', $location['city_id'])
+                ->where('status', 'active')
+                ->where('delivery_available', true)
+                ->exists();
+
+            if (! $zoneExists) {
+                return null;
+            }
+        }
+
+        return [
+            'country_id' => (int) $location['country_id'],
+            'city_id' => (int) $location['city_id'],
+            'zone_id' => $zoneId,
+        ];
     }
 
     private function defaultCityFromIp(): ?City
@@ -1163,6 +1269,7 @@ class StorefrontController extends Controller
             $city = City::query()
                 ->where('status', 'active')
                 ->where('city_code', $preferredCityCode)
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
                 ->with('country')
                 ->first();
 
@@ -1173,6 +1280,7 @@ class StorefrontController extends Controller
 
         return City::query()
             ->where('status', 'active')
+            ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
             ->with('country')
             ->orderBy('city_name')
             ->first();
@@ -1193,7 +1301,7 @@ class StorefrontController extends Controller
 
     private function browsingLocation(): ?array
     {
-        return $this->hardLocation() ?? $this->softLocation();
+        return $this->hardLocation();
     }
 
     private function locationLabel(): string

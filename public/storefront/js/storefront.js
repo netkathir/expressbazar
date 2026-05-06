@@ -357,22 +357,13 @@ function selectedVendorIdFromUrl() {
 }
 
 function savedVendorId() {
-    try {
-        return localStorage.getItem(selectedVendorIdKey) || '';
-    } catch (error) {
-        return '';
-    }
+    return '';
 }
 
 function saveSelectedVendor(id, name) {
     try {
-        if (id) {
-            localStorage.setItem(selectedVendorIdKey, String(id));
-            localStorage.setItem(selectedVendorNameKey, String(name || ''));
-        } else {
-            localStorage.removeItem(selectedVendorIdKey);
-            localStorage.removeItem(selectedVendorNameKey);
-        }
+        localStorage.removeItem(selectedVendorIdKey);
+        localStorage.removeItem(selectedVendorNameKey);
     } catch (error) {
         // Ignore storage errors.
     }
@@ -433,8 +424,7 @@ async function loadVendors() {
     try {
         const vendors = await fetchJson(config.vendorsByLocationUrl);
         const requestedVendorId = String(config.initialSelectedVendorId || selectedVendorIdFromUrl() || '');
-        const storedVendorId = savedVendorId();
-        const activeVendorId = requestedVendorId || storedVendorId;
+        const activeVendorId = requestedVendorId;
         const activeVendor = Array.isArray(vendors)
             ? vendors.find((vendor) => String(vendor.id) === activeVendorId)
             : null;
@@ -462,10 +452,6 @@ async function loadVendors() {
         if (activeVendor) {
             selectedVendorText.textContent = activeVendor.name;
             saveSelectedVendor(activeVendor.id, activeVendor.name);
-
-            if (!requestedVendorId && storedVendorId && isVendorFilterablePage()) {
-                applyVendorFilter(storedVendorId);
-            }
         } else {
             clearSelectedVendor();
 
@@ -973,6 +959,13 @@ searchInput?.addEventListener('input', () => {
     const q = searchInput.value.trim();
     window.clearTimeout(searchSuggestionTimer);
 
+    if (q === '' && new URL(window.location.href).searchParams.has('search')) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('search');
+        window.location.href = url.toString();
+        return;
+    }
+
     if (q.length < 2) {
         hideSearchSuggestions();
         return;
@@ -1012,6 +1005,12 @@ if (config.initialLocation) {
 }
 
 loadVendors();
+
+if (config.resetHomeVendorFilterOnLoad) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('vendor_id');
+    window.history.replaceState({}, '', url);
+}
 
 if (config.notificationsUrl) {
     loadNotifications();
