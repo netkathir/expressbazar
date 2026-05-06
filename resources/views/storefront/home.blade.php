@@ -28,7 +28,7 @@
             </div>
         </section>
 
-        @if (!$isSearch && ($selectedVendor ?? null) && $selectedVendorProducts->isNotEmpty())
+        @if (!$isSearch && ($selectedVendor ?? null))
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <div class="sf-section-header">
                     <div>
@@ -41,9 +41,11 @@
                         <i class="ti ti-chevron-left"></i>
                     </button>
                     <div class="sf-product-rail">
-                        @foreach ($selectedVendorProducts as $product)
+                        @forelse ($selectedVendorProducts as $product)
                             @include('storefront.partials.product-card', ['product' => $product])
-                        @endforeach
+                        @empty
+                            <x-empty-state>No products available</x-empty-state>
+                        @endforelse
                     </div>
                     <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll vendor products right">
                         <i class="ti ti-chevron-right"></i>
