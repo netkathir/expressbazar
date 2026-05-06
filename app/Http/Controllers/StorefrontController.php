@@ -503,7 +503,7 @@ class StorefrontController extends Controller
             'force_clear' => ['nullable'],
         ]);
 
-        if (! empty($data['postcode']) && empty($data['zone_id'])) {
+        if (! empty($data['postcode'])) {
             $resolvedLocation = $this->resolvePostcodeLocation($data['postcode']);
 
             if (! $resolvedLocation) {
@@ -1081,7 +1081,7 @@ class StorefrontController extends Controller
                 $zoneStatusQuery->whereNull('region_zone_id')
                     ->orWhereHas('zone', fn ($zoneQuery) => $zoneQuery->where('status', 'active'));
             })
-            ->whereRaw("UPPER(REPLACE(TRIM(COALESCE(pincode, '')), ' ', '')) = ?", [$normalizedPincode])
+            ->whereRaw("UPPER(REPLACE(REPLACE(TRIM(COALESCE(pincode, '')), ' ', ''), '-', '')) = ?", [$normalizedPincode])
             ->pluck('id');
 
         return $cache[$normalizedPincode];
@@ -1098,7 +1098,7 @@ class StorefrontController extends Controller
 
         $vendor = Vendor::query()
             ->where('status', 'active')
-            ->whereRaw("UPPER(REPLACE(TRIM(COALESCE(pincode, '')), ' ', '')) = ?", [$normalizedPostcode])
+            ->whereRaw("UPPER(REPLACE(REPLACE(TRIM(COALESCE(pincode, '')), ' ', ''), '-', '')) = ?", [$normalizedPostcode])
             ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
             ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
             ->where(function ($zoneStatusQuery) {
@@ -1112,7 +1112,7 @@ class StorefrontController extends Controller
             return [
                 'country_id' => (int) $vendor->country_id,
                 'city_id' => (int) $vendor->city_id,
-                'zone_id' => $vendor->region_zone_id ? (int) $vendor->region_zone_id : null,
+                'zone_id' => null,
                 'resolved_pincode' => $normalizedPostcode,
                 'resolved_from_vendor_postcode' => true,
             ];
@@ -1141,7 +1141,7 @@ class StorefrontController extends Controller
 
     private function normalizedPostcode(string $postcode): string
     {
-        return mb_strtoupper((string) preg_replace('/\s+/', '', trim($postcode)));
+        return mb_strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', trim($postcode)));
     }
 
     private function vendorsForLocation(?array $location, ?string $pincode)
@@ -1158,7 +1158,7 @@ class StorefrontController extends Controller
         $this->applyVendorLocationScope($query, $location);
 
         if ($pincode) {
-            $query->whereRaw("UPPER(REPLACE(TRIM(COALESCE(pincode, '')), ' ', '')) = ?", [$this->normalizedPostcode($pincode)]);
+            $query->whereRaw("UPPER(REPLACE(REPLACE(TRIM(COALESCE(pincode, '')), ' ', ''), '-', '')) = ?", [$this->normalizedPostcode($pincode)]);
         }
 
         return $query->orderBy('vendor_name')->get(['id', 'vendor_name', 'pincode']);
