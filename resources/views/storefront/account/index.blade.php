@@ -98,11 +98,12 @@
                                         <div>
                                             <div class="fw-semibold">{{ $address->label ?: $address->recipient_name }}</div>
                                             <div class="small text-secondary">{{ $address->address_line_1 }}, {{ $address->city?->city_name }}</div>
-                                            <div class="small text-secondary">{{ $address->zone?->zone_name ?? '-' }} | {{ $address->postcode }}</div>
+                                            <div class="small text-secondary">{{ $address->zone?->zone_name ?? '-' }}</div>
+                                            <div class="small text-secondary">Postcode: {{ $address->postcode }}</div>
                                         </div>
                                         <div class="d-flex flex-column gap-2">
                                             <a href="{{ route('storefront.addresses.edit', $address) }}" class="btn btn-sm btn-outline-dark">Edit</a>
-                                            <form method="POST" action="{{ route('storefront.addresses.destroy', $address) }}">
+                                            <form method="POST" action="{{ route('storefront.addresses.destroy', $address) }}" onsubmit="return confirm('Are you sure you want to delete this address?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="btn btn-sm btn-outline-danger w-100">Delete</button>

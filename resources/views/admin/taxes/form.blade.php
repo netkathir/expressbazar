@@ -33,8 +33,8 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Country</label>
-                    <select name="country_id" class="form-select">
-                        <option value="">Optional</option>
+                    <select name="country_id" class="form-select" required>
+                        <option value="">Select country</option>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected((string) old('country_id', $tax->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
                         @endforeach
@@ -42,7 +42,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Region</label>
-                    <input type="text" name="region_name" value="{{ old('region_name', $tax->region_name) }}" class="form-control" placeholder="Optional region or zone name" pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&'()\/-]+$">
+                    <input type="text" name="region_name" value="{{ old('region_name', $tax->region_name) }}" class="form-control" placeholder="Region or zone name" pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&'()\/-]+$" required>
                 </div>
                 <div class="col-12">
                     <button class="btn btn-primary" type="submit">{{ $mode === 'create' ? 'Save Tax' : 'Update Tax' }}</button>

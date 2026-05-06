@@ -1352,6 +1352,83 @@ body.storefront-shell {
     align-self: start;
 }
 
+.sf-payment-options {
+    display: grid;
+    gap: 12px;
+}
+
+.sf-payment-option {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--sf-border);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, .06);
+    cursor: pointer;
+    transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+.sf-payment-option:has(.sf-payment-radio:checked) {
+    border-color: rgba(11, 31, 68, .45);
+    background: #f8fafc;
+    box-shadow: 0 14px 26px rgba(11, 31, 68, .10);
+}
+
+.sf-payment-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sf-payment-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    margin-top: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.sf-payment-check::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sf-purple);
+    transform: scale(0);
+    transition: transform .18s ease;
+}
+
+.sf-payment-radio:checked + .sf-payment-check {
+    border-color: var(--sf-purple);
+}
+
+.sf-payment-radio:checked + .sf-payment-check::after {
+    transform: scale(1);
+}
+
+.sf-payment-copy {
+    display: grid;
+    gap: 3px;
+}
+
+.sf-payment-copy span {
+    font-weight: 800;
+    color: #111827;
+}
+
+.sf-payment-copy small {
+    color: var(--sf-muted);
+    line-height: 1.4;
+}
+
 .sf-footer {
     margin-top: 56px;
     padding: 48px 0 24px;

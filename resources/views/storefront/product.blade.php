@@ -1,7 +1,6 @@
 @extends('layouts.storefront')
 
 @section('content')
-    @php($cartEntry = $cartMap[$product->id] ?? null)
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-3">
             <nav class="sf-breadcrumbs">
@@ -40,15 +39,7 @@
 
                     <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart">
                         @csrf
-                        @if ($cartEntry)
-                            <div class="sf-stepper">
-                                <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="{{ $product->id }}">−</button>
-                                <span class="sf-stepper-value">{{ $cartEntry['quantity'] }}</span>
-                                <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="1" data-product="{{ $product->id }}">+</button>
-                            </div>
-                        @else
-                            <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4">Add to Cart</button>
-                        @endif
+                        <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4">Add to Cart</button>
                     </form>
                 </div>
             </div>

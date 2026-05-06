@@ -61,10 +61,6 @@
                                     @endif
                                 </span>
                             </a>
-                            <a href="{{ route('storefront.account') }}" class="sf-action-link">
-                                <i class="ti ti-user-circle"></i>
-                                <span>Account</span>
-                            </a>
                             <div class="dropdown">
                                 <button class="sf-action-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                                     <i class="ti ti-bell"></i>
@@ -216,7 +212,7 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <label class="form-label">Country</label>
-                            <select name="country_id" class="form-select js-country-select" required>
+                            <select name="country_id" class="form-select js-country-select">
                                 <option value="">Choose country</option>
                                 @foreach (($countries ?? collect()) as $country)
                                     <option value="{{ $country->id }}">{{ $country->country_name }}</option>
@@ -225,7 +221,7 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="form-label">City</label>
-                            <select name="city_id" class="form-select js-city-select" required>
+                            <select name="city_id" class="form-select js-city-select">
                                 <option value="">Choose city</option>
                             </select>
                         </div>

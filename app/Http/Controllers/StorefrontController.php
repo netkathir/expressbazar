@@ -496,32 +496,26 @@ class StorefrontController extends Controller
     public function setLocation(Request $request)
     {
         $data = $request->validate([
-            'country_id' => ['required', Rule::exists('countries', 'id')->where('status', 'active')],
-            'city_id' => ['required', Rule::exists('cities', 'id')->where('status', 'active')],
+            'country_id' => ['nullable', 'required_without:postcode', Rule::exists('countries', 'id')->where('status', 'active')],
+            'city_id' => ['nullable', 'required_without:postcode', Rule::exists('cities', 'id')->where('status', 'active')],
             'zone_id' => ['nullable', 'exists:regions_zones,id'],
             'postcode' => ['nullable', 'string', 'max:32'],
             'force_clear' => ['nullable'],
         ]);
 
         if (! empty($data['postcode']) && empty($data['zone_id'])) {
-            $zone = RegionZone::query()
-                ->whereRaw('LOWER(zone_code) = ?', [mb_strtolower(trim($data['postcode']))])
-                ->where('status', 'active')
-                ->where('delivery_available', true)
-                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
-                ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
-                ->first();
+            $resolvedLocation = $this->resolvePostcodeLocation($data['postcode']);
 
-            if (! $zone) {
+            if (! $resolvedLocation) {
                 throw ValidationException::withMessages([
                     'postcode' => 'Delivery is not available in your area.',
                 ]);
             }
 
-            $data['zone_id'] = $zone->id;
-            $data['city_id'] = $zone->city_id;
-            $data['country_id'] = $zone->country_id;
+            $data = array_merge($data, $resolvedLocation);
         }
+
+        $resolvedFromVendorPostcode = ! empty($data['resolved_from_vendor_postcode']);
 
         $city = City::findOrFail($data['city_id']);
 
@@ -537,7 +531,7 @@ class StorefrontController extends Controller
                 ->where('country_id', $data['country_id'])
                 ->where('city_id', $data['city_id'])
                 ->where('status', 'active')
-                ->where('delivery_available', true)
+                ->when(! $resolvedFromVendorPostcode, fn ($query) => $query->where('delivery_available', true))
                 ->first();
 
             if (! $zone) {
@@ -568,8 +562,8 @@ class StorefrontController extends Controller
 
         session()->put('storefront.location', $newLocation);
         session()->forget('storefront.soft_location');
-        if (! empty($data['postcode'])) {
-            session()->put('user_pincode', mb_strtoupper(trim((string) $data['postcode'])));
+        if (! empty($data['resolved_pincode'])) {
+            session()->put('user_pincode', $data['resolved_pincode']);
         } else {
             session()->forget('user_pincode');
         }
@@ -1073,20 +1067,81 @@ class StorefrontController extends Controller
     private function vendorIdsForPincode(string $pincode)
     {
         static $cache = [];
+        $normalizedPincode = $this->normalizedPostcode($pincode);
 
-        if (isset($cache[$pincode])) {
-            return $cache[$pincode];
+        if (isset($cache[$normalizedPincode])) {
+            return $cache[$normalizedPincode];
         }
 
-        $cache[$pincode] = Vendor::query()
+        $cache[$normalizedPincode] = Vendor::query()
             ->where('status', 'active')
-            ->where(function ($vendorQuery) use ($pincode) {
-                $vendorQuery->where('pincode', $pincode)
-                    ->orWhereNull('pincode');
+            ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+            ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+            ->where(function ($zoneStatusQuery) {
+                $zoneStatusQuery->whereNull('region_zone_id')
+                    ->orWhereHas('zone', fn ($zoneQuery) => $zoneQuery->where('status', 'active'));
             })
+            ->whereRaw("UPPER(REPLACE(TRIM(COALESCE(pincode, '')), ' ', '')) = ?", [$normalizedPincode])
             ->pluck('id');
 
-        return $cache[$pincode];
+        return $cache[$normalizedPincode];
+    }
+
+    private function resolvePostcodeLocation(string $postcode): ?array
+    {
+        $postcode = mb_strtoupper(trim($postcode));
+        $normalizedPostcode = $this->normalizedPostcode($postcode);
+
+        if ($normalizedPostcode === '') {
+            return null;
+        }
+
+        $vendor = Vendor::query()
+            ->where('status', 'active')
+            ->whereRaw("UPPER(REPLACE(TRIM(COALESCE(pincode, '')), ' ', '')) = ?", [$normalizedPostcode])
+            ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+            ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+            ->where(function ($zoneStatusQuery) {
+                $zoneStatusQuery->whereNull('region_zone_id')
+                    ->orWhereHas('zone', fn ($zoneQuery) => $zoneQuery->where('status', 'active'));
+            })
+            ->orderBy('vendor_name')
+            ->first();
+
+        if ($vendor) {
+            return [
+                'country_id' => (int) $vendor->country_id,
+                'city_id' => (int) $vendor->city_id,
+                'zone_id' => $vendor->region_zone_id ? (int) $vendor->region_zone_id : null,
+                'resolved_pincode' => $normalizedPostcode,
+                'resolved_from_vendor_postcode' => true,
+            ];
+        }
+
+        $zone = RegionZone::query()
+            ->whereRaw('LOWER(zone_code) = ?', [mb_strtolower($postcode)])
+            ->where('status', 'active')
+            ->where('delivery_available', true)
+            ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+            ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+            ->first();
+
+        if (! $zone) {
+            return null;
+        }
+
+        return [
+            'country_id' => (int) $zone->country_id,
+            'city_id' => (int) $zone->city_id,
+            'zone_id' => (int) $zone->id,
+            'resolved_pincode' => null,
+            'resolved_from_vendor_postcode' => false,
+        ];
+    }
+
+    private function normalizedPostcode(string $postcode): string
+    {
+        return mb_strtoupper((string) preg_replace('/\s+/', '', trim($postcode)));
     }
 
     private function vendorsForLocation(?array $location, ?string $pincode)
@@ -1103,10 +1158,7 @@ class StorefrontController extends Controller
         $this->applyVendorLocationScope($query, $location);
 
         if ($pincode) {
-            $query->where(function ($vendorQuery) use ($pincode) {
-                $vendorQuery->where('pincode', $pincode)
-                    ->orWhereNull('pincode');
-            });
+            $query->whereRaw("UPPER(REPLACE(TRIM(COALESCE(pincode, '')), ' ', '')) = ?", [$this->normalizedPostcode($pincode)]);
         }
 
         return $query->orderBy('vendor_name')->get(['id', 'vendor_name', 'pincode']);

@@ -95,13 +95,14 @@ class TaxController extends Controller
         return $request->validate([
             'tax_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/', Rule::unique('taxes', 'tax_name')->ignore($tax?->id)],
             'tax_percentage' => ['required', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,2})?$/'],
-            'country_id' => ['nullable', 'exists:countries,id', 'required_with:region_name'],
-            'region_name' => ['nullable', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/'],
+            'country_id' => ['required', 'exists:countries,id'],
+            'region_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
             'tax_name.regex' => 'Tax name must include letters or numbers and cannot contain unsupported special characters.',
             'tax_percentage.regex' => 'Percentage can have up to two decimal places.',
-            'country_id.required_with' => 'Select a country before entering a region.',
+            'country_id.required' => 'Select a country.',
+            'region_name.required' => 'Region is required.',
             'region_name.regex' => 'Region must include letters or numbers and cannot contain unsupported special characters.',
         ]);
     }

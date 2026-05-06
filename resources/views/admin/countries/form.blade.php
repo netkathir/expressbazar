@@ -22,6 +22,18 @@
             height: 54px;
             right: 12px;
         }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #111827 transparent transparent transparent;
+            border-width: 6px 5px 0 5px;
+            margin-left: -5px;
+            margin-top: -3px;
+        }
+
+        .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+            border-color: transparent transparent #111827 transparent;
+            border-width: 0 5px 6px 5px;
+        }
     </style>
 @endpush
 
@@ -44,19 +56,19 @@
                 <div class="col-md-6">
                     <label class="form-label">Country Name</label>
                     <select name="country_name" id="country_name" class="form-control" required>
-                        <option value="">Select Country</option>
+                        <option value=""></option>
                     </select>
                 </div>
                 <div class="col-md-3 d-none">
                     <label class="form-label">Country Code</label>
                     <select name="country_code" id="country_code" class="form-control text-uppercase" required>
-                        <option value="">Select Code</option>
+                        <option value=""></option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Currency</label>
                     <select name="currency" id="currency" class="form-control text-uppercase" required>
-                        <option value="">Select Currency</option>
+                        <option value=""></option>
                     </select>
                 </div>
                 <div class="col-md-6">

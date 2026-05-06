@@ -40,38 +40,42 @@
                         </div>
 
                         <div class="sf-info-card">
-                            <h4 class="mb-3">Payment Method</h4>
-                            <label class="sf-sidepanel p-3 mb-3 d-block">
-                                <div class="d-flex gap-2 align-items-start">
+                            <div class="sf-section-header mb-3">
+                                <div>
+                                    <h4>Payment Method</h4>
+                                    <p class="text-secondary mb-0 small">Choose how you want to complete this order.</p>
+                                </div>
+                            </div>
+                            <div class="sf-payment-options">
+                                <label class="sf-payment-option">
                                     <input
                                         type="radio"
                                         name="payment_method"
                                         value="cod"
-                                        class="mt-1"
+                                        class="sf-payment-radio"
                                         {{ $checkoutPaymentMethod === 'cod' ? 'checked' : '' }}
-                                        required
                                     >
-                                    <div>
-                                        <div class="fw-semibold">Cash on Delivery</div>
-                                        <div class="small text-secondary">Pay when the order reaches you.</div>
+                                    <span class="sf-payment-check" aria-hidden="true"></span>
+                                    <div class="sf-payment-copy">
+                                        <span>Cash on Delivery</span>
+                                        <small>Pay safely when the order reaches your doorstep.</small>
                                     </div>
-                                </div>
-                            </label>
-                            <label class="sf-sidepanel p-3 mb-0 d-block">
-                                <div class="d-flex gap-2 align-items-start">
+                                </label>
+                                <label class="sf-payment-option">
                                     <input
                                         type="radio"
                                         name="payment_method"
                                         value="online"
-                                        class="mt-1"
+                                        class="sf-payment-radio"
                                         {{ $checkoutPaymentMethod === 'online' ? 'checked' : '' }}
                                     >
-                                    <div>
-                                        <div class="fw-semibold">Online Payment</div>
-                                        <div class="small text-secondary">Stripe test checkout will open after you place the order.</div>
+                                    <span class="sf-payment-check" aria-hidden="true"></span>
+                                    <div class="sf-payment-copy">
+                                        <span>Online Payment</span>
+                                        <small>Continue to secure Stripe checkout after placing the order.</small>
                                     </div>
-                                </div>
-                            </label>
+                                </label>
+                            </div>
                         </div>
 
                         <div class="sf-info-card sf-cart-summary">

@@ -43,7 +43,7 @@ class ProductController extends Controller
             'products' => $products,
             'categories' => Category::orderBy('category_name')->get(),
             'vendors' => collect([$vendor]),
-            'taxes' => Tax::orderBy('tax_name')->get(),
+            'taxes' => $this->vendorTaxes($vendor),
             'routePrefix' => 'vendor.products',
             'isVendorPanel' => true,
         ]);
@@ -51,14 +51,16 @@ class ProductController extends Controller
 
     public function create()
     {
+        $vendor = Auth::guard('vendor')->user();
+
         return view('admin.products.form', [
             'title' => 'Add Product',
             'activeMenu' => 'products',
             'product' => new Product(),
             'categories' => Category::orderBy('category_name')->get(),
             'subcategories' => Subcategory::orderBy('subcategory_name')->get(),
-            'vendors' => collect([Auth::guard('vendor')->user()]),
-            'taxes' => Tax::orderBy('tax_name')->get(),
+            'vendors' => collect([$vendor]),
+            'taxes' => $this->vendorTaxes($vendor),
             'mode' => 'create',
             'routePrefix' => 'vendor.products',
             'isVendorPanel' => true,
@@ -89,6 +91,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $this->authorizeVendorProduct($product);
+        $vendor = Auth::guard('vendor')->user();
 
         return view('admin.products.form', [
             'title' => 'Edit Product',
@@ -96,8 +99,8 @@ class ProductController extends Controller
             'product' => $product->loadMissing(['images', 'inventory']),
             'categories' => Category::orderBy('category_name')->get(),
             'subcategories' => Subcategory::orderBy('subcategory_name')->get(),
-            'vendors' => collect([Auth::guard('vendor')->user()]),
-            'taxes' => Tax::orderBy('tax_name')->get(),
+            'vendors' => collect([$vendor]),
+            'taxes' => $this->vendorTaxes($vendor),
             'mode' => 'edit',
             'routePrefix' => 'vendor.products',
             'isVendorPanel' => true,
@@ -178,7 +181,12 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'category_id' => ['required', 'exists:categories,id'],
             'subcategory_id' => ['nullable', 'exists:subcategories,id'],
-            'tax_id' => ['nullable', 'exists:taxes,id'],
+            'tax_id' => [
+                'nullable',
+                Rule::exists('taxes', 'id')
+                    ->where('country_id', Auth::guard('vendor')->user()?->country_id ?: 0)
+                    ->where('status', 'active'),
+            ],
             'price' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'discount_type' => ['nullable', Rule::in(['percentage', 'fixed'])],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
@@ -218,6 +226,19 @@ class ProductController extends Controller
         }
 
         return $data;
+    }
+
+    private function vendorTaxes($vendor)
+    {
+        if (! $vendor?->country_id) {
+            return collect();
+        }
+
+        return Tax::query()
+            ->where('country_id', $vendor->country_id)
+            ->where('status', 'active')
+            ->orderBy('tax_name')
+            ->get();
     }
 
     private function calculateFinalPrice(array $data): string
