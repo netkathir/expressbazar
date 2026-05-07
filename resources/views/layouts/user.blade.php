@@ -40,6 +40,26 @@
             border-radius: 22px;
             box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
         }
+        @media (max-width: 575.98px) {
+            .user-nav .container {
+                gap: .75rem;
+            }
+            .user-nav .navbar-brand {
+                white-space: normal;
+            }
+            .hero,
+            .soft-card {
+                border-radius: 18px;
+            }
+            .hero .display-5 {
+                font-size: 2rem;
+                line-height: 1.15;
+            }
+            .hero .btn,
+            .soft-card .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>

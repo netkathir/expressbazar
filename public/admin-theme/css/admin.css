@@ -759,3 +759,111 @@ body.admin-shell {
         display: none;
     }
 }
+
+@media (max-width: 991.98px) {
+    .topbar {
+        min-width: 0;
+    }
+
+    .topbar > .d-flex:first-child {
+        min-width: 0;
+    }
+
+    .topbar > .d-flex:first-child > div:last-child {
+        min-width: 0;
+    }
+
+    .topbar > .d-flex:first-child .fw-semibold {
+        max-width: 42vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .content {
+        min-width: 0;
+    }
+
+    .content > .container-fluid {
+        padding-inline: .9rem;
+    }
+
+    .hero-card,
+    .soft-panel,
+    .metric-card,
+    .shell-card,
+    .module-card,
+    .soft-card {
+        border-radius: 18px;
+    }
+
+    .hero-stat {
+        min-width: min(220px, 100%);
+    }
+
+    .admin-shell main > .container-fluid > .shell-card > .table-responsive {
+        border-radius: 14px 14px 0 0;
+    }
+
+    .admin-shell main > .container-fluid > .shell-card > .table-responsive + .card-body .pagination {
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .topbar {
+        padding-inline: .65rem !important;
+    }
+
+    .topbar .badge-soft {
+        display: none;
+    }
+
+    .topbar > .d-flex:first-child .fw-semibold {
+        max-width: 34vw;
+    }
+
+    .admin-brand-logo {
+        max-width: 180px;
+    }
+
+    .sidebar {
+        width: min(280px, 86vw);
+        left: min(-280px, -86vw);
+    }
+
+    .admin-shell main h1.h2,
+    .admin-shell main h1.h3,
+    .admin-page-title {
+        font-size: 1.45rem;
+    }
+
+    .content {
+        padding-top: 84px !important;
+    }
+
+    .content > .container-fluid {
+        padding-inline: .75rem;
+    }
+
+    .hero-card,
+    .soft-panel,
+    .metric-card,
+    .shell-card,
+    .module-card,
+    .soft-card {
+        border-radius: 16px;
+    }
+
+    .admin-flash-backdrop {
+        padding-top: 76px;
+    }
+
+    #adminDeleteConfirmModal .modal-dialog.modal-delete-confirm,
+    #adminBackConfirmModal .modal-dialog.modal-delete-confirm {
+        margin: .75rem;
+    }
+}
