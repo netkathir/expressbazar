@@ -867,3 +867,130 @@ body.admin-shell {
         margin: .75rem;
     }
 }
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6,
+.admin-shell p,
+.admin-shell a,
+.admin-shell span,
+.admin-shell div,
+.admin-shell button,
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea,
+.admin-shell td,
+.admin-shell th {
+    overflow-wrap: anywhere;
+}
+
+.admin-shell main h1,
+.admin-shell main h2,
+.admin-page-title {
+    font-weight: 600;
+}
+
+.admin-shell main h1.h2,
+.admin-shell main h1.h3,
+.admin-page-title {
+    font-size: clamp(1.45rem, 1.5vw + 1rem, 1.95rem);
+}
+
+.admin-shell main h2.h4,
+.admin-shell main h2.h5 {
+    font-size: clamp(1rem, .7vw + .85rem, 1.1rem);
+    font-weight: 600;
+}
+
+.hero-card .fw-semibold,
+.soft-panel .fw-semibold,
+.metric-card .fw-semibold,
+.shell-card .fw-semibold,
+.module-card .fw-semibold,
+.soft-card .fw-semibold,
+.admin-shell .card .fw-semibold {
+    font-weight: 600 !important;
+}
+
+.sidebar .nav-link,
+.admin-profile-name,
+.badge-soft,
+.admin-shell .btn,
+.admin-shell .form-label,
+.admin-shell .dropdown-item {
+    font-weight: 500;
+}
+
+.admin-profile-role,
+.admin-shell .small,
+.admin-shell .text-secondary,
+.admin-shell .form-text,
+.admin-shell .field-validation-message {
+    font-weight: 400;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table {
+    font-size: .78rem;
+    line-height: 1.35;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table thead th {
+    font-size: .66rem;
+    font-weight: 600;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table tbody td {
+    min-width: 0;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.fw-semibold,
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table .fw-semibold {
+    font-weight: 600 !important;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table .badge {
+    font-size: .64rem;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: normal;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td:not(.text-end) {
+    white-space: normal;
+}
+
+.admin-shell .table-responsive {
+    overflow-x: auto;
+}
+
+@media (max-width: 575.98px) {
+    .admin-shell {
+        font-size: .94rem;
+    }
+
+    .sidebar .nav-link {
+        font-size: .88rem;
+    }
+
+    .admin-shell main h1.h2,
+    .admin-shell main h1.h3,
+    .admin-page-title {
+        font-size: clamp(1.28rem, 7vw, 1.55rem);
+        line-height: 1.2;
+    }
+
+    .admin-shell main > .container-fluid > .shell-card > .table-responsive > .table {
+        font-size: .74rem;
+    }
+
+    .admin-shell .btn {
+        font-size: .84rem;
+    }
+
+    .admin-profile-toggle {
+        gap: .35rem;
+    }
+}

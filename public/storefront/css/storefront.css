@@ -1745,3 +1745,152 @@ body.storefront-shell {
         padding: 32px 0 18px;
     }
 }
+
+.storefront-shell h1,
+.storefront-shell h2,
+.storefront-shell h3,
+.storefront-shell h4,
+.storefront-shell h5,
+.storefront-shell h6,
+.storefront-shell p,
+.storefront-shell a,
+.storefront-shell span,
+.storefront-shell div,
+.storefront-shell button,
+.storefront-shell input,
+.storefront-shell select,
+.storefront-shell textarea {
+    overflow-wrap: anywhere;
+}
+
+.sf-info-card h3,
+.sf-info-card h4,
+.sf-product-summary h1,
+.sf-page-title h2,
+.sf-section-header h3,
+.sf-section-header h4 {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.sf-info-card .fw-semibold,
+.sf-sidepanel .fw-semibold,
+.sf-cart-row .fw-semibold,
+.sf-order-history-card .fw-semibold {
+    font-weight: 600 !important;
+}
+
+.sf-category-strip-header h2,
+.sf-page-title h2,
+.sf-section-header h3,
+.sf-section-header h4 {
+    font-size: clamp(1.08rem, 1.1vw + .85rem, 1.35rem);
+}
+
+.sf-product-name,
+.sf-recent-order-title,
+.sf-order-history-copy .fw-semibold,
+.sf-cart-row .fw-semibold {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sf-product-name {
+    -webkit-line-clamp: 2;
+    min-height: 2.35em;
+    font-weight: 700;
+    line-height: 1.18;
+}
+
+.sf-cart-row .fw-semibold,
+.sf-order-history-copy .fw-semibold,
+.sf-recent-order-title {
+    -webkit-line-clamp: 2;
+}
+
+.sf-action-link,
+.sf-filter-pill,
+.sf-benefit,
+.sf-payment-copy span,
+.sf-coupon-row,
+.sf-side-links a,
+.sf-category-cloud a {
+    font-weight: 500;
+}
+
+.sf-chip,
+.sf-product-meta,
+.sf-mrp,
+.sf-cart-row .small,
+.sf-order-history-copy .small,
+.sf-specs dt,
+.sf-payment-copy small,
+.sf-footer-col a,
+.sf-footer-address {
+    font-weight: 400;
+}
+
+.sf-product-price-row,
+.sf-cart-row,
+.sf-order-history-card,
+.sf-recent-order-row,
+.sf-payment-option,
+.sf-coupon-row,
+.sf-side-links a {
+    min-width: 0;
+}
+
+.sf-price {
+    font-weight: 800;
+}
+
+.sf-product-saving,
+.sf-product-discount-badge {
+    font-weight: 700;
+}
+
+@media (max-width: 575.98px) {
+    .storefront-shell {
+        font-size: .95rem;
+    }
+
+    .sf-product-name {
+        font-size: .7rem;
+        line-height: 1.2;
+    }
+
+    .sf-price {
+        font-size: .86rem;
+    }
+
+    .sf-mrp,
+    .sf-product-meta {
+        font-size: .58rem;
+    }
+
+    .sf-info-card h3,
+    .sf-info-card h4,
+    .sf-product-summary h1 {
+        font-size: clamp(1.05rem, 6vw, 1.45rem);
+    }
+
+    .sf-hero-card h1,
+    .sf-hero-card h2 {
+        font-size: clamp(1.28rem, 7vw, 1.55rem);
+        line-height: 1.14;
+    }
+
+    .sf-filter-pill,
+    .sf-action-link,
+    .sf-payment-copy span,
+    .sf-coupon-row {
+        font-size: .84rem;
+    }
+
+    .sf-cart-row .fw-semibold,
+    .sf-order-history-copy .fw-semibold,
+    .sf-recent-order-title {
+        font-size: .92rem;
+    }
+}
