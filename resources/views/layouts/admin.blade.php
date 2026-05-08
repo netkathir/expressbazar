@@ -6,7 +6,7 @@
     <title>{{ ($title ?? null) ? $title.' | ' : '' }}{{ config('admin_panel.brand.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.35.0/dist/tabler-icons.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -110,7 +110,7 @@
     <aside id="sidebar" class="sidebar">
         <div class="logo-area">
             <a href="{{ $isVendorPanel ? route('vendor.dashboard') : route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
-                <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="admin-brand-logo">
+                <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="admin-brand-logo">
             </a>
         </div>
 

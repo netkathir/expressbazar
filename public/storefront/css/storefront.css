@@ -1,17 +1,17 @@
 :root {
-    --sf-purple: #1f7a63;
-    --sf-pink: #ff8c42;
-    --sf-lime: #a3d65c;
-    --sf-bg: #f9f9f9;
-    --sf-muted: #6b7280;
-    --sf-border: #e5e7eb;
-    --sf-surface: #f9f9f9;
+    --sf-purple: #1F7A63;
+    --sf-pink: #FF8C42;
+    --sf-lime: #A3D65C;
+    --sf-bg: #F9F9F9;
+    --sf-muted: rgba(51, 51, 51, .68);
+    --sf-border: rgba(31, 122, 99, .14);
+    --sf-surface: #F9F9F9;
     --sf-charcoal: #333333;
     --sf-shadow: 0 12px 30px rgba(31, 122, 99, .10);
 }
 
 body.storefront-shell {
-    font-family: Poppins, system-ui, sans-serif;
+    font-family: 'Poppins', system-ui, sans-serif;
     background: var(--sf-bg);
     color: var(--sf-charcoal);
 }
@@ -27,14 +27,14 @@ body.storefront-shell {
 .storefront-shell .btn-primary:focus,
 .storefront-shell .btn-danger:hover,
 .storefront-shell .btn-danger:focus {
-    background: #12386f;
-    border-color: #12386f;
+    background: var(--sf-purple);
+    border-color: var(--sf-purple);
     color: #fff;
 }
 
 .storefront-shell .btn-outline-dark {
     color: var(--sf-purple);
-    border-color: rgba(11, 31, 68, .28);
+    border-color: rgba(31, 122, 99, .28);
 }
 
 .storefront-shell .btn-outline-dark:hover,
@@ -45,7 +45,7 @@ body.storefront-shell {
 }
 
 .storefront-shell .required-symbol {
-    color: #dc2626;
+    color: var(--sf-pink);
     font-weight: 800;
 }
 
@@ -202,7 +202,7 @@ body.storefront-shell {
 
 .sf-search-suggestion:hover,
 .sf-search-suggestion:focus {
-    background: #f8fafc;
+    background: var(--sf-surface);
 }
 
 .sf-actions {
@@ -221,8 +221,8 @@ body.storefront-shell {
     height: 42px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid rgba(11, 31, 68, 0.18);
-    background: linear-gradient(135deg, rgba(11,31,68,.12), rgba(255,122,24,.12));
+    border: 2px solid rgba(31, 122, 99, 0.18);
+    background: linear-gradient(135deg, rgba(31, 122, 99, .12), rgba(255, 140, 66, .12));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -250,7 +250,7 @@ body.storefront-shell {
     justify-content: center;
     gap: .35rem;
     padding: 0 12px;
-    color: #111827;
+    color: var(--sf-charcoal);
     text-decoration: none;
     position: relative;
 }
@@ -285,7 +285,7 @@ body.storefront-shell {
 
 .sf-category-strip-header h2 {
     margin: 0 0 4px;
-    color: #071b4d;
+    color: var(--sf-purple);
     font-size: 1.28rem;
     font-weight: 800;
 }
@@ -336,7 +336,7 @@ body.storefront-shell {
 
 .sf-chip {
     text-decoration: none;
-    color: #111827;
+    color: var(--sf-charcoal);
     display: grid;
     gap: 8px;
     justify-items: center;
@@ -352,7 +352,7 @@ body.storefront-shell {
     height: 62px;
     object-fit: cover;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #fff 0%, #f5f0ff 58%, #ecddff 100%);
+    background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(163, 214, 92, .14) 58%, rgba(31, 122, 99, .12) 100%);
     box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
 }
 
@@ -382,7 +382,7 @@ body.storefront-shell {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(11,31,68,.58) 100%);
+    background: linear-gradient(180deg, rgba(51, 51, 51, 0) 0%, rgba(31, 122, 99, .58) 100%);
 }
 
 .sf-banner-copy {
@@ -453,7 +453,7 @@ body.storefront-shell {
     border: 1px solid var(--sf-border);
     border-radius: 50%;
     background: #fff;
-    color: #111827;
+    color: var(--sf-charcoal);
     box-shadow: 0 10px 24px rgba(15,23,42,.12);
     display: inline-flex;
     align-items: center;
@@ -503,7 +503,7 @@ body.storefront-shell {
     display: block;
     height: 104px;
     aspect-ratio: auto;
-    background: linear-gradient(135deg, #fff8f3 0%, #fff 100%);
+    background: linear-gradient(135deg, rgba(255, 140, 66, .10) 0%, var(--sf-surface) 100%);
     border: 0;
     border-radius: 14px;
     overflow: hidden;
@@ -552,7 +552,7 @@ body.storefront-shell {
     display: block;
     font-size: .74rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--sf-charcoal);
     text-decoration: none;
     line-height: 1.12;
     min-height: 1.2rem;
@@ -601,7 +601,7 @@ body.storefront-shell {
 }
 
 .sf-price {
-    color: #166534;
+    color: var(--sf-purple);
     font-weight: 900;
     line-height: 1;
 }
@@ -618,7 +618,7 @@ body.storefront-shell {
     padding: 2px 5px;
     border-radius: 6px;
     background: rgba(22, 163, 74, .12);
-    color: #15803d;
+    color: var(--sf-purple);
     font-size: .52rem;
     font-weight: 900;
     line-height: 1;
@@ -688,8 +688,8 @@ body.storefront-shell {
     padding: 12px 14px;
     border-radius: 14px;
     text-decoration: none;
-    color: #111827;
-    background: #fafafa;
+    color: var(--sf-charcoal);
+    background: var(--sf-surface);
 }
 
 .sf-side-links a img {
@@ -749,7 +749,7 @@ body.storefront-shell {
 .sf-filter-pill {
     border: 1px solid var(--sf-border);
     background: #fff;
-    color: #374151;
+    color: var(--sf-charcoal);
     border-radius: 14px;
     padding: 10px 14px;
     text-decoration: none;
@@ -827,13 +827,13 @@ body.storefront-shell {
 .sf-card-plus button:focus {
     color: #fff;
     border-color: transparent;
-    background: linear-gradient(135deg, var(--sf-pink), #ff9447);
+    background: var(--sf-pink);
 }
 
 .sf-card-add .btn:hover,
 .sf-card-add .btn:focus {
     color: #fff;
-    background: linear-gradient(135deg, #ff8a2b, var(--sf-pink));
+    background: var(--sf-pink);
 }
 
 .sf-stepper-ghost {
@@ -1020,7 +1020,7 @@ body.storefront-shell {
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--sf-border);
-    background: #f8fafc;
+    background: var(--sf-surface);
 }
 
 .sf-order-history-image img {
@@ -1064,7 +1064,7 @@ body.storefront-shell {
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid var(--sf-border);
-    background: #f8fafc;
+    background: var(--sf-surface);
 }
 
 .sf-recent-order-image img {
@@ -1080,7 +1080,7 @@ body.storefront-shell {
 
 .sf-recent-order-title {
     display: block;
-    color: #111827;
+    color: var(--sf-charcoal);
     font-weight: 600;
     line-height: 1.25;
     text-decoration: none;
@@ -1096,14 +1096,14 @@ body.storefront-shell {
     align-items: center;
     gap: 14px;
     margin-top: 12px;
-    color: #6b7280;
+    color: var(--sf-muted);
     font-size: .875rem;
 }
 
 .sf-recent-order-details strong,
 .sf-recent-order-status strong,
 .sf-recent-order-total strong {
-    color: #111827;
+    color: var(--sf-charcoal);
 }
 
 .sf-recent-order-status,
@@ -1113,7 +1113,7 @@ body.storefront-shell {
 
 .sf-recent-order-status strong {
     display: block;
-    color: #ff7a18;
+    color: var(--sf-pink);
     font-size: 1rem;
 }
 
@@ -1189,11 +1189,11 @@ body.storefront-shell {
 
 .sf-search-form {
     border-radius: 999px;
-    background: #f8fafc;
+    background: var(--sf-surface);
 }
 
 .sf-search-form input::placeholder {
-    color: #94a3b8;
+    color: var(--sf-muted);
 }
 
 .sf-hero-grid {
@@ -1211,12 +1211,12 @@ body.storefront-shell {
 }
 
 .sf-hero-card-soft {
-    background: linear-gradient(135deg, #f7f1ff 0%, #ffffff 100%);
+    background: linear-gradient(135deg, rgba(163, 214, 92, .14) 0%, var(--sf-surface) 100%);
     border: 1px solid rgba(123, 44, 255, 0.1);
 }
 
 .sf-hero-card-dark {
-    background: linear-gradient(135deg, #1b1f3a 0%, #0f172a 100%);
+    background: linear-gradient(135deg, var(--sf-purple) 0%, var(--sf-charcoal) 100%);
     color: #fff;
 }
 
@@ -1277,7 +1277,7 @@ body.storefront-shell {
     border: 1px solid var(--sf-border);
     border-radius: 999px;
     text-decoration: none;
-    color: #111827;
+    color: var(--sf-charcoal);
     background: #fff;
 }
 
@@ -1294,7 +1294,7 @@ body.storefront-shell {
     min-width: 44px;
     height: 30px;
     border-radius: 999px;
-    background: #16a34a;
+    background: var(--sf-lime);
     color: #fff;
     font-weight: 800;
     font-size: .9rem;
@@ -1309,9 +1309,9 @@ body.storefront-shell {
 .sf-benefit {
     padding: 10px 14px;
     border-radius: 16px;
-    background: #f8fafc;
+    background: var(--sf-surface);
     border: 1px solid var(--sf-border);
-    color: #0f172a;
+    color: var(--sf-charcoal);
     font-weight: 600;
     font-size: .88rem;
 }
@@ -1319,7 +1319,7 @@ body.storefront-shell {
 .sf-stepper {
     display: inline-flex;
     align-items: center;
-    border: 1px solid #ffd0dc;
+    border: 1px solid rgba(255, 140, 66, .28);
     background: #fff;
     border-radius: 999px;
     overflow: hidden;
@@ -1335,7 +1335,7 @@ body.storefront-shell {
     width: 30px;
     height: 30px;
     border: 0;
-    background: linear-gradient(135deg, var(--sf-pink), #ff9447);
+    background: var(--sf-pink);
     color: #fff;
     font-weight: 800;
 }
@@ -1344,7 +1344,7 @@ body.storefront-shell {
     min-width: 32px;
     text-align: center;
     font-weight: 800;
-    color: #111827;
+    color: var(--sf-charcoal);
 }
 
 .sf-product-rail .sf-stepper-value {
@@ -1364,7 +1364,7 @@ body.storefront-shell {
     gap: 12px;
     padding: 12px 14px;
     border-radius: 16px;
-    background: #f8fafc;
+    background: var(--sf-surface);
     border: 1px solid var(--sf-border);
     font-size: .92rem;
 }
@@ -1396,9 +1396,9 @@ body.storefront-shell {
 }
 
 .sf-payment-option:has(.sf-payment-radio:checked) {
-    border-color: rgba(11, 31, 68, .45);
-    background: #f8fafc;
-    box-shadow: 0 14px 26px rgba(11, 31, 68, .10);
+    border-color: rgba(31, 122, 99, .45);
+    background: var(--sf-surface);
+    box-shadow: 0 14px 26px rgba(31, 122, 99, .10);
 }
 
 .sf-payment-radio {
@@ -1410,7 +1410,7 @@ body.storefront-shell {
 .sf-payment-check {
     width: 20px;
     height: 20px;
-    border: 2px solid #cbd5e1;
+    border: 2px solid var(--sf-border);
     border-radius: 50%;
     margin-top: 2px;
     display: inline-flex;
@@ -1444,7 +1444,7 @@ body.storefront-shell {
 
 .sf-payment-copy span {
     font-weight: 800;
-    color: #111827;
+    color: var(--sf-charcoal);
 }
 
 .sf-payment-copy small {
@@ -1455,10 +1455,7 @@ body.storefront-shell {
 .sf-footer {
     margin-top: 56px;
     padding: 48px 0 24px;
-   /*  background:
-        radial-gradient(circle at top left, rgba(255, 122, 24, .07), transparent 28%),
-        linear-gradient(180deg, #ffffff 0%, #fff8f2 100%); */
-    border-top: 1px solid rgba(11, 31, 68, .08);
+    border-top: 1px solid rgba(31, 122, 99, .08);
 }
 
 .sf-footer-grid {
@@ -1495,7 +1492,7 @@ body.storefront-shell {
     justify-content: center;
     border-radius: 10px;
     border: 1px solid var(--sf-border);
-    color: #111827;
+    color: var(--sf-charcoal);
     text-decoration: none;
 }
 
@@ -1511,7 +1508,7 @@ body.storefront-shell {
 }
 
 .sf-footer-col a {
-    color: #4b5563;
+    color: var(--sf-muted);
     text-decoration: none;
     font-size: .95rem;
 }
@@ -1519,12 +1516,12 @@ body.storefront-shell {
 .sf-footer-bottom {
     margin-top: 28px;
     padding-top: 18px;
-    border-top: 1px solid rgba(11, 31, 68, .08);
+    border-top: 1px solid rgba(31, 122, 99, .08);
     display: flex;
     justify-content: space-between;
     gap: 16px;
     align-items: center;
-    color: #374151;
+    color: var(--sf-charcoal);
     font-size: .92rem;
 }
 
@@ -1916,7 +1913,7 @@ body.storefront-shell {
     --bs-primary: var(--sf-purple);
     --bs-primary-rgb: 31, 122, 99;
     --bs-link-color: var(--sf-purple);
-    --bs-link-hover-color: #17624f;
+    --bs-link-hover-color: var(--sf-purple);
 }
 
 .sf-topbar,
@@ -1992,17 +1989,17 @@ body.storefront-shell {
 .sf-card-add .btn:focus,
 .sf-card-plus button:hover,
 .sf-card-plus button:focus {
-    background: linear-gradient(135deg, var(--sf-pink), #ff9f5f);
+    background: var(--sf-pink);
     color: #fff;
 }
 
 .sf-hero-card-soft {
-    background: linear-gradient(135deg, rgba(163, 214, 92, .18) 0%, #f9f9f9 100%);
+    background: linear-gradient(135deg, rgba(163, 214, 92, .18) 0%, var(--sf-surface) 100%);
     border-color: rgba(31, 122, 99, .14);
 }
 
 .sf-hero-card-dark {
-    background: linear-gradient(135deg, #1f7a63 0%, #333333 100%);
+    background: linear-gradient(135deg, var(--sf-purple) 0%, var(--sf-charcoal) 100%);
 }
 
 .sf-footer {

@@ -7,7 +7,7 @@
     <title>{{ ($title ?? null) ? $title.' | ' : '' }}{{ config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.35.0/dist/tabler-icons.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -20,7 +20,7 @@
         <div class="container-fluid px-3 px-lg-4">
             <div class="sf-searchbar">
                 <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
-                    <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="sf-brand-logo">
+                    <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="sf-brand-logo">
                 </a>
 
                 <button class="sf-location-btn js-open-location" type="button">
@@ -135,7 +135,7 @@
             <div class="sf-footer-grid">
                 <div class="sf-footer-brand">
                     <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
-                        <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
+                        <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
                     </a>
                     <p class="sf-footer-address mb-3">
                         AMAZE FARMS LIMITED,<br>

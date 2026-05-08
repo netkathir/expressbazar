@@ -14,7 +14,7 @@
             <div class="col-12 col-md-8 col-lg-5">
                 <div class="card shell-card p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="mb-3" style="max-width: 250px; width: 100%; height: auto; object-fit: contain;">
+                        <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="mb-3" style="max-width: 250px; width: 100%; height: auto; object-fit: contain;">
                         <h1 class="mb-1" style="font-size: 16px;">Complete vendor setup</h1>
                         <p class="text-secondary mb-0">{{ $vendor->email }}</p>
                     </div>
