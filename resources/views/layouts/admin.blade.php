@@ -6,7 +6,7 @@
     <title>{{ ($title ?? null) ? $title.' | ' : '' }}{{ config('admin_panel.brand.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.35.0/dist/tabler-icons.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -22,6 +22,8 @@
         $isVendorPanel = $vendorUser !== null;
         $panelBrandName = $isVendorPanel ? 'Express Bazar Vendor' : config('admin_panel.brand.name');
         $panelNavigation = $isVendorPanel ? config('vendor_panel.navigation') : config('admin_panel.navigation');
+        $notificationType = $isVendorPanel ? \App\Notifications\VendorOrderNotification::class : \App\Notifications\LowStockNotification::class;
+        $notificationAlertsUrl = $isVendorPanel ? route('vendor.notification-alerts') : route('admin.notification-alerts');
     @endphp
     <div id="overlay" class="overlay"></div>
 
@@ -47,23 +49,27 @@
             @endunless
             @if ($panelUser)
                 @php
-                    $stockUnreadNotifications = \Illuminate\Support\Facades\Schema::hasTable('notifications')
-                        ? $panelUser->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->latest()->limit(5)->get()
+                    $panelUnreadNotifications = \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                        ? $panelUser->unreadNotifications()->where('type', $notificationType)->latest()->limit(5)->get()
                         : collect();
-                    $stockUnreadCount = \Illuminate\Support\Facades\Schema::hasTable('notifications')
-                        ? $panelUser->unreadNotifications()->where('type', \App\Notifications\LowStockNotification::class)->count()
+                    $panelUnreadCount = \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                        ? $panelUser->unreadNotifications()->where('type', $notificationType)->count()
                         : 0;
                 @endphp
                 <div class="dropdown">
                     <button class="btn btn-light btn-icon btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                         <i class="ti ti-bell"></i>
-                        <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $stockUnreadCount ? '' : 'd-none' }}">{{ $stockUnreadCount }}</span>
+                        <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $panelUnreadCount ? '' : 'd-none' }}">{{ $panelUnreadCount }}</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
                         <div class="small fw-semibold px-2 py-1">Notifications</div>
                         <div id="notification-list">
-                            @forelse ($stockUnreadNotifications as $note)
-                                <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
+                            @forelse ($panelUnreadNotifications as $note)
+                                @if ($isVendorPanel)
+                                    <a href="{{ route('vendor.notifications.read', $note->id) }}" class="dropdown-item small rounded-2 py-2">{{ $note->data['message'] ?? 'Order received' }}</a>
+                                @else
+                                    <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
+                                @endif
                             @empty
                                 <div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>
                             @endforelse
@@ -222,7 +228,7 @@
             setTimeout(close, 3000);
         })();
     </script>
-    @if (! $isVendorPanel && auth()->check())
+    @if ($panelUser)
         <script>
             (function () {
                 const countEl = document.getElementById('notification-count');
@@ -233,7 +239,7 @@
                 }
 
                 setInterval(function () {
-                    fetch('{{ route('admin.notification-alerts') }}', {
+                    fetch(@json($notificationAlertsUrl), {
                         headers: {
                             'Accept': 'application/json'
                         }
@@ -250,6 +256,14 @@
                             countEl.classList.toggle('d-none', data.count < 1);
                             listEl.innerHTML = data.items.length
                                 ? data.items.map(function (item) {
+                                    if (item.url) {
+                                        const link = document.createElement('a');
+                                        link.className = 'dropdown-item small rounded-2 py-2';
+                                        link.href = item.url;
+                                        link.textContent = item.message;
+                                        return link.outerHTML;
+                                    }
+
                                     const div = document.createElement('div');
                                     div.className = 'dropdown-item-text small text-secondary px-2 py-2';
                                     div.textContent = item.message;

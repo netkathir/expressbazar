@@ -2,6 +2,7 @@
 
 return [
     'no_products' => 'No products available',
+    'no_vendor_products' => 'No products available for the selected vendor',
     'no_vendors' => 'No vendors available in your area',
     'empty_cart' => 'Your cart is empty',
     'no_orders' => 'You have no orders yet',

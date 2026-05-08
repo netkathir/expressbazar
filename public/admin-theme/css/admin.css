@@ -1,8 +1,10 @@
 :root {
-    --admin-brand: #ff9a3d;
-    --admin-brand-rgb: 255, 154, 61;
-    --admin-brand-dark: #0b1f44;
-    --admin-brand-dark-rgb: 11, 31, 68;
+    --admin-brand: #ff8c42;
+    --admin-brand-rgb: 255, 140, 66;
+    --admin-brand-dark: #1f7a63;
+    --admin-brand-dark-rgb: 31, 122, 99;
+    --admin-brand-lime: #a3d65c;
+    --admin-charcoal: #333333;
     --admin-brand-soft: rgba(var(--admin-brand-rgb), .12);
     --admin-brand-soft-border: rgba(var(--admin-brand-rgb), .16);
     --admin-brand-soft-strong: rgba(var(--admin-brand-rgb), .18);
@@ -13,13 +15,13 @@
     --bs-primary: var(--admin-brand);
     --bs-primary-rgb: var(--admin-brand-rgb);
     --bs-link-color: var(--admin-brand);
-    --bs-link-hover-color: #e98218;
-    --admin-bg: #f6f7fb;
-    --admin-surface: #ffffff;
+    --bs-link-hover-color: #e8762d;
+    --admin-bg: #f9f9f9;
+    --admin-surface: #f9f9f9;
     --admin-border: #e5e7eb;
-    --admin-text: #1f2937;
+    --admin-text: #333333;
     --admin-muted: #6b7280;
-    --admin-sidebar: #ffffff;
+    --admin-sidebar: #f9f9f9;
 }
 
 html, body {
@@ -28,7 +30,7 @@ html, body {
 
 body.admin-shell {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(180deg, #f8fafc 0%, var(--admin-bg) 100%);
+    background: linear-gradient(180deg, #f9f9f9 0%, #f4faf2 100%);
     color: var(--admin-text);
 }
 
@@ -993,4 +995,85 @@ body.admin-shell {
     .admin-profile-toggle {
         gap: .35rem;
     }
+}
+
+.admin-shell {
+    --bs-body-color: var(--admin-charcoal);
+    --bs-primary: var(--admin-brand-dark);
+    --bs-primary-rgb: var(--admin-brand-dark-rgb);
+    --bs-link-color: var(--admin-brand-dark);
+    --bs-link-hover-color: #17624f;
+}
+
+.admin-shell main h1,
+.admin-shell main h2,
+.admin-page-title,
+.admin-profile-name,
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover,
+.admin-shell .btn-outline-primary,
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table td.fw-semibold,
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table .fw-semibold {
+    color: var(--admin-brand-dark);
+}
+
+.topbar,
+.logo-area,
+.sidebar,
+.hero-card,
+.soft-panel,
+.metric-card,
+.shell-card,
+.module-card,
+.soft-card,
+.admin-shell .dropdown-menu,
+.admin-shell .modal-content {
+    background-color: var(--admin-surface);
+}
+
+.badge-soft,
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: rgba(163, 214, 92, .22);
+    border-color: rgba(31, 122, 99, .14);
+}
+
+.hero-card {
+    background:
+        radial-gradient(circle at top right, rgba(163, 214, 92, .22), transparent 30%),
+        linear-gradient(135deg, rgba(249, 249, 249, .96), rgba(249, 249, 249, .88));
+}
+
+.info-list li::before,
+.workflow-list li::before {
+    background: var(--admin-brand);
+}
+
+.admin-shell main > .container-fluid > .shell-card > .table-responsive > .table thead {
+    background: linear-gradient(90deg, var(--admin-brand-dark), #17624f);
+}
+
+.admin-shell .btn-primary,
+.admin-shell .btn-danger {
+    background: var(--admin-brand-dark);
+    border-color: var(--admin-brand-dark);
+}
+
+.admin-shell .btn-primary:hover,
+.admin-shell .btn-primary:focus,
+.admin-shell .btn-danger:hover,
+.admin-shell .btn-danger:focus {
+    background: #17624f;
+    border-color: #17624f;
+}
+
+.admin-shell .btn-outline-danger {
+    color: var(--admin-brand);
+    border-color: rgba(255, 140, 66, .35);
+}
+
+.admin-shell .btn-outline-danger:hover,
+.admin-shell .btn-outline-danger:focus {
+    background: var(--admin-brand);
+    border-color: var(--admin-brand);
 }

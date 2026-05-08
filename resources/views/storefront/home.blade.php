@@ -10,10 +10,24 @@
         @php($isSearch = filled($search))
         @php($selectedVendorProducts = $selectedVendorProducts ?? collect())
         @php($showNoPincodeData = !empty($pincode ?? null) && !($hasPincodeProducts ?? true))
+        @php($availableVendors = $vendors ?? collect())
+        @php($topStatusMessage = null)
+        @if (!$isSearch && !empty($location ?? null) && $availableVendors->isEmpty())
+            @php($topStatusMessage = config('ui_messages.no_vendors'))
+        @elseif (!$isSearch && ($selectedVendor ?? null) && $selectedVendorProducts->isEmpty())
+            @php($topStatusMessage = config('ui_messages.no_vendor_products'))
+        @elseif (!$isSearch && $showNoPincodeData)
+            @php($topStatusMessage = config('ui_messages.no_products'))
+        @endif
         <section class="container-fluid px-3 px-lg-4 pt-0">
             <div class="sf-category-strip-header">
                 <div>
-                    <h2>Shop by categories</h2>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h2>Shop by categories</h2>
+                        <div class="sf-top-status js-storefront-status {{ $topStatusMessage ? '' : 'd-none' }}">
+                            {{ $topStatusMessage }}
+                        </div>
+                    </div>
                     <p>Find everything you need, all in one place.</p>
                 </div>
                 <a href="#all-categories">See all categories <i class="ti ti-chevron-right"></i></a>

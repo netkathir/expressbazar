@@ -32,6 +32,7 @@ use App\Http\Controllers\VendorSetupController;
 use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\Vendor\CouponController as VendorCouponController;
 use App\Http\Controllers\Vendor\OrderController as VendorOrderController;
+use App\Http\Controllers\Vendor\NotificationController as VendorNotificationController;
 use App\Http\Controllers\Vendor\PaymentController as VendorPaymentController;
 use App\Http\Controllers\Vendor\ProductController as VendorProductController;
 use App\Http\Controllers\Vendor\ReferenceModuleController as VendorReferenceModuleController;
@@ -164,6 +165,8 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::get('taxes', [VendorReferenceModuleController::class, 'taxes'])->name('taxes.index');
         Route::get('inventory', [VendorReferenceModuleController::class, 'inventory'])->name('inventory.index');
         Route::get('delivery', [VendorReferenceModuleController::class, 'delivery'])->name('delivery.index');
+        Route::get('notification-alerts', [VendorNotificationController::class, 'alerts'])->name('notification-alerts');
+        Route::get('notifications/{id}/read', [VendorNotificationController::class, 'read'])->name('notifications.read');
         Route::get('notifications', [VendorReferenceModuleController::class, 'notifications'])->name('notifications.index');
         Route::get('reports', [VendorReferenceModuleController::class, 'reports'])->name('reports.index');
         Route::resource('products', VendorProductController::class)->except(['show']);

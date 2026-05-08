@@ -15,6 +15,7 @@ const zoneSelect = document.querySelector('.js-zone-select');
 const vendorSelector = document.querySelector('.js-vendor-selector');
 const vendorList = document.querySelector('.js-vendor-list');
 const selectedVendorText = document.querySelector('.js-selected-vendor-text');
+const storefrontStatus = document.querySelector('.js-storefront-status');
 const guestCartKey = 'expressbazar.guestCart';
 const legacyGuestCartKey = 'guest_cart';
 const selectedVendorIdKey = 'expressbazar.selectedVendorId';
@@ -67,6 +68,16 @@ function clearGuestCartState() {
     }
 }
 
+function syncGuestCartState(state) {
+    const normalized = normalizeCartState(state);
+
+    if (normalized.length > 0) {
+        setGuestCartState(normalized);
+    } else {
+        clearGuestCartState();
+    }
+}
+
 function shouldMirrorGuestCart() {
     return config.currentUserRole !== 'customer';
 }
@@ -114,14 +125,18 @@ function updateCartUi(payload = {}) {
             el.textContent = String(payload.cartCount);
         });
         document.body.dataset.cartCount = String(payload.cartCount);
+
+        if (shouldMirrorGuestCart() && Number(payload.cartCount || 0) === 0) {
+            clearGuestCartState();
+        }
     }
 
     if (payload.drawerHtml && cartDrawerContent) {
         cartDrawerContent.innerHTML = payload.drawerHtml;
     }
 
-    if (payload.cartState && shouldMirrorGuestCart()) {
-        setGuestCartState(payload.cartState);
+    if (Array.isArray(payload.cartState) && shouldMirrorGuestCart()) {
+        syncGuestCartState(payload.cartState);
     }
 
     if (payload.locationLabel) {
@@ -141,6 +156,12 @@ function guestCartCount() {
 
 function hydrateGuestCartCount() {
     if (!shouldMirrorGuestCart() || Number(document.body.dataset.cartCount || 0) > 0) {
+        return;
+    }
+
+    if (Array.isArray(config.initialCartState) && config.initialCartState.length === 0) {
+        clearGuestCartState();
+        updateCartUi({ cartCount: 0 });
         return;
     }
 
@@ -262,6 +283,16 @@ function updateProductList(html) {
     if (productList && typeof html === 'string') {
         productList.innerHTML = html;
     }
+}
+
+function updateStorefrontStatus(message = '') {
+    if (!storefrontStatus) {
+        return;
+    }
+
+    const text = String(message || '').trim();
+    storefrontStatus.textContent = text;
+    storefrontStatus.classList.toggle('d-none', text === '');
 }
 
 function notificationMessage(notification) {
@@ -432,6 +463,7 @@ async function loadVendors() {
         if (!Array.isArray(vendors) || vendors.length === 0) {
             clearSelectedVendor();
             vendorList.innerHTML = '<li class="dropdown-item text-danger">No vendors available</li>';
+            updateStorefrontStatus(uiMessage('no_vendors', 'No vendors available in your area'));
             return;
         }
 
@@ -1022,7 +1054,7 @@ if (config.currentUserRole === 'customer' && config.guestCartMerged) {
 } else if (config.currentUserRole === 'customer') {
     mergeGuestCartIfNeeded().catch(() => {});
 } else if (Array.isArray(config.initialCartState) && config.initialCartState.length > 0) {
-    setGuestCartState(config.initialCartState);
+    syncGuestCartState(config.initialCartState);
 }
 
 hydrateGuestCartCount();
