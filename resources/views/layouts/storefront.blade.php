@@ -13,6 +13,8 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('storefront/css/storefront.css') }}">
+    <link rel="stylesheet" href="{{ asset('storefront/css/custom.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom-overrides.css') }}">
     @stack('head')
 </head>
 <body class="storefront-shell" data-cart-count="{{ $cartCount ?? 0 }}">

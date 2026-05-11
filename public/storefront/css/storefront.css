@@ -1209,26 +1209,55 @@ body.storefront-shell {
 
 .sf-hero-grid {
     display: grid;
-    grid-template-columns: 1.15fr .85fr;
-    gap: 14px;
+    grid-template-columns: 1.18fr .82fr;
+    gap: 18px;
 }
 
 .sf-hero-card {
-    border-radius: 22px;
-    padding: 22px;
-    min-height: 176px;
-    box-shadow: var(--sf-shadow);
+    border-radius: 18px;
+    padding: 28px 30px;
+    min-height: 250px;
+    box-shadow: 0 18px 44px rgba(31, 122, 99, .11);
     overflow: hidden;
+    position: relative;
+    isolation: isolate;
 }
 
 .sf-hero-card-soft {
-    background: linear-gradient(135deg, rgba(163, 214, 92, .14) 0%, var(--sf-surface) 100%);
-    border: 1px solid rgba(123, 44, 255, 0.1);
+    background:
+        linear-gradient(115deg, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, .9) 56%, rgba(163, 214, 92, .16) 100%),
+        repeating-linear-gradient(135deg, rgba(31, 122, 99, .06) 0 1px, transparent 1px 12px);
+    border: 1px solid rgba(31, 122, 99, .16);
 }
 
 .sf-hero-card-dark {
-    background: linear-gradient(135deg, var(--sf-purple) 0%, var(--sf-charcoal) 100%);
+    background:
+        linear-gradient(135deg, rgba(31, 122, 99, .98) 0%, rgba(31, 122, 99, .88) 48%, rgba(51, 51, 51, .98) 100%),
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 16px);
     color: #fff;
+}
+
+.sf-hero-card::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px solid currentColor;
+    border-radius: 14px;
+    opacity: .08;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.sf-hero-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 42%;
+    height: 100%;
+    background: linear-gradient(135deg, transparent 0 38%, rgba(255, 140, 66, .14) 38% 62%, transparent 62% 100%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .sf-kicker {
@@ -1243,35 +1272,55 @@ body.storefront-shell {
 
 .sf-hero-card h1,
 .sf-hero-card h2 {
-    margin-top: 8px;
+    margin-top: 12px;
     font-weight: 800;
     line-height: 1.08;
-    max-width: 16ch;
-    font-size: 1.75rem;
+    max-width: 17ch;
+    font-size: 2.15rem;
 }
 
 .sf-hero-card p {
     max-width: 52ch;
     margin-bottom: 0;
     color: inherit;
-    opacity: .9;
-    font-size: .9rem;
+    opacity: .86;
+    font-size: .98rem;
+    line-height: 1.6;
+}
+
+.sf-hero-card .btn {
+    min-height: 42px;
+    padding-inline: 22px;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.sf-hero-card .btn-dark {
+    background: var(--sf-charcoal);
+    border-color: var(--sf-charcoal);
+}
+
+.sf-hero-card .btn-outline-dark {
+    background: #fff;
+    border-color: rgba(31, 122, 99, .22);
 }
 
 .sf-hero-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
+    gap: 10px;
+    margin-top: 24px;
 }
 
 .sf-hero-pills span {
-    border: 1px solid rgba(255,255,255,.16);
-    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.24);
+    background: rgba(255,255,255,.11);
     color: #fff;
-    padding: 6px 10px;
+    padding: 7px 12px;
     border-radius: 999px;
-    font-size: .76rem;
+    font-size: .78rem;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
 }
 
 .sf-category-cloud {
@@ -2009,12 +2058,16 @@ body.storefront-shell {
 }
 
 .sf-hero-card-soft {
-    background: linear-gradient(135deg, rgba(163, 214, 92, .18) 0%, var(--sf-surface) 100%);
+    background:
+        linear-gradient(115deg, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, .9) 56%, rgba(163, 214, 92, .16) 100%),
+        repeating-linear-gradient(135deg, rgba(31, 122, 99, .06) 0 1px, transparent 1px 12px);
     border-color: rgba(31, 122, 99, .14);
 }
 
 .sf-hero-card-dark {
-    background: linear-gradient(135deg, var(--sf-purple) 0%, var(--sf-charcoal) 100%);
+    background:
+        linear-gradient(135deg, rgba(31, 122, 99, .98) 0%, rgba(31, 122, 99, .88) 48%, rgba(51, 51, 51, .98) 100%),
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 16px);
 }
 
 .sf-footer {

@@ -12,6 +12,7 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('admin-theme/css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom-overrides.css') }}">
 </head>
 <body class="admin-shell">
     <div class="container py-5">
