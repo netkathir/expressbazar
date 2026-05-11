@@ -197,14 +197,16 @@ document.querySelectorAll('form[data-dirty-check]').forEach((form) => {
         });
     });
 
-    window.addEventListener('beforeunload', (event) => {
-        if (!isDirty || isSubmitting || window.__adminBypassBeforeUnload) {
-            return;
-        }
+    if (form.dataset.skipBeforeunload === undefined) {
+        window.addEventListener('beforeunload', (event) => {
+            if (!isDirty || isSubmitting || window.__adminBypassBeforeUnload) {
+                return;
+            }
 
-        event.preventDefault();
-        event.returnValue = '';
-    });
+            event.preventDefault();
+            event.returnValue = '';
+        });
+    }
 });
 
 document.querySelectorAll('.alert.alert-success:not(.admin-flash-message), .alert.alert-danger:not(.admin-flash-message)').forEach((alert) => {

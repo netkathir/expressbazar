@@ -10,7 +10,7 @@
                 <a href="{{ route('admin.zones.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.zones.store') : route('admin.zones.update', $zone) }}" class="row g-3" data-dirty-check>
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.zones.store') : route('admin.zones.update', $zone) }}" class="row g-3" data-dirty-check data-zone-form>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -18,7 +18,7 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Country</label>
-                    <select name="country_id" class="form-select" required>
+                    <select name="country_id" class="form-select" required data-country-select>
                         <option value="">Select country</option>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected((string) old('country_id', $zone->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">City</label>
-                    <select name="city_id" class="form-select" required>
+                    <select name="city_id" class="form-select" required data-city-select data-selected-city="{{ old('city_id', $zone->city_id) }}">
                         <option value="">Select city</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}" @selected((string) old('city_id', $zone->city_id) === (string) $city->id)>{{ $city->city_name }}</option>
@@ -63,3 +63,69 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const form = document.querySelector('[data-zone-form]');
+            if (!form) {
+                return;
+            }
+
+            const countrySelect = form.querySelector('[data-country-select]');
+            const citySelect = form.querySelector('[data-city-select]');
+            const selectedCity = citySelect?.dataset.selectedCity || '';
+            const cities = @json($cities->map(fn ($city) => [
+                'id' => (string) $city->id,
+                'country_id' => (string) $city->country_id,
+                'city_name' => $city->city_name,
+            ])->values());
+
+            if (!countrySelect || !citySelect) {
+                return;
+            }
+
+            function appendPlaceholder(text) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = text;
+                citySelect.appendChild(option);
+            }
+
+            function populateCities(countryId, cityId = '') {
+                citySelect.innerHTML = '';
+
+                if (!countryId) {
+                    appendPlaceholder('Select country first');
+                    citySelect.value = '';
+                    citySelect.disabled = true;
+                    return;
+                }
+
+                const filteredCities = cities.filter(function (city) {
+                    return city.country_id === countryId;
+                });
+
+                appendPlaceholder(filteredCities.length ? 'Select city' : 'No cities available');
+
+                filteredCities.forEach(function (city) {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = city.city_name;
+                    citySelect.appendChild(option);
+                });
+
+                citySelect.disabled = false;
+                citySelect.value = filteredCities.some(function (city) {
+                    return city.id === cityId;
+                }) ? cityId : '';
+            }
+
+            populateCities(countrySelect.value, selectedCity);
+
+            countrySelect.addEventListener('change', function () {
+                populateCities(countrySelect.value);
+            });
+        })();
+    </script>
+@endpush

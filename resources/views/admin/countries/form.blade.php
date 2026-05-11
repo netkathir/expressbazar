@@ -47,7 +47,7 @@
                 <a href="{{ route('admin.countries.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.countries.store') : route('admin.countries.update', $country) }}" class="row g-3" data-dirty-check>
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.countries.store') : route('admin.countries.update', $country) }}" class="row g-3" data-dirty-check data-skip-beforeunload>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -57,18 +57,27 @@
                     <label class="form-label">Country Name</label>
                     <select name="country_name" id="country_name" class="form-control" required>
                         <option value=""></option>
+                        @if (old('country_name', $country->country_name))
+                            <option value="{{ old('country_name', $country->country_name) }}" data-code="{{ old('country_code', $country->country_code) }}" data-currency="{{ old('currency', $country->currency) }}" selected>{{ old('country_name', $country->country_name) }}</option>
+                        @endif
                     </select>
                 </div>
                 <div class="col-md-3 d-none">
                     <label class="form-label">Country Code</label>
                     <select name="country_code" id="country_code" class="form-control text-uppercase" required>
                         <option value=""></option>
+                        @if (old('country_code', $country->country_code))
+                            <option value="{{ old('country_code', $country->country_code) }}" data-name="{{ old('country_name', $country->country_name) }}" selected>{{ old('country_code', $country->country_code) }}</option>
+                        @endif
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Currency</label>
                     <select name="currency" id="currency" class="form-control text-uppercase" required>
                         <option value=""></option>
+                        @if (old('currency', $country->currency))
+                            <option value="{{ old('currency', $country->currency) }}" selected>{{ old('currency', $country->currency) }}</option>
+                        @endif
                     </select>
                 </div>
                 <div class="col-md-6">
@@ -397,6 +406,9 @@
             function appendCountry(country) {
                 if (country.name && !$countryName.find(`option[value="${escapeSelector(country.name)}"]`).length) {
                     $countryName.append(new Option(country.name, country.name, false, false));
+                }
+
+                if (country.name) {
                     $countryName.find(`option[value="${escapeSelector(country.name)}"]`)
                         .attr('data-code', country.code || '')
                         .attr('data-currency', country.currency || countryCurrencies[country.name] || '');
@@ -404,6 +416,9 @@
 
                 if (country.code && !$countryCode.find(`option[value="${escapeSelector(country.code)}"]`).length) {
                     $countryCode.append(new Option(country.code, country.code, false, false));
+                }
+
+                if (country.code) {
                     $countryCode.find(`option[value="${escapeSelector(country.code)}"]`).attr('data-name', country.name || '');
                 }
             }

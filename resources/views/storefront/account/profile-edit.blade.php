@@ -42,7 +42,7 @@
                             </div>
 
                             <div class="col-12 d-grid d-md-flex justify-content-md-end gap-2 pt-2">
-                                <a href="{{ route('storefront.account') }}" class="btn btn-light rounded-pill px-4">Cancel</a>
+                                <a href="{{ route('storefront.account') }}" class="btn btn-light rounded-pill px-4 js-profile-cancel">Cancel</a>
                                 <button class="btn btn-danger rounded-pill px-4">Save Changes</button>
                             </div>
                         </form>
@@ -50,5 +50,40 @@
                 </div>
             </div>
         </section>
+
+        <div class="modal fade" id="profileCancelModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0">
+                    <div class="modal-header border-0 pb-0">
+                        <div>
+                            <h5 class="modal-title fw-bold">Cancel profile changes?</h5>
+                            <div class="text-secondary small">Any unsaved profile changes will be lost.</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Keep Editing</button>
+                            <a href="{{ route('storefront.account') }}" class="btn btn-danger rounded-pill px-4">Cancel Changes</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 @endsection
+
+@push('scripts')
+    <script>
+        document.querySelector('.js-profile-cancel')?.addEventListener('click', function (event) {
+            const modalEl = document.getElementById('profileCancelModal');
+
+            if (!modalEl || !window.bootstrap) {
+                return;
+            }
+
+            event.preventDefault();
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        });
+    </script>
+@endpush

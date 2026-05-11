@@ -15,14 +15,20 @@
                             <h3 class="mb-3">Delivery Address</h3>
                             @forelse ($addresses as $address)
                                 @php($deliveryCharge = (float) ($deliveryChargeByAddress[$address->id] ?? 0))
-                                <label class="sf-sidepanel p-3 mb-3 d-block js-checkout-address" data-delivery-charge="{{ $deliveryCharge }}" data-address-id="{{ $address->id }}">
+                                @php($isSelectedAddress = (int) $selectedAddressId === (int) $address->id)
+                                <label
+                                    class="sf-sidepanel p-3 mb-3 d-block js-checkout-address {{ $loop->index >= 3 && ! $isSelectedAddress ? 'd-none' : '' }}"
+                                    data-delivery-charge="{{ $deliveryCharge }}"
+                                    data-address-id="{{ $address->id }}"
+                                    data-extra-address="{{ $loop->index >= 3 && ! $isSelectedAddress ? 'true' : 'false' }}"
+                                >
                                     <div class="d-flex gap-2 align-items-start">
                                         <input
                                             type="radio"
                                             name="address_id"
                                             value="{{ $address->id }}"
                                             class="mt-1"
-                                            {{ (int) $selectedAddressId === (int) $address->id ? 'checked' : '' }}
+                                            {{ $isSelectedAddress ? 'checked' : '' }}
                                             required
                                         >
                                         <div>
@@ -36,6 +42,11 @@
                             @empty
                                 <div class="sf-empty-state mb-3">No saved address yet. Add one from My Account.</div>
                             @endforelse
+                            @if ($addresses->count() > 3)
+                                <button type="button" class="btn btn-light rounded-pill px-4 mb-3 js-toggle-checkout-addresses" data-expanded="false">
+                                    View more addresses
+                                </button>
+                            @endif
                             <a href="{{ route('storefront.account') }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
                         </div>
 
@@ -149,6 +160,7 @@
     <script>
         window.checkoutDeliveryCharges = @json($deliveryChargeByAddress ?? []);
         const checkoutSubmit = document.getElementById('checkoutSubmit');
+        const addressToggle = document.querySelector('.js-toggle-checkout-addresses');
 
         document.addEventListener('change', (event) => {
             const radio = event.target.closest('input[name="address_id"]');
@@ -183,5 +195,16 @@
         if (activePaymentMethod && checkoutSubmit) {
             checkoutSubmit.textContent = activePaymentMethod.value === 'online' ? 'Pay Now' : 'Place Order';
         }
+
+        addressToggle?.addEventListener('click', () => {
+            const isExpanded = addressToggle.dataset.expanded === 'true';
+
+            document.querySelectorAll('[data-extra-address="true"]').forEach((address) => {
+                address.classList.toggle('d-none', isExpanded);
+            });
+
+            addressToggle.dataset.expanded = isExpanded ? 'false' : 'true';
+            addressToggle.textContent = isExpanded ? 'View more addresses' : 'View fewer addresses';
+        });
     </script>
 @endpush

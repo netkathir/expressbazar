@@ -8,10 +8,10 @@ const locationModalEl = document.getElementById('locationModal');
 const locationModal = locationModalEl ? new bootstrap.Modal(locationModalEl) : null;
 const checkoutAuthModalEl = document.getElementById('checkoutAuthModal');
 const checkoutAuthModal = checkoutAuthModalEl ? new bootstrap.Modal(checkoutAuthModalEl) : null;
-const locationForm = document.querySelector('.js-location-form');
-const countrySelect = document.querySelector('.js-country-select');
-const citySelect = document.querySelector('.js-city-select');
-const zoneSelect = document.querySelector('.js-zone-select');
+const locationForm = locationModalEl?.querySelector('.js-location-form') || document.querySelector('.js-location-form');
+const countrySelect = locationForm?.querySelector('.js-country-select') || null;
+const citySelect = locationForm?.querySelector('.js-city-select') || null;
+const zoneSelect = locationForm?.querySelector('.js-zone-select') || null;
 const vendorSelector = document.querySelector('.js-vendor-selector');
 const vendorList = document.querySelector('.js-vendor-list');
 const selectedVendorText = document.querySelector('.js-selected-vendor-text');
@@ -576,8 +576,8 @@ async function mergeGuestCartIfNeeded() {
     }
 }
 
-async function loadCities(countryId, selectedCityId = null) {
-    if (!countryId || !citySelect) {
+async function loadCities(countryId, selectedCityId = null, targetCitySelect = citySelect) {
+    if (!countryId || !targetCitySelect) {
         return;
     }
 
@@ -592,7 +592,7 @@ async function loadCities(countryId, selectedCityId = null) {
         showError(error.message);
     }
 
-    citySelect.innerHTML = '<option value="">Choose city</option>';
+    targetCitySelect.innerHTML = '<option value="">Choose city</option>';
     cities.forEach((city) => {
         const option = document.createElement('option');
         option.value = city.id;
@@ -600,12 +600,12 @@ async function loadCities(countryId, selectedCityId = null) {
         if (String(city.id) === String(selectedCityId)) {
             option.selected = true;
         }
-        citySelect.appendChild(option);
+        targetCitySelect.appendChild(option);
     });
 }
 
-async function loadZones(cityId, selectedZoneId = null) {
-    if (!cityId || !zoneSelect) {
+async function loadZones(cityId, selectedZoneId = null, targetZoneSelect = zoneSelect) {
+    if (!cityId || !targetZoneSelect) {
         return;
     }
 
@@ -620,7 +620,7 @@ async function loadZones(cityId, selectedZoneId = null) {
         showError(error.message);
     }
 
-    zoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
+    targetZoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
     zones.forEach((zone) => {
         const option = document.createElement('option');
         option.value = zone.id;
@@ -628,7 +628,7 @@ async function loadZones(cityId, selectedZoneId = null) {
         if (String(zone.id) === String(selectedZoneId)) {
             option.selected = true;
         }
-        zoneSelect.appendChild(option);
+        targetZoneSelect.appendChild(option);
     });
 }
 
@@ -942,6 +942,45 @@ citySelect?.addEventListener('change', async () => {
         return;
     }
     await loadZones(cityId);
+});
+
+document.querySelectorAll('.js-country-select').forEach((select) => {
+    if (select === countrySelect) {
+        return;
+    }
+
+    const form = select.closest('form');
+    const relatedCitySelect = form?.querySelector('.js-city-select');
+    const relatedZoneSelect = form?.querySelector('.js-zone-select');
+
+    select.addEventListener('change', async () => {
+        const countryId = select.value;
+        if (!countryId) {
+            if (relatedCitySelect) {
+                relatedCitySelect.innerHTML = '<option value="">Choose city</option>';
+            }
+            if (relatedZoneSelect) {
+                relatedZoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
+            }
+            return;
+        }
+
+        if (relatedZoneSelect) {
+            relatedZoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
+        }
+        await loadCities(countryId, null, relatedCitySelect);
+    });
+
+    relatedCitySelect?.addEventListener('change', async () => {
+        const cityId = relatedCitySelect.value;
+        if (!cityId) {
+            if (relatedZoneSelect) {
+                relatedZoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
+            }
+            return;
+        }
+        await loadZones(cityId, null, relatedZoneSelect);
+    });
 });
 
 document.querySelectorAll('.js-open-location').forEach((button) => {

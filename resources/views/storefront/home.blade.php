@@ -110,24 +110,6 @@
         </section>
         @endif
 
-        @if (!$isSearch && ($banners ?? collect())->isNotEmpty())
-            <section class="container-fluid px-3 px-lg-4 mt-4">
-                <div class="sf-banner-grid">
-                    @foreach ($banners as $banner)
-                        <a href="{{ $banner->link_url ?: '#' }}" class="sf-banner-card" style="background-image: linear-gradient(135deg, rgba(0,0,0,.25), rgba(0,0,0,.1)), url('{{ asset($banner->image_path) }}');">
-                            <div class="sf-banner-copy">
-                                <span class="sf-kicker text-white-50">Featured</span>
-                                <h2>{{ $banner->title }}</h2>
-                                @if ($banner->subtitle)
-                                    <p>{{ $banner->subtitle }}</p>
-                                @endif
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </section>
-        @endif
-
         @if (!$isSearch && $showNoPincodeData)
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <x-empty-state>{{ config('ui_messages.no_products') }}</x-empty-state>
@@ -208,6 +190,24 @@
                     </div>
                 @endforeach
             </section>
+
+            @if (($banners ?? collect())->isNotEmpty())
+                <section class="container-fluid px-3 px-lg-4 mt-4">
+                    <div class="sf-banner-grid">
+                        @foreach ($banners as $banner)
+                            <a href="{{ $banner->link_url ?: '#' }}" class="sf-banner-card" style="background-image: linear-gradient(135deg, rgba(0,0,0,.25), rgba(0,0,0,.1)), url('{{ asset($banner->image_path) }}');">
+                                <div class="sf-banner-copy">
+                                    <span class="sf-kicker text-white-50">Featured</span>
+                                    <h2>{{ $banner->title }}</h2>
+                                    @if ($banner->subtitle)
+                                        <p>{{ $banner->subtitle }}</p>
+                                    @endif
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
         @endif
 
         <section class="container-fluid px-3 px-lg-4 mt-5">
