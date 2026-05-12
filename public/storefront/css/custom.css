@@ -111,15 +111,35 @@
 }
 
 .sf-search-form {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
     height: 38px;
     max-width: 380px;
     width: 100%;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border-color: rgba(31, 122, 99, .18);
+}
+
+.sf-search-form > i {
+    width: 46px;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(31, 122, 99, .045);
+    color: var(--sf-charcoal);
+    font-size: 1.05rem;
 }
 
 .sf-search-form input {
     height: 100%;
+    min-width: 0;
     font-size: 14px;
-    padding: 8px 0;
+    padding: 8px 16px;
+    background: transparent;
 }
 
 .storefront-shell .modal .form-select {
@@ -164,12 +184,17 @@
         radial-gradient(circle at 82% 16%, rgba(255, 140, 66, .16), transparent 28%);
     padding: 18px;
     box-shadow: none;
+    align-items: stretch;
 }
 
 .sf-hero-card {
-    min-height: 286px;
+    min-height: 260px;
     border-radius: 26px;
     box-shadow: 0 22px 52px rgba(31, 122, 99, .13);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 30px 34px;
 }
 
 .sf-hero-card-soft {
@@ -225,6 +250,17 @@
 .sf-hero-card h1,
 .sf-hero-card h2 {
     max-width: 19ch;
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.sf-hero-card p {
+    max-width: 46ch;
+}
+
+.sf-hero-card .d-flex,
+.sf-hero-pills {
+    margin-top: 18px !important;
 }
 
 .sf-hero-pills span {
@@ -322,6 +358,7 @@
 
     .sf-hero-card {
         min-height: 260px;
+        padding: 24px 22px;
     }
 
     .sf-hero-card-dark {

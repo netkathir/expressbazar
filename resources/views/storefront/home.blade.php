@@ -116,13 +116,16 @@
             </section>
         @elseif (!$isSearch)
             @if (($discountedProducts ?? collect())->isNotEmpty())
+                @php($topOfferCategory = $discountedProducts->first()?->category ?? $categories->first())
                 <section class="container-fluid px-3 px-lg-4 mt-4">
                     <div class="sf-section-header">
                         <div>
                             <h3>Top offers today</h3>
                             <p class="text-secondary mb-0">Discounted products picked from the live sample catalog.</p>
                         </div>
-                        <a href="{{ route('storefront.category', array_merge(['category' => $categories->first()], $filterQuery)) }}">See all</a>
+                        @if ($topOfferCategory)
+                            <a href="{{ route('storefront.category', array_merge(['category' => $topOfferCategory], $filterQuery)) }}">See all</a>
+                        @endif
                     </div>
                     <div class="sf-rail-wrap">
                         <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll offers left">
@@ -146,6 +149,7 @@
                         <h3>Trending near you</h3>
                         <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'Browse popular products' : 'Showing results near '.$locationLabel }}</p>
                     </div>
+                    <a href="#featured-sections">See more</a>
                 </div>
                 <div class="sf-rail-wrap">
                     <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll trending products left">
