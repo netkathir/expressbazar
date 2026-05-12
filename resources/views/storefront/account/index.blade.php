@@ -68,7 +68,6 @@
                                             <div class="small text-secondary">By: {{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
                                             <div class="sf-recent-order-details">
                                                 <span>Qty: {{ $firstItem?->quantity ?? 0 }}</span>
-                                                <strong>&#8377;{{ number_format((float) ($firstItem?->price ?? $order->total_amount), 0) }}</strong>
                                             </div>
                                             </div>
                                         </div>
