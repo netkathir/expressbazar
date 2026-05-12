@@ -83,13 +83,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <form action="{{ route('storefront.logout') }}" method="POST" class="d-inline js-logout-form">
-                                @csrf
-                                <button type="submit" class="sf-action-link">
-                                    <i class="ti ti-logout"></i>
-                                    <span>Logout</span>
-                                </button>
-                            </form>
                         @else
                             <a href="{{ route('admin.dashboard') }}" class="sf-action-link">
                                 <i class="ti ti-shield-lock"></i>

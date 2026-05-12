@@ -8,7 +8,15 @@
                     <div class="sf-info-card">
                         <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
                             <h3 class="mb-0">My Account</h3>
-                            <a href="{{ route('storefront.profile.edit') }}" class="btn btn-outline-dark rounded-pill btn-sm">Edit Profile</a>
+                            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                <a href="{{ route('storefront.profile.edit') }}" class="btn btn-outline-dark rounded-pill btn-sm">Edit Profile</a>
+                                <form action="{{ route('storefront.logout') }}" method="POST" class="d-inline js-logout-form">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger rounded-pill btn-sm">
+                                        <i class="ti ti-logout me-1"></i>Logout
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                         <dl class="sf-specs">
                             <dt>Name</dt><dd>{{ $user->name }}</dd>

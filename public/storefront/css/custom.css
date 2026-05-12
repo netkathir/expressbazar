@@ -100,7 +100,7 @@
 }
 
 .sf-location-btn {
-    max-width: 220px;
+    max-width: 190px;
     overflow: hidden;
 }
 
@@ -156,8 +156,9 @@
 
 @media (min-width: 992px) {
     .sf-searchbar {
-        grid-template-columns: minmax(360px, 400px) minmax(24px, 1fr) minmax(190px, 220px) minmax(150px, 190px) minmax(250px, 340px) max-content;
+        grid-template-columns: minmax(260px, 360px) minmax(140px, 190px) minmax(130px, 170px) minmax(220px, 320px) max-content minmax(0, 1fr);
         gap: 10px;
+        justify-content: start;
     }
 
     .sf-logo {
@@ -166,26 +167,28 @@
     }
 
     .sf-location-btn {
-        grid-column: 3;
+        grid-column: 2;
         justify-self: stretch;
         margin-right: 0;
         width: 100%;
+        padding-inline: 14px;
     }
 
     .sf-vendor-selector {
-        grid-column: 4;
+        grid-column: 3;
         width: 100%;
     }
 
     .sf-search-form {
-        grid-column: 5;
-        max-width: 340px;
+        grid-column: 4;
+        max-width: 320px;
     }
 
     .sf-actions {
-        grid-column: 6;
+        grid-column: 5;
         flex-wrap: nowrap;
         min-width: max-content;
+        justify-self: start;
     }
 
     .sf-action-link {
@@ -194,8 +197,8 @@
     }
 
     .sf-vendor-selector.d-none + .sf-search-form {
-        grid-column: 4 / 6;
-        max-width: 360px;
+        grid-column: 3 / 5;
+        max-width: 340px;
         justify-self: start;
     }
 }
