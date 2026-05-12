@@ -2,22 +2,28 @@
 input::placeholder,
 textarea::placeholder,
 select::placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
     opacity: .85;
 }
 
 input::-webkit-input-placeholder,
 textarea::-webkit-input-placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
 }
 
 input::-moz-placeholder,
 textarea::-moz-placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
 }
 
 input:-ms-input-placeholder,
 textarea:-ms-input-placeholder {
+    font-size: 10px !important;
+}
+
+.admin-shell .form-select,
+.admin-shell .select-field-placeholder,
+.storefront-shell .modal .form-select {
     font-size: 12px !important;
 }
 
@@ -51,7 +57,7 @@ textarea:-ms-input-placeholder {
     input::placeholder,
     textarea::placeholder,
     select::placeholder {
-        font-size: 11px !important;
+        font-size: 9px !important;
     }
 
     .subtitle,

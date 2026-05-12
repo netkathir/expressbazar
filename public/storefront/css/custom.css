@@ -1,23 +1,23 @@
 /* Non-breaking storefront UI refinements */
 .storefront-shell input::placeholder,
 .storefront-shell textarea::placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
     opacity: .8;
 }
 
 .storefront-shell input::-webkit-input-placeholder,
 .storefront-shell textarea::-webkit-input-placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
 }
 
 .storefront-shell input::-moz-placeholder,
 .storefront-shell textarea::-moz-placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
 }
 
 .storefront-shell input:-ms-input-placeholder,
 .storefront-shell textarea:-ms-input-placeholder {
-    font-size: 12px !important;
+    font-size: 10px !important;
 }
 
 .storefront-shell .subtitle,
@@ -121,6 +121,10 @@
     padding: 8px 0;
 }
 
+.storefront-shell .modal .form-select {
+    font-size: 12px;
+}
+
 @media (min-width: 992px) {
     .sf-searchbar {
         grid-template-columns: auto minmax(32px, 1fr) auto minmax(120px, auto) minmax(240px, 340px) auto;
@@ -175,7 +179,7 @@
 @media (max-width: 768px) {
     .storefront-shell input::placeholder,
     .storefront-shell textarea::placeholder {
-        font-size: 11px !important;
+        font-size: 9px !important;
     }
 
     .storefront-shell .subtitle,
