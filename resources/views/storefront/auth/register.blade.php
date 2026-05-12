@@ -34,11 +34,12 @@
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="password" name="password" class="form-control" id="customer-register-password" required>
+                                    <input type="password" name="password" class="form-control" id="customer-register-password" maxlength="8" required>
                                     <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-register-password" aria-label="Show password">
                                         <i class="ti ti-eye"></i>
                                     </button>
                                 </div>
+                                <small class="text-danger d-block mt-1">Maximum 8 characters</small>
                                 @error('password')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
@@ -46,7 +47,7 @@
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Confirm password <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="password" name="password_confirmation" class="form-control" id="customer-register-password-confirmation" required>
+                                    <input type="password" name="password_confirmation" class="form-control" id="customer-register-password-confirmation" maxlength="8" required>
                                     <button class="btn btn-outline-secondary js-password-toggle" type="button" data-target="customer-register-password-confirmation" aria-label="Show password">
                                         <i class="ti ti-eye"></i>
                                     </button>

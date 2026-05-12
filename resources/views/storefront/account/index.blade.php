@@ -119,7 +119,7 @@
 
                     <div class="sf-info-card">
                         <h4 class="mb-3">Add address</h4>
-                        <form method="POST" action="{{ route('storefront.addresses.store') }}" class="row g-3">
+                        <form method="POST" action="{{ route('storefront.addresses.store') }}" class="row g-3 sf-address-form">
                             @csrf
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Label</label>

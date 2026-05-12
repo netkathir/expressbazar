@@ -14,7 +14,7 @@
                             <a href="{{ route('storefront.account') }}" class="btn btn-outline-dark rounded-pill btn-sm">Back to Account</a>
                         </div>
 
-                        <form method="POST" action="{{ route('storefront.addresses.update', $address) }}" class="row g-3">
+                        <form method="POST" action="{{ route('storefront.addresses.update', $address) }}" class="row g-3 sf-address-form">
                             @csrf
                             @method('PUT')
 
