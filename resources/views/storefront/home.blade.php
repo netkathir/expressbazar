@@ -250,7 +250,6 @@
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
                     <div>
                         <h4 class="mb-1">Categories</h4>
-                        <p class="text-secondary mb-0">A Zepto-style quick commerce landing page for category-first shopping.</p>
                     </div>
                 </div>
                 <div class="sf-category-cloud">
