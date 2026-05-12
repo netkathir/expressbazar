@@ -20,6 +20,24 @@ let pendingDeleteForm = null;
 let pendingBackLink = null;
 window.__adminBypassBeforeUnload = false;
 
+const hideAdminPageLoader = () => {
+    const loader = document.querySelector('.admin-page-loader');
+    if (!loader) {
+        return;
+    }
+
+    window.setTimeout(() => {
+        loader.classList.add('is-hidden');
+        window.setTimeout(() => loader.remove(), 300);
+    }, 450);
+};
+
+if (document.readyState === 'complete') {
+    hideAdminPageLoader();
+} else {
+    window.addEventListener('load', hideAdminPageLoader, { once: true });
+}
+
 const setDesktopSidebarState = (collapsed) => {
     sidebar?.classList.toggle('collapsed', collapsed);
     content?.classList.toggle('full', collapsed);

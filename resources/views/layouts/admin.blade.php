@@ -16,6 +16,13 @@
     @stack('head')
 </head>
 <body class="admin-shell">
+    <div class="admin-page-loader" role="status" aria-live="polite" aria-label="Loading admin page">
+        <div class="admin-page-loader-card">
+            <img src="{{ asset('favicon.png') }}" alt="" class="admin-page-loader-logo">
+            <span class="admin-page-loader-spinner"></span>
+        </div>
+    </div>
+
     @php
         $vendorUser = auth('vendor')->user();
         $adminUser = auth()->user();
