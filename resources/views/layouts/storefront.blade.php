@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ ($title ?? null) ? $title.' | ' : '' }}{{ config('app.name') }}</title>
+    <title>{{ $title ?? 'Express Bazaar' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,6 +18,13 @@
     @stack('head')
 </head>
 <body class="storefront-shell" data-cart-count="{{ $cartCount ?? 0 }}">
+    <div class="sf-page-loader" role="status" aria-live="polite" aria-label="Loading">
+        <div class="sf-page-loader-card">
+            <img src="{{ asset('favicon.png') }}" alt="" class="sf-page-loader-logo">
+            <span class="sf-page-loader-spinner"></span>
+        </div>
+    </div>
+
     <header class="sf-topbar sticky-top">
         <div class="container-fluid px-3 px-lg-4">
             <div class="sf-searchbar">

@@ -31,6 +31,54 @@
     line-height: 1.4;
 }
 
+.sf-page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: grid;
+    place-items: center;
+    background: rgba(249, 249, 249, .94);
+    transition: opacity .25s ease, visibility .25s ease;
+}
+
+.sf-page-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.sf-page-loader-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid rgba(31, 122, 99, .14);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(31, 122, 99, .12);
+}
+
+.sf-page-loader-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+}
+
+.sf-page-loader-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(31, 122, 99, .16);
+    border-top-color: var(--sf-purple);
+    border-radius: 50%;
+    animation: sf-loader-spin .75s linear infinite;
+}
+
+@keyframes sf-loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .sf-searchbar {
     align-items: center;
 }
@@ -50,9 +98,20 @@
     object-fit: contain;
 }
 
+.sf-location-btn {
+    max-width: 220px;
+    overflow: hidden;
+}
+
+.sf-location-btn .js-location-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .sf-search-form {
-    height: 42px;
-    max-width: 450px;
+    height: 38px;
+    max-width: 380px;
     width: 100%;
 }
 
@@ -60,6 +119,42 @@
     height: 100%;
     font-size: 14px;
     padding: 8px 0;
+}
+
+@media (min-width: 992px) {
+    .sf-searchbar {
+        grid-template-columns: auto minmax(32px, 1fr) auto minmax(120px, auto) minmax(240px, 340px) auto;
+        gap: 9px;
+    }
+
+    .sf-logo {
+        grid-column: 1;
+    }
+
+    .sf-location-btn {
+        grid-column: 3;
+        justify-self: end;
+        margin-right: 8px;
+    }
+
+    .sf-vendor-selector {
+        grid-column: 4;
+    }
+
+    .sf-search-form {
+        grid-column: 5;
+        max-width: 340px;
+    }
+
+    .sf-actions {
+        grid-column: 6;
+    }
+
+    .sf-vendor-selector.d-none + .sf-search-form {
+        grid-column: 4 / 6;
+        max-width: 360px;
+        justify-self: start;
+    }
 }
 
 @media (max-width: 991.98px) {

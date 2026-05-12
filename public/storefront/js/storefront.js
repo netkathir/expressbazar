@@ -22,6 +22,24 @@ const selectedVendorIdKey = 'expressbazar.selectedVendorId';
 const selectedVendorNameKey = 'expressbazar.selectedVendorName';
 window.storefrontAjaxFilters = true;
 
+function hidePageLoader() {
+    const loader = document.querySelector('.sf-page-loader');
+    if (!loader) {
+        return;
+    }
+
+    window.setTimeout(() => {
+        loader.classList.add('is-hidden');
+        window.setTimeout(() => loader.remove(), 300);
+    }, 450);
+}
+
+if (document.readyState === 'complete') {
+    hidePageLoader();
+} else {
+    window.addEventListener('load', hidePageLoader, { once: true });
+}
+
 function uiMessage(key, fallback) {
     return config.uiMessages?.[key] || fallback;
 }
