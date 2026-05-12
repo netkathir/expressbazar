@@ -149,7 +149,7 @@
                         <h3>Trending near you</h3>
                         <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'Browse popular products' : 'Showing results near '.$locationLabel }}</p>
                     </div>
-                    <a href="#featured-sections">See more</a>
+                    <a href="#featured-sections">See all</a>
                 </div>
                 <div class="sf-rail-wrap">
                     <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll trending products left">

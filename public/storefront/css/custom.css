@@ -79,6 +79,10 @@
     }
 }
 
+#all-categories {
+    scroll-margin-top: 120px;
+}
+
 .sf-searchbar {
     align-items: center;
 }
@@ -318,6 +322,10 @@
 }
 
 @media (max-width: 991.98px) {
+    #all-categories {
+        scroll-margin-top: 180px;
+    }
+
     .sf-topbar .container-fluid {
         padding-left: .75rem !important;
     }

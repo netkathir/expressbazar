@@ -449,6 +449,7 @@ function vendorFilterUrl(vendorId) {
 function reloadWithoutVendorFilter() {
     const url = new URL(window.location.href);
     url.searchParams.delete('vendor_id');
+    url.hash = '';
     window.location.href = url.toString();
 }
 
