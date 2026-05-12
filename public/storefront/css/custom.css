@@ -89,6 +89,7 @@
 
 .sf-logo {
     margin-left: 0;
+    min-width: 0;
 }
 
 .sf-brand-logo {
@@ -149,20 +150,26 @@
     font-size: 12px;
 }
 
+.js-checkout-address > .required-symbol {
+    display: none;
+}
+
 @media (min-width: 992px) {
     .sf-searchbar {
-        grid-template-columns: auto minmax(32px, 1fr) auto minmax(120px, auto) minmax(240px, 340px) auto;
-        gap: 9px;
+        grid-template-columns: minmax(300px, 360px) minmax(24px, 1fr) minmax(190px, 220px) minmax(120px, auto) minmax(240px, 340px) auto;
+        gap: 12px;
     }
 
     .sf-logo {
         grid-column: 1;
+        overflow: hidden;
     }
 
     .sf-location-btn {
         grid-column: 3;
-        justify-self: end;
-        margin-right: 8px;
+        justify-self: stretch;
+        margin-right: 0;
+        width: 100%;
     }
 
     .sf-vendor-selector {

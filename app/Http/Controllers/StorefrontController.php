@@ -1431,7 +1431,7 @@ class StorefrontController extends Controller
     {
         $items = $this->cartItems();
         $itemTotal = $items->sum('subtotal');
-        $delivery = $deliveryCharge ?? 0;
+        $delivery = $deliveryCharge ?? $this->cartDeliveryCharge();
         $vendorId = $this->cartVendorId();
         $coupon = $this->validCouponForCart((float) $itemTotal, $vendorId);
         $discount = $coupon ? $this->couponDiscount($coupon, (float) $itemTotal) : 0.0;
@@ -1447,6 +1447,28 @@ class StorefrontController extends Controller
                 'value' => (float) $coupon->value,
             ] : null,
         ];
+    }
+
+    private function cartDeliveryCharge(): float
+    {
+        $user = request()?->user();
+
+        if (! $user || $user->role !== 'customer') {
+            return 0.0;
+        }
+
+        $address = CustomerAddress::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->orderByDesc('is_default')
+            ->latest()
+            ->first();
+
+        if (! $address?->zone_id) {
+            return 0.0;
+        }
+
+        return $this->deliveryChargeForZone($address->zone_id) ?? 0.0;
     }
 
     private function validCouponForCart(float $itemTotal, ?int $vendorId): ?Coupon
