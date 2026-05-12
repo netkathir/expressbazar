@@ -71,8 +71,8 @@
                                 </span>
                             </a>
                             <div class="dropdown">
-                                <button class="sf-action-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
-                                    <i class="ti ti-bell"></i>
+                                <button class="sf-action-link sf-alert-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                                    <i class="ti ti-bell-filled" aria-hidden="true"></i>
                                     <span>Alerts</span>
                                     <span id="notification-count" class="sf-cart-badge js-notification-count d-none">0</span>
                                 </button>
