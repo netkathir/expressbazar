@@ -1014,3 +1014,66 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Keep the desktop header controls on a single, non-overlapping row. */
+@media (min-width: 992px) {
+    .sf-searchbar {
+        grid-template-columns: clamp(220px, 18vw, 340px) minmax(0, 1fr) max-content;
+        gap: 18px;
+    }
+
+    .sf-header-controls {
+        justify-self: stretch;
+        width: 100%;
+        gap: 12px;
+        grid-template-columns:
+            minmax(170px, .8fr)
+            minmax(140px, .65fr)
+            minmax(220px, 1.25fr);
+    }
+
+    .sf-search-form {
+        min-width: 0;
+    }
+
+    .sf-search-form input {
+        min-width: 0;
+    }
+
+    .sf-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+        min-width: max-content;
+        white-space: nowrap;
+    }
+
+    .sf-actions .sf-action-link {
+        flex: 0 0 auto;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .sf-searchbar {
+        grid-template-columns: minmax(170px, 220px) minmax(0, 1fr) max-content;
+        gap: 12px;
+    }
+
+    .sf-header-controls {
+        gap: 8px;
+        grid-template-columns:
+            minmax(135px, .8fr)
+            minmax(110px, .65fr)
+            minmax(150px, 1.15fr);
+    }
+
+    .sf-location-btn,
+    .sf-vendor-btn {
+        padding-inline: 12px;
+    }
+
+    .sf-actions {
+        gap: 8px;
+    }
+}
