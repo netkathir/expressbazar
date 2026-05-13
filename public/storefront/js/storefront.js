@@ -314,13 +314,20 @@ function showLocationModal() {
 }
 
 async function fetchJson(url) {
-    const response = await fetch(url, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-        },
-    });
-    const payload = await response.json();
+    let response;
+    let payload = {};
+
+    try {
+        response = await fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+        });
+        payload = await response.json();
+    } catch (error) {
+        throw new Error(uiMessage('api_error', 'Something went wrong. Please try again'));
+    }
 
     if (!response.ok || payload?.error) {
         throw new Error(payload?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
@@ -413,7 +420,7 @@ async function loadNotifications() {
         const notifications = await fetchJson(config.notificationsUrl);
         renderNotifications(notifications);
     } catch (error) {
-        showError(error.message);
+        // Notifications are a background enhancement; avoid interrupting browsing.
     }
 }
 
