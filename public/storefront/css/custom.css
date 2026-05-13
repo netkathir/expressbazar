@@ -83,6 +83,34 @@
     scroll-margin-top: 120px;
 }
 
+.sf-home-page {
+    padding-bottom: 0;
+}
+
+.sf-home-page > section:last-child {
+    margin-bottom: 24px !important;
+}
+
+.sf-home-page + .sf-footer {
+    margin-top: 0;
+    padding-top: 28px;
+    padding-bottom: 16px;
+}
+
+.sf-home-page + .sf-footer .sf-footer-grid {
+    align-items: start;
+    gap: 24px;
+}
+
+.sf-home-page + .sf-footer .sf-footer-logo {
+    margin-bottom: 10px;
+}
+
+.sf-home-page + .sf-footer .sf-footer-bottom {
+    margin-top: 18px;
+    padding-top: 14px;
+}
+
 .sf-searchbar {
     align-items: center;
 }

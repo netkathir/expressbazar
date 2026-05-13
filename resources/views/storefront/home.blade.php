@@ -1,7 +1,7 @@
 @extends('layouts.storefront')
 
 @section('content')
-    <main class="sf-page">
+    <main class="sf-page sf-home-page">
         @php($filterQuery = array_filter([
             'pincode' => $pincode ?? null,
             'vendor_id' => $selectedVendorId ?? request('vendor_id'),
