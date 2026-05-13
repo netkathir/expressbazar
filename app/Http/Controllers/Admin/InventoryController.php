@@ -28,6 +28,7 @@ class InventoryController extends Controller
                     [mb_strtolower($search).'%']
                 );
             })
+            ->when($request->filled('product_id'), fn ($query) => $query->where('product_id', $request->integer('product_id')))
             ->when($request->filled('inventory_mode'), fn ($query) => $query->where('inventory_mode', $request->string('inventory_mode')))
             ->when($request->boolean('low_stock'), function ($query) {
                 $query->whereNotNull('low_stock_threshold')

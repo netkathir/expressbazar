@@ -7,7 +7,9 @@ use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
 use App\Notifications\LowStockNotification;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
@@ -99,9 +101,102 @@ class NotificationController extends Controller
         return response()->json([
             'count' => $count,
             'items' => $notifications->map(fn ($notification) => [
+                'id' => $notification->id,
                 'message' => $notification->data['message'] ?? 'Notification',
+                'url' => route('admin.notifications.read', $notification->id),
             ])->values(),
         ]);
+    }
+
+    public function read(Request $request, string $id): RedirectResponse
+    {
+        abort_if(! $request->user() || ! Schema::hasTable('notifications'), 404);
+
+        $notification = $request->user()
+            ->notifications()
+            ->whereKey($id)
+            ->firstOrFail();
+
+        $notification->markAsRead();
+
+        return redirect()->to($this->notificationRedirectUrl($request, $notification));
+    }
+
+    private function notificationRedirectUrl(Request $request, $notification): string
+    {
+        $routeName = $this->notificationRouteName($notification);
+
+        if (! $routeName || ! Route::has($routeName)) {
+            return route('admin.notifications.index');
+        }
+
+        if (method_exists($request->user(), 'canAccessAdminRoute') && ! $request->user()->canAccessAdminRoute($routeName, 'GET')) {
+            return route('admin.dashboard');
+        }
+
+        return route($routeName, $this->notificationRouteParams($notification, $routeName));
+    }
+
+    private function notificationRouteName($notification): ?string
+    {
+        $data = $notification->data ?? [];
+
+        if (! empty($data['route_name']) && str_starts_with((string) $data['route_name'], 'admin.')) {
+            return (string) $data['route_name'];
+        }
+
+        if (! empty($data['module'])) {
+            return $this->moduleRouteName((string) $data['module']);
+        }
+
+        return match ($notification->type) {
+            LowStockNotification::class => 'admin.inventory.index',
+            default => 'admin.notifications.index',
+        };
+    }
+
+    private function notificationRouteParams($notification, string $routeName): array
+    {
+        $data = $notification->data ?? [];
+
+        if (! empty($data['route_params']) && is_array($data['route_params'])) {
+            return $data['route_params'];
+        }
+
+        if ($routeName === 'admin.inventory.index') {
+            return array_filter([
+                'product_id' => $data['product_id'] ?? null,
+                'low_stock' => 1,
+            ], fn ($value) => $value !== null && $value !== '');
+        }
+
+        return [];
+    }
+
+    private function moduleRouteName(string $module): ?string
+    {
+        return match (trim($module)) {
+            'vendors' => 'admin.vendors.index',
+            'categories' => 'admin.categories.index',
+            'subcategories' => 'admin.subcategories.index',
+            'customers' => 'admin.customers.index',
+            'taxes' => 'admin.taxes.index',
+            'countries' => 'admin.countries.index',
+            'cities' => 'admin.cities.index',
+            'zones' => 'admin.zones.index',
+            'products' => 'admin.products.index',
+            'inventory' => 'admin.inventory.index',
+            'orders' => 'admin.orders.index',
+            'payments' => 'admin.payments.index',
+            'coupons' => 'admin.coupons.index',
+            'delivery' => 'admin.delivery.index',
+            'notifications' => 'admin.notifications.index',
+            'reports' => 'admin.reports.index',
+            'roles' => 'admin.roles.index',
+            'users' => 'admin.users.index',
+            'config' => 'admin.system-config.edit',
+            default => null,
+        };
     }
 
     private function validateTemplate(Request $request, ?NotificationTemplate $template = null): array

@@ -314,7 +314,11 @@ function updateStorefrontStatus(message = '') {
 }
 
 function notificationMessage(notification) {
-    return notification?.data?.message || notification?.data?.title || 'Notification';
+    return notification?.message || notification?.data?.message || notification?.data?.title || 'Notification';
+}
+
+function notificationTitle(notification) {
+    return notification?.title || notification?.data?.title || 'Notification';
 }
 
 function renderNotifications(data) {
@@ -325,8 +329,10 @@ function renderNotifications(data) {
         return;
     }
 
-    const notifications = Array.isArray(data) ? data : [];
-    const unreadCount = notifications.filter((notification) => !notification.read_at).length;
+    const notifications = Array.isArray(data) ? data : (data?.notifications || []);
+    const unreadCount = Number(Array.isArray(data)
+        ? notifications.filter((notification) => !notification.read_at).length
+        : (data?.unread || 0));
 
     if (countEl) {
         countEl.textContent = String(unreadCount);
@@ -341,13 +347,17 @@ function renderNotifications(data) {
     container.innerHTML = notifications
         .map((notification) => {
             const unreadClass = notification.read_at ? '' : 'fw-semibold';
+            const title = escapeHtml(notificationTitle(notification));
             const message = escapeHtml(notificationMessage(notification));
             const id = escapeHtml(notification.id);
 
             return `
-                <div class="dropdown-item-text small text-secondary px-2 py-2 ${unreadClass}">
+                <div class="dropdown-item-text small text-secondary px-2 py-2 js-notification-item ${unreadClass}">
                     <div class="d-flex align-items-start justify-content-between gap-2">
-                        <span>${message}</span>
+                        <span>
+                            <span class="d-block text-dark">${title}</span>
+                            <span class="d-block">${message}</span>
+                        </span>
                         <button type="button" class="btn btn-sm btn-light py-0 px-1 js-notification-read" data-notification-id="${id}" aria-label="Mark notification as read">
                             <i class="ti ti-check"></i>
                         </button>

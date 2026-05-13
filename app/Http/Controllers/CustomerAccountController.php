@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\ProductInventory;
 use App\Services\InventoryService;
 use App\Services\OrderLifecycleService;
+use App\Notifications\CustomerBellNotification;
 use App\Models\RegionZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -137,34 +138,48 @@ class CustomerAccountController extends Controller
     public function notifications(Request $request): JsonResponse
     {
         $user = $request->user();
-        abort_if(! $user, 403);
+        abort_if(! $user || $user->role !== 'customer', 403);
 
         if (! Schema::hasTable('notifications')) {
-            return response()->json([]);
+            return response()->json([
+                'notifications' => [],
+                'unread' => 0,
+            ]);
         }
 
-        $notifications = $user->notifications()
+        $notifications = $user->unreadNotifications()
+            ->where('type', CustomerBellNotification::class)
             ->latest()
-            ->limit(20)
+            ->limit(10)
             ->get()
             ->map(fn ($notification) => [
                 'id' => $notification->id,
-                'type' => $notification->type,
+                'title' => $notification->data['title'] ?? 'Notification',
+                'message' => $notification->data['message'] ?? '',
+                'type' => $notification->data['category'] ?? null,
                 'data' => $notification->data,
                 'read_at' => $notification->read_at,
                 'created_at' => $notification->created_at,
             ])
             ->values();
 
-        return response()->json($notifications);
+        return response()->json([
+            'notifications' => $notifications,
+            'unread' => $user->unreadNotifications()
+                ->where('type', CustomerBellNotification::class)
+                ->count(),
+        ]);
     }
 
     public function markNotificationAsRead(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
-        abort_if(! $user, 403);
+        abort_if(! $user || $user->role !== 'customer', 403);
 
-        $notification = $user->notifications()->whereKey($id)->firstOrFail();
+        $notification = $user->notifications()
+            ->where('type', CustomerBellNotification::class)
+            ->whereKey($id)
+            ->firstOrFail();
         $notification->markAsRead();
 
         return response()->json(['success' => true]);

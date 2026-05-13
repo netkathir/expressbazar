@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\OrderPlaced;
 use App\Events\TriggerNotificationEvent;
 use App\Listeners\DispatchOrderPlacedTemplateNotification;
+use App\Listeners\SendCustomerBellOrderPlacedNotification;
 use App\Listeners\SendTemplateNotification;
 use App\Listeners\SendVendorNotification;
 use App\Support\StorefrontLayoutData;
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         Event::listen(OrderPlaced::class, DispatchOrderPlacedTemplateNotification::class);
+        Event::listen(OrderPlaced::class, SendCustomerBellOrderPlacedNotification::class);
         Event::listen(OrderPlaced::class, SendVendorNotification::class);
         Event::listen(TriggerNotificationEvent::class, SendTemplateNotification::class);
 

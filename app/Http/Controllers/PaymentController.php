@@ -6,6 +6,7 @@ use App\Events\TriggerNotificationEvent;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\StripeCheckoutService;
+use App\Support\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -134,6 +135,7 @@ class PaymentController extends Controller
 
             if ($paidOrder) {
                 $this->dispatchPaymentSuccessNotification($paidOrder);
+                NotificationHelper::sendPaymentSuccessful($paidOrder);
             }
         }
 

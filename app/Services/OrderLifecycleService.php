@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\TriggerNotificationEvent;
 use App\Models\Order;
 use App\Models\OrderLog;
+use App\Support\NotificationHelper;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -59,7 +60,9 @@ class OrderLifecycleService
 
         $order->update($updates);
         $this->log($order, $from, $to, $changedBy, $note);
-        $this->dispatchCustomerStatusNotification($order->fresh(['customer', 'vendor']), $to);
+        $freshOrder = $order->fresh(['customer', 'vendor']);
+        $this->dispatchCustomerStatusNotification($freshOrder, $to);
+        NotificationHelper::sendOrderStatus($freshOrder, $to);
     }
 
     public function log(Order $order, ?string $from, string $to, ?int $changedBy = null, ?string $note = null): void

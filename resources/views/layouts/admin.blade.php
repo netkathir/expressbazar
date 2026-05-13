@@ -76,7 +76,7 @@
                                 @if ($isVendorPanel)
                                     <a href="{{ route('vendor.notifications.read', $note->id) }}" class="dropdown-item small rounded-2 py-2">{{ $note->data['message'] ?? 'Order received' }}</a>
                                 @else
-                                    <div class="dropdown-item-text small text-secondary px-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</div>
+                                    <a href="{{ route('admin.notifications.read', $note->id) }}" class="dropdown-item small rounded-2 py-2">{{ $note->data['message'] ?? 'Notification' }}</a>
                                 @endif
                             @empty
                                 <div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>
