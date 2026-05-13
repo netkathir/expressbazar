@@ -39,7 +39,7 @@ class CustomerAccountController extends Controller
                 ->with(['vendor', 'items.product.images', 'payments'])
                 ->latest('placed_at')
                 ->latest('id')
-                ->limit(5)
+                ->limit(3)
                 ->get(),
         ]);
     }
