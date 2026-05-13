@@ -122,6 +122,22 @@ class NotificationController extends Controller
         return redirect()->to($this->notificationRedirectUrl($request, $notification));
     }
 
+    public function readAll(Request $request): JsonResponse
+    {
+        abort_if(! $request->user(), 403);
+
+        if (! Schema::hasTable('notifications')) {
+            return response()->json(['success' => true]);
+        }
+
+        $request->user()
+            ->unreadNotifications()
+            ->where('type', LowStockNotification::class)
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
+    }
+
     private function notificationRedirectUrl(Request $request, $notification): string
     {
         $routeName = $this->notificationRouteName($notification);

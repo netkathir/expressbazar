@@ -324,6 +324,7 @@ function notificationTitle(notification) {
 function renderNotifications(data) {
     const container = document.getElementById('notification-list');
     const countEl = document.getElementById('notification-count');
+    const clearAllButton = document.querySelector('.js-notifications-clear-all');
 
     if (!container) {
         return;
@@ -338,6 +339,8 @@ function renderNotifications(data) {
         countEl.textContent = String(unreadCount);
         countEl.classList.toggle('d-none', unreadCount < 1);
     }
+
+    clearAllButton?.classList.toggle('d-none', unreadCount < 1);
 
     if (notifications.length === 0) {
         container.innerHTML = '<div class="dropdown-item-text small text-secondary px-2 py-2">No notifications</div>';
@@ -390,6 +393,28 @@ async function markRead(id) {
 
     try {
         const { response, payload } = await sendCartAction(url, {
+            method: 'POST',
+            body: new FormData(),
+        });
+
+        if (!response.ok || payload?.error) {
+            showError(payload?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
+            return;
+        }
+
+        loadNotifications();
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function clearAllNotifications() {
+    if (!config.notificationReadAllUrl) {
+        return;
+    }
+
+    try {
+        const { response, payload } = await sendCartAction(config.notificationReadAllUrl, {
             method: 'POST',
             body: new FormData(),
         });
@@ -774,6 +799,13 @@ document.addEventListener('click', async (event) => {
     if (notificationReadButton) {
         event.preventDefault();
         markRead(notificationReadButton.dataset.notificationId);
+        return;
+    }
+
+    const notificationsClearAllButton = event.target.closest('.js-notifications-clear-all');
+    if (notificationsClearAllButton) {
+        event.preventDefault();
+        clearAllNotifications();
         return;
     }
 

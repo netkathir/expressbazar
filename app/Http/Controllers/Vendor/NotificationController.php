@@ -56,6 +56,23 @@ class NotificationController extends Controller
         return redirect()->to($this->notificationRedirectUrl($vendor, $notification));
     }
 
+    public function readAll(): JsonResponse
+    {
+        $vendor = Auth::guard('vendor')->user();
+
+        abort_if(! $vendor, 403);
+
+        if (! Schema::hasTable('notifications')) {
+            return response()->json(['success' => true]);
+        }
+
+        $vendor->unreadNotifications()
+            ->whereIn('type', $this->notificationTypes())
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
+    }
+
     private function notificationRedirectUrl($vendor, $notification): string
     {
         $routeName = match ($notification->type) {

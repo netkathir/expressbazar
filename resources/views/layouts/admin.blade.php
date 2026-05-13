@@ -34,6 +34,7 @@
             ? [\App\Notifications\VendorOrderNotification::class, \App\Notifications\LowStockNotification::class]
             : [\App\Notifications\LowStockNotification::class];
         $notificationAlertsUrl = $isVendorPanel ? route('vendor.notification-alerts') : route('admin.notification-alerts');
+        $notificationReadAllUrl = $isVendorPanel ? route('vendor.notifications.read-all') : route('admin.notifications.read-all');
     @endphp
     <div id="overlay" class="overlay"></div>
 
@@ -72,7 +73,15 @@
                         <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $panelUnreadCount ? '' : 'd-none' }}">{{ $panelUnreadCount }}</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
-                        <div class="small fw-semibold px-2 py-1">Notifications</div>
+                        <div class="d-flex align-items-center justify-content-between gap-2 px-2 py-1">
+                            <div class="small fw-semibold">Notifications</div>
+                            <button
+                                id="notification-clear-all"
+                                type="button"
+                                class="btn btn-sm btn-link p-0 text-decoration-none {{ $panelUnreadCount ? '' : 'd-none' }}"
+                                data-url="{{ $notificationReadAllUrl }}"
+                            >Clear all</button>
+                        </div>
                         <div id="notification-list">
                             @forelse ($panelUnreadNotifications as $note)
                                 @if ($isVendorPanel)
@@ -243,12 +252,35 @@
             (function () {
                 const countEl = document.getElementById('notification-count');
                 const listEl = document.getElementById('notification-list');
+                const clearAllEl = document.getElementById('notification-clear-all');
 
                 if (!countEl || !listEl) {
                     return;
                 }
 
-                setInterval(function () {
+                const renderNotifications = function (data) {
+                    countEl.textContent = data.count;
+                    countEl.classList.toggle('d-none', data.count < 1);
+                    clearAllEl?.classList.toggle('d-none', data.count < 1);
+                    listEl.innerHTML = data.items.length
+                        ? data.items.map(function (item) {
+                            if (item.url) {
+                                const link = document.createElement('a');
+                                link.className = 'dropdown-item small rounded-2 py-2';
+                                link.href = item.url;
+                                link.textContent = item.message;
+                                return link.outerHTML;
+                            }
+
+                            const div = document.createElement('div');
+                            div.className = 'dropdown-item-text small text-secondary px-2 py-2';
+                            div.textContent = item.message;
+                            return div.outerHTML;
+                        }).join('')
+                        : '<div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>';
+                };
+
+                const refreshNotifications = function () {
                     fetch(@json($notificationAlertsUrl), {
                         headers: {
                             'Accept': 'application/json'
@@ -258,30 +290,36 @@
                             return response.ok ? response.json() : null;
                         })
                         .then(function (data) {
-                            if (!data) {
-                                return;
+                            if (data) {
+                                renderNotifications(data);
                             }
-
-                            countEl.textContent = data.count;
-                            countEl.classList.toggle('d-none', data.count < 1);
-                            listEl.innerHTML = data.items.length
-                                ? data.items.map(function (item) {
-                                    if (item.url) {
-                                        const link = document.createElement('a');
-                                        link.className = 'dropdown-item small rounded-2 py-2';
-                                        link.href = item.url;
-                                        link.textContent = item.message;
-                                        return link.outerHTML;
-                                    }
-
-                                    const div = document.createElement('div');
-                                    div.className = 'dropdown-item-text small text-secondary px-2 py-2';
-                                    div.textContent = item.message;
-                                    return div.outerHTML;
-                                }).join('')
-                                : '<div class="dropdown-item-text small text-secondary px-2 py-2">No new notifications</div>';
                         })
                         .catch(function () {});
+                };
+
+                clearAllEl?.addEventListener('click', function (event) {
+                    event.preventDefault();
+
+                    fetch(clearAllEl.dataset.url, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @json(csrf_token())
+                        }
+                    })
+                        .then(function (response) {
+                            return response.ok ? response.json() : null;
+                        })
+                        .then(function (data) {
+                            if (data) {
+                                refreshNotifications();
+                            }
+                        })
+                        .catch(function () {});
+                });
+
+                setInterval(function () {
+                    refreshNotifications();
                 }, 10000);
             })();
         </script>

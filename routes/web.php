@@ -55,6 +55,7 @@ Route::post('/forgot-password/reset', [CustomerPasswordResetController::class, '
 Route::post('/logout', [CustomerAuthController::class, 'destroy'])->name('storefront.logout');
 Route::get('/notifications', [CustomerAccountController::class, 'notifications'])->middleware('auth')->name('notifications.index');
 Route::get('/customer/notifications', [CustomerAccountController::class, 'notifications'])->middleware('auth')->name('customer.notifications.index');
+Route::post('/notifications/read-all', [CustomerAccountController::class, 'markAllNotificationsAsRead'])->middleware('auth')->name('notifications.read-all');
 Route::post('/notifications/read/{id}', [CustomerAccountController::class, 'markNotificationAsRead'])->middleware('auth')->name('notifications.read');
 Route::get('/account', [CustomerAccountController::class, 'index'])->middleware('auth')->name('storefront.account');
 Route::get('/account/profile/edit', [CustomerAccountController::class, 'editProfile'])->middleware('auth')->name('storefront.profile.edit');
@@ -130,6 +131,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('payments', AdminPaymentController::class)->except(['show']);
         Route::resource('delivery', DeliveryController::class)->except(['show']);
         Route::get('notification-alerts', [NotificationController::class, 'alerts'])->name('notification-alerts');
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
         Route::get('notifications/read/{id}', [NotificationController::class, 'read'])->name('notifications.read');
         Route::resource('notifications', NotificationController::class)->except(['show']);
         Route::get('notifications/logs', [NotificationController::class, 'logs'])->name('notifications.logs');
@@ -168,6 +170,7 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::get('inventory', [VendorReferenceModuleController::class, 'inventory'])->name('inventory.index');
         Route::get('delivery', [VendorReferenceModuleController::class, 'delivery'])->name('delivery.index');
         Route::get('notification-alerts', [VendorNotificationController::class, 'alerts'])->name('notification-alerts');
+        Route::post('notifications/read-all', [VendorNotificationController::class, 'readAll'])->name('notifications.read-all');
         Route::get('notifications/{id}/read', [VendorNotificationController::class, 'read'])->name('notifications.read');
         Route::get('notifications', [VendorReferenceModuleController::class, 'notifications'])->name('notifications.index');
         Route::get('reports', [VendorReferenceModuleController::class, 'reports'])->name('reports.index');

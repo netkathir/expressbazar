@@ -185,6 +185,22 @@ class CustomerAccountController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function markAllNotificationsAsRead(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        if (! Schema::hasTable('notifications')) {
+            return response()->json(['success' => true]);
+        }
+
+        $user->unreadNotifications()
+            ->where('type', CustomerBellNotification::class)
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
+    }
+
     public function cancelOrder(Request $request, Order $order)
     {
         $user = $request->user();
