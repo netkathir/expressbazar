@@ -12,6 +12,7 @@ const locationForm = locationModalEl?.querySelector('.js-location-form') || docu
 const countrySelect = locationForm?.querySelector('.js-country-select') || null;
 const citySelect = locationForm?.querySelector('.js-city-select') || null;
 const zoneSelect = locationForm?.querySelector('.js-zone-select') || null;
+const locationAlert = locationForm?.querySelector('.js-location-alert') || null;
 const vendorSelector = document.querySelector('.js-vendor-selector');
 const vendorList = document.querySelector('.js-vendor-list');
 const selectedVendorText = document.querySelector('.js-selected-vendor-text');
@@ -58,6 +59,35 @@ function showError(message) {
 
     errorBox.textContent = text;
     errorBox.style.display = 'block';
+}
+
+function showLocationAlert(message) {
+    if (!locationAlert) {
+        showError(message);
+        return;
+    }
+
+    locationAlert.textContent = message || 'Delivery is not available in your area.';
+    locationAlert.classList.remove('d-none');
+}
+
+function clearLocationAlert() {
+    if (!locationAlert) {
+        return;
+    }
+
+    locationAlert.textContent = '';
+    locationAlert.classList.add('d-none');
+}
+
+function locationErrorMessage(payload) {
+    return payload?.errors?.postcode?.[0]
+        || payload?.errors?.zone_id?.[0]
+        || payload?.errors?.city_id?.[0]
+        || payload?.errors?.country_id?.[0]
+        || payload?.errors?.location?.[0]
+        || payload?.message
+        || uiMessage('api_error', 'Something went wrong. Please try again');
 }
 
 function getGuestCartState() {
@@ -139,12 +169,14 @@ function closeCart() {
 
 function updateCartUi(payload = {}) {
     if (typeof payload.cartCount !== 'undefined') {
+        const cartCount = Number(payload.cartCount || 0);
         cartCountEls.forEach((el) => {
-            el.textContent = String(payload.cartCount);
+            el.textContent = String(cartCount);
+            el.classList.toggle('d-none', cartCount <= 0);
         });
-        document.body.dataset.cartCount = String(payload.cartCount);
+        document.body.dataset.cartCount = String(cartCount);
 
-        if (shouldMirrorGuestCart() && Number(payload.cartCount || 0) === 0) {
+        if (shouldMirrorGuestCart() && cartCount === 0) {
             clearGuestCartState();
         }
     }
@@ -277,6 +309,7 @@ function updateProductControls(payload = {}) {
 }
 
 function showLocationModal() {
+    clearLocationAlert();
     locationModal?.show();
 }
 
@@ -456,7 +489,7 @@ function saveSelectedVendor(id, name) {
 function clearSelectedVendor() {
     saveSelectedVendor('', '');
     if (selectedVendorText) {
-        selectedVendorText.textContent = 'All Vendors';
+        selectedVendorText.textContent = 'Vendors';
     }
 }
 
@@ -530,7 +563,7 @@ async function loadVendors() {
         });
 
         vendorList.innerHTML = [
-            '<li><button type="button" class="dropdown-item js-vendor-item" data-id="" data-name="All Vendors">All Vendors</button></li>',
+            '<li><button type="button" class="dropdown-item js-vendor-item" data-id="" data-name="Vendors">Vendors</button></li>',
             '<li><hr class="dropdown-divider"></li>',
             ...items,
         ].join('');
@@ -813,11 +846,11 @@ document.addEventListener('click', async (event) => {
     if (vendorItem) {
         event.preventDefault();
         const vendorId = vendorItem.dataset.id || '';
-        const vendorName = vendorItem.dataset.name || vendorItem.textContent.trim() || 'All Vendors';
+        const vendorName = vendorItem.dataset.name || vendorItem.textContent.trim() || 'Vendors';
 
         saveSelectedVendor(vendorId, vendorName);
         if (selectedVendorText) {
-            selectedVendorText.textContent = vendorId ? vendorName : 'All Vendors';
+            selectedVendorText.textContent = vendorId ? vendorName : 'Vendors';
         }
         applyVendorFilter(vendorId);
         return;
@@ -940,6 +973,7 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
+    clearLocationAlert();
     const formData = new FormData(form);
     const { response, payload } = await sendCartAction(form.action, {
         method: 'POST',
@@ -961,12 +995,10 @@ document.addEventListener('submit', async (event) => {
                     reloadWithoutVendorFilter();
                 }
             }
-        } else if (payload?.message) {
-            showError(payload.message);
-        } else if (payload?.errors?.postcode?.[0]) {
-            showError(payload.errors.postcode[0]);
+        } else if (payload?.errors || payload?.message) {
+            showLocationAlert(locationErrorMessage(payload));
         } else {
-            showError(uiMessage('api_error', 'Something went wrong. Please try again'));
+            showLocationAlert(uiMessage('api_error', 'Something went wrong. Please try again'));
         }
         return;
     }
@@ -978,6 +1010,7 @@ document.addEventListener('submit', async (event) => {
 });
 
 countrySelect?.addEventListener('change', async () => {
+    clearLocationAlert();
     const countryId = countrySelect.value;
     if (!countryId) {
         if (citySelect) {
@@ -995,6 +1028,7 @@ countrySelect?.addEventListener('change', async () => {
 });
 
 citySelect?.addEventListener('change', async () => {
+    clearLocationAlert();
     const cityId = citySelect.value;
     if (!cityId) {
         if (zoneSelect) {
@@ -1004,6 +1038,9 @@ citySelect?.addEventListener('change', async () => {
     }
     await loadZones(cityId);
 });
+
+locationForm?.querySelector('input[name="postcode"]')?.addEventListener('input', clearLocationAlert);
+zoneSelect?.addEventListener('change', clearLocationAlert);
 
 document.querySelectorAll('.js-country-select').forEach((select) => {
     if (select === countrySelect) {

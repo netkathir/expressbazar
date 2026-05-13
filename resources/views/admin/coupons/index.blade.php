@@ -45,7 +45,7 @@
                     <div class="col-md-3">
                         <label class="form-label">Vendor</label>
                         <select name="vendor_id" class="form-select">
-                            <option value="">All vendors</option>
+                            <option value="">Vendors</option>
                             @foreach ($vendors as $vendor)
                                 <option value="{{ $vendor->id }}" @selected((string) request('vendor_id') === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
                             @endforeach
@@ -90,7 +90,7 @@
                                 {{ $coupon->type === 'percentage' ? rtrim(rtrim(number_format((float) $coupon->value, 2), '0'), '.').'%' : '₹'.number_format((float) $coupon->value, 0) }}
                             </td>
                             <td>{{ $coupon->min_order !== null ? '₹'.number_format((float) $coupon->min_order, 0) : '-' }}</td>
-                            <td>{{ $coupon->vendor?->vendor_name ?: 'All vendors' }}</td>
+                            <td>{{ $coupon->vendor?->vendor_name ?: 'Vendors' }}</td>
                             <td>{{ $coupon->expires_at ? $coupon->expires_at->format('d M Y') : '-' }}</td>
                             <td><span class="badge text-bg-{{ $coupon->is_active ? 'success' : 'secondary' }}">{{ $coupon->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">

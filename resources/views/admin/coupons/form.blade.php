@@ -51,7 +51,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Vendor</label>
                         <select name="vendor_id" class="form-select">
-                            <option value="">All vendors</option>
+                            <option value="">Vendors</option>
                             @foreach ($vendors as $vendor)
                                 <option value="{{ $vendor->id }}" @selected((string) old('vendor_id', $coupon->vendor_id) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
                             @endforeach

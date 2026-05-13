@@ -547,6 +547,13 @@ class StorefrontController extends Controller
             'zone_id' => isset($data['zone_id']) ? (int) $data['zone_id'] : null,
         ];
 
+        $resolvedPincode = ! empty($data['resolved_pincode']) ? $data['resolved_pincode'] : null;
+        if ($this->vendorsForLocation($newLocation, $resolvedPincode)->isEmpty()) {
+            throw ValidationException::withMessages([
+                'location' => 'Delivery is not available in your area.',
+            ]);
+        }
+
         $locationChanged = $this->hardLocation() !== $newLocation;
 
         if ($locationChanged && $this->cartCount() > 0 && ! $request->boolean('force_clear')) {

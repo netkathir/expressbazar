@@ -41,7 +41,7 @@
                 <div class="dropdown sf-vendor-selector js-vendor-selector {{ empty($location ?? null) ? 'd-none' : '' }}">
                     <button class="sf-vendor-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-building-store me-1"></i>
-                        <span class="js-selected-vendor-text">All Vendors</span>
+                        <span class="js-selected-vendor-text">Vendors</span>
                         <i class="ti ti-chevron-down ms-1"></i>
                     </button>
                     <ul class="dropdown-menu sf-vendor-menu js-vendor-list">
@@ -104,7 +104,7 @@
                     <button class="sf-action-link js-open-cart" type="button">
                         <i class="ti ti-shopping-cart"></i>
                         <span>Cart</span>
-                        <span class="sf-cart-badge js-cart-count">{{ $cartCount ?? 0 }}</span>
+                        <span class="sf-cart-badge js-cart-count {{ ($cartCount ?? 0) > 0 ? '' : 'd-none' }}">{{ $cartCount ?? 0 }}</span>
                     </button>
                 </div>
             </div>
@@ -141,19 +141,13 @@
                     <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
                         <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
                     </a>
-                    <p class="sf-footer-address mb-3">
-                        AMAZE FARMS LIMITED,<br>
-                        73 Colby Street,<br>
-                        Southampton,<br>
-                        SO16 9RU,<br>
-                        United Kingdom.
-                    </p>
-                    <div class="sf-socials">
-                        <a href="#" aria-label="Facebook"><i class="ti ti-brand-facebook"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="ti ti-brand-x"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
-                    </div>
+                    <address class="sf-footer-address">
+                        <span>AMAZE FARMS LIMITED,</span>
+                        <span>73 Colby Street,</span>
+                        <span>Southampton,</span>
+                        <span>SO16 9RU,</span>
+                        <span>United Kingdom.</span>
+                    </address>
                 </div>
 
                 <div class="sf-footer-col">
@@ -181,10 +175,20 @@
                     @endforeach
                     <a href="{{ route('user.home') }}#featured-sections">View All Categories</a>
                 </div>
+
+                <div class="sf-footer-col sf-footer-social-col">
+                    <h6>Follow Us</h6>
+                    <div class="sf-socials">
+                        <a href="#" aria-label="Facebook"><i class="ti ti-brand-facebook"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="ti ti-brand-x"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
+                    </div>
+                </div>
             </div>
 
             <div class="sf-footer-bottom">
-                <div>© {{ date('Y') }} Express Bazaar. All rights reserved.</div>
+                <div>&copy; {{ date('Y') }} Express Bazaar. All rights reserved.</div>
             </div>
         </div>
     </footer>
@@ -209,6 +213,7 @@
                 <form class="modal-body d-grid gap-3 js-location-form" action="{{ route('storefront.location') }}" method="POST">
                     @csrf
                     <input type="hidden" name="force_clear" value="0">
+                    <div class="alert alert-danger border-0 rounded-4 mb-0 d-none js-location-alert" role="alert"></div>
                     <div>
                         <label class="form-label">Postcode / Zone code</label>
                         <input type="text" name="postcode" class="form-control" placeholder="Enter postcode to auto-detect zone">

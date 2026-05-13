@@ -59,7 +59,7 @@
                                 <input type="hidden" name="subcategory" value="{{ $selectedSubcategory->id }}">
                             @endif
                             <select name="vendor_id" class="form-select form-select-sm rounded-pill js-filter-input" style="min-width: 220px;" onchange="if (!window.storefrontAjaxFilters) this.form.submit()">
-                                <option value="">All Vendors</option>
+                                <option value="">Vendors</option>
                                 @forelse (($vendors ?? collect()) as $vendor)
                                     <option value="{{ $vendor->id }}" @selected((string) ($selectedVendorId ?? request('vendor_id')) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
                                 @empty
