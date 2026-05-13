@@ -160,7 +160,12 @@ class ReferenceModuleController extends Controller
                 $search = trim((string) $request->string('search'));
                 $query->whereHas('product', fn ($sub) => $sub->where('product_name', 'like', "%{$search}%"));
             })
+            ->when($request->filled('product_id'), fn ($query) => $query->where('product_id', $request->integer('product_id')))
             ->when($request->filled('inventory_mode'), fn ($query) => $query->where('inventory_mode', $request->string('inventory_mode')))
+            ->when($request->boolean('low_stock'), function ($query) {
+                $query->whereNotNull('low_stock_threshold')
+                    ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
+            })
             ->latest()
             ->paginate(10)
             ->withQueryString();

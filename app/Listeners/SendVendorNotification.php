@@ -5,13 +5,12 @@ namespace App\Listeners;
 use App\Events\OrderPlaced;
 use App\Models\NotificationLog;
 use App\Notifications\VendorOrderNotification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
-class SendVendorNotification implements ShouldQueue
+class SendVendorNotification
 {
     public function handle(OrderPlaced $event): void
     {

@@ -30,7 +30,9 @@
         $isVendorPanel = $vendorUser !== null;
         $panelBrandName = $isVendorPanel ? 'Express Bazar Vendor' : config('admin_panel.brand.name');
         $panelNavigation = $isVendorPanel ? config('vendor_panel.navigation') : config('admin_panel.navigation');
-        $notificationType = $isVendorPanel ? \App\Notifications\VendorOrderNotification::class : \App\Notifications\LowStockNotification::class;
+        $notificationTypes = $isVendorPanel
+            ? [\App\Notifications\VendorOrderNotification::class, \App\Notifications\LowStockNotification::class]
+            : [\App\Notifications\LowStockNotification::class];
         $notificationAlertsUrl = $isVendorPanel ? route('vendor.notification-alerts') : route('admin.notification-alerts');
     @endphp
     <div id="overlay" class="overlay"></div>
@@ -58,10 +60,10 @@
             @if ($panelUser)
                 @php
                     $panelUnreadNotifications = \Illuminate\Support\Facades\Schema::hasTable('notifications')
-                        ? $panelUser->unreadNotifications()->where('type', $notificationType)->latest()->limit(5)->get()
+                        ? $panelUser->unreadNotifications()->whereIn('type', $notificationTypes)->latest()->limit(5)->get()
                         : collect();
                     $panelUnreadCount = \Illuminate\Support\Facades\Schema::hasTable('notifications')
-                        ? $panelUser->unreadNotifications()->where('type', $notificationType)->count()
+                        ? $panelUser->unreadNotifications()->whereIn('type', $notificationTypes)->count()
                         : 0;
                 @endphp
                 <div class="dropdown">
