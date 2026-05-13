@@ -32,31 +32,33 @@
                     <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="sf-brand-logo">
                 </a>
 
-                <button class="sf-location-btn js-open-location" type="button">
-                    <i class="ti ti-map-pin me-1"></i>
-                    <span class="js-location-label">{{ $locationLabel ?? 'Select Location' }}</span>
-                    <i class="ti ti-chevron-down ms-1"></i>
-                </button>
-
-                <div class="dropdown sf-vendor-selector js-vendor-selector {{ empty($location ?? null) ? 'd-none' : '' }}">
-                    <button class="sf-vendor-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ti ti-building-store me-1"></i>
-                        <span class="js-selected-vendor-text">Vendors</span>
+                <div class="sf-header-controls">
+                    <button class="sf-location-btn js-open-location" type="button">
+                        <i class="ti ti-map-pin me-1"></i>
+                        <span class="js-location-label">{{ $locationLabel ?? 'Select Location' }}</span>
                         <i class="ti ti-chevron-down ms-1"></i>
                     </button>
-                    <ul class="dropdown-menu sf-vendor-menu js-vendor-list">
-                        <li class="dropdown-item text-muted">Loading...</li>
-                    </ul>
-                </div>
 
-                <form action="{{ route('user.home') }}" method="GET" class="sf-search-form js-search-form">
-                    <i class="ti ti-search"></i>
-                    <input type="search" id="searchInput" class="js-search-input" name="search" placeholder="Search for products, categories or brands" value="{{ request('search', request('q')) }}" autocomplete="off">
-                    @if (request()->filled('vendor_id'))
-                        <input type="hidden" name="vendor_id" value="{{ request('vendor_id') }}">
-                    @endif
-                    <div class="sf-search-suggestions js-search-suggestions" hidden></div>
-                </form>
+                    <div class="dropdown sf-vendor-selector js-vendor-selector {{ empty($location ?? null) ? 'd-none' : '' }}">
+                        <button class="sf-vendor-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-building-store me-1"></i>
+                            <span class="js-selected-vendor-text">Vendors</span>
+                            <i class="ti ti-chevron-down ms-1"></i>
+                        </button>
+                        <ul class="dropdown-menu sf-vendor-menu js-vendor-list">
+                            <li class="dropdown-item text-muted">Loading...</li>
+                        </ul>
+                    </div>
+
+                    <form action="{{ route('user.home') }}" method="GET" class="sf-search-form js-search-form">
+                        <i class="ti ti-search"></i>
+                        <input type="search" id="searchInput" class="js-search-input" name="search" placeholder="Search for products, categories or brands" value="{{ request('search', request('q')) }}" autocomplete="off">
+                        @if (request()->filled('vendor_id'))
+                            <input type="hidden" name="vendor_id" value="{{ request('vendor_id') }}">
+                        @endif
+                        <div class="sf-search-suggestions js-search-suggestions" hidden></div>
+                    </form>
+                </div>
 
                 <div class="sf-actions">
                     @auth
@@ -271,6 +273,20 @@
         </div>
     </div>
 
+    @php
+        $notificationsUrl = auth()->check() ? route('notifications.index', [], false) : null;
+        $notificationReadUrlTemplate = auth()->check()
+            ? route('notifications.read', ['id' => '__ID__'], false)
+            : null;
+        $notificationReadAllUrl = auth()->check() ? route('notifications.read-all', [], false) : null;
+        $initialVendorsForHeader = collect($vendors ?? [])->map(function ($vendor) {
+            return [
+                'id' => data_get($vendor, 'id'),
+                'name' => data_get($vendor, 'vendor_name', data_get($vendor, 'name')),
+            ];
+        })->values();
+    @endphp
+
     <script>
         window.storefrontConfig = {
             cartAddUrlTemplate: @json(route('storefront.cart.add', ['product' => '__ID__'], false)),
@@ -284,12 +300,13 @@
             locationZonesUrl: @json(route('storefront.location.zones', [], false)),
             vendorsByLocationUrl: @json(route('storefront.vendors-by-location', [], false)),
             searchSuggestionsUrl: @json(route('storefront.search.suggestions', [], false)),
-            notificationsUrl: @json(auth()->check() ? route('notifications.index', [], false) : null),
-            notificationReadUrlTemplate: @json(auth()->check() ? route('notifications.read', ['id' => '__ID__'], false) : null),
-            notificationReadAllUrl: @json(auth()->check() ? route('notifications.read-all', [], false) : null),
+            notificationsUrl: @json($notificationsUrl),
+            notificationReadUrlTemplate: @json($notificationReadUrlTemplate),
+            notificationReadAllUrl: @json($notificationReadAllUrl),
             logoutUrl: @json(route('storefront.logout', [], false)),
             uiMessages: @json(config('ui_messages')),
             initialLocation: @json($location ?? null),
+            initialVendors: @json($initialVendorsForHeader),
             initialSelectedVendorId: @json((string) ($selectedVendorId ?? request('vendor_id', ''))),
             resetHomeVendorFilterOnLoad: @json(request()->routeIs('user.home') && request()->filled('vendor_id')),
             initialCartState: @json($cartState ?? []),

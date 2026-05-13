@@ -547,46 +547,58 @@ async function loadVendors() {
     vendorList.innerHTML = '<li class="dropdown-item text-muted">Loading...</li>';
 
     try {
+        if (Array.isArray(config.initialVendors) && config.initialVendors.length > 0) {
+            renderVendorDropdown(config.initialVendors, { allowRedirect: false });
+        }
         const vendors = await fetchJson(config.vendorsByLocationUrl);
-        const requestedVendorId = String(config.initialSelectedVendorId || selectedVendorIdFromUrl() || '');
-        const activeVendorId = requestedVendorId;
-        const activeVendor = Array.isArray(vendors)
-            ? vendors.find((vendor) => String(vendor.id) === activeVendorId)
-            : null;
-
-        if (!Array.isArray(vendors) || vendors.length === 0) {
-            clearSelectedVendor();
-            vendorList.innerHTML = '<li class="dropdown-item text-danger">No vendors available</li>';
-            updateStorefrontStatus(uiMessage('no_vendors', 'No vendors available in your area'));
+        renderVendorDropdown(vendors);
+    } catch (error) {
+        if (Array.isArray(config.initialVendors) && config.initialVendors.length > 0) {
+            renderVendorDropdown(config.initialVendors);
             return;
         }
 
-        const items = vendors.map((vendor) => {
-            const id = escapeHtml(vendor.id);
-            const name = escapeHtml(vendor.name);
-            const activeClass = String(vendor.id) === activeVendorId ? ' active' : '';
-
-            return `<li><button type="button" class="dropdown-item js-vendor-item${activeClass}" data-id="${id}" data-name="${name}">${name}</button></li>`;
-        });
-
-        vendorList.innerHTML = [
-            '<li><button type="button" class="dropdown-item js-vendor-item" data-id="" data-name="Vendors">Vendors</button></li>',
-            '<li><hr class="dropdown-divider"></li>',
-            ...items,
-        ].join('');
-
-        if (activeVendor) {
-            selectedVendorText.textContent = activeVendor.name;
-            saveSelectedVendor(activeVendor.id, activeVendor.name);
-        } else {
-            clearSelectedVendor();
-
-            if (requestedVendorId && isVendorFilterablePage()) {
-                applyVendorFilter('');
-            }
-        }
-    } catch (error) {
         vendorList.innerHTML = '<li class="dropdown-item text-danger">Unable to load vendors</li>';
+    }
+}
+
+function renderVendorDropdown(vendors, options = {}) {
+    const allowRedirect = options.allowRedirect !== false;
+    const requestedVendorId = String(config.initialSelectedVendorId || selectedVendorIdFromUrl() || '');
+    const activeVendorId = requestedVendorId;
+    const vendorItems = Array.isArray(vendors) ? vendors : [];
+    const activeVendor = vendorItems.find((vendor) => String(vendor.id) === activeVendorId) || null;
+
+    if (vendorItems.length === 0) {
+        clearSelectedVendor();
+        vendorList.innerHTML = '<li class="dropdown-item text-danger">No vendors available</li>';
+        updateStorefrontStatus(uiMessage('no_vendors', 'No vendors available in your area'));
+        return;
+    }
+
+    const items = vendorItems.map((vendor) => {
+        const id = escapeHtml(vendor.id);
+        const name = escapeHtml(vendor.name);
+        const activeClass = String(vendor.id) === activeVendorId ? ' active' : '';
+
+        return `<li><button type="button" class="dropdown-item js-vendor-item${activeClass}" data-id="${id}" data-name="${name}">${name}</button></li>`;
+    });
+
+    vendorList.innerHTML = [
+        '<li><button type="button" class="dropdown-item js-vendor-item" data-id="" data-name="Vendors">Vendors</button></li>',
+        '<li><hr class="dropdown-divider"></li>',
+        ...items,
+    ].join('');
+
+    if (activeVendor) {
+        selectedVendorText.textContent = activeVendor.name;
+        saveSelectedVendor(activeVendor.id, activeVendor.name);
+    } else {
+        clearSelectedVendor();
+
+        if (allowRedirect && requestedVendorId && isVendorFilterablePage()) {
+            applyVendorFilter('');
+        }
     }
 }
 
