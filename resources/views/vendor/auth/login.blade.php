@@ -48,7 +48,7 @@
                             <label class="form-check-label" for="remember">Remember me</label>
                         </div>
                         <button type="submit" class="btn btn-primary">Login</button>
-                        <a href="{{ route('vendor.password.request') }}" class="btn btn-link px-0 text-start">Forgot password?</a>
+                        <a href="{{ Route::has('vendor.password.request') ? route('vendor.password.request') : url('/vendor/forgot-password') }}" class="btn btn-link px-0 text-start">Forgot password?</a>
                         <a href="{{ route('admin.login') }}" class="btn btn-link px-0 text-start">Admin login</a>
                     </form>
                 </div>
