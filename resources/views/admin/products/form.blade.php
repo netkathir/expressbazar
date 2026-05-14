@@ -79,7 +79,7 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label">Product Images</label>
-                    <input type="file" name="images[]" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" data-max-file-size="2097152">
+                    <input type="file" name="images[]" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" data-max-file-size="2097152" data-max-files="5">
                     <div class="form-text">You can upload up to 5 images: JPG, JPEG, PNG, WEBP or GIF, maximum 2 MB each. Leave blank to keep the current images on edit.</div>
                 </div>
                 @if ($mode === 'edit' && $product->images->isNotEmpty())
@@ -98,7 +98,7 @@
                 @endif
                 <div class="col-md-3">
                     <label class="form-label">Price</label>
-                    <input type="number" step="0.01" min="0" max="{{ $maxMoneyAmount }}" name="price" value="{{ old('price', $product->price) }}" class="form-control" required>
+                    <input type="number" step="0.01" min="0.01" max="{{ $maxMoneyAmount }}" name="price" value="{{ old('price', $product->price) }}" class="form-control" required>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount Type</label>
@@ -111,7 +111,7 @@
                 <div class="col-md-3">
                     <label class="form-label" id="discountValueLabel">Discount Value</label>
                     <div class="input-group">
-                        <input type="number" step="0.01" min="0" max="{{ $maxMoneyAmount }}" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue" data-max-money="{{ $maxMoneyAmount }}">
+                        <input type="number" step="0.01" min="0.01" max="{{ $maxMoneyAmount }}" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue" data-max-money="{{ $maxMoneyAmount }}">
                         <span class="input-group-text" id="discountValueSuffix">Value</span>
                     </div>
                 </div>
@@ -132,12 +132,12 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Stock Qty</label>
-                    <input type="number" min="0" name="stock_quantity" value="{{ old('stock_quantity', $product->inventory?->stock_quantity) }}" class="form-control" required>
+                    <input type="number" min="0" name="stock_quantity" value="{{ old('stock_quantity', $product->inventory?->stock_quantity) }}" class="form-control" id="stockQuantity" required>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Unit</label>
                     @php($selectedUnit = old('unit', $product->unit ?: $product->inventory?->unit))
-                    <select name="unit" class="form-select">
+                    <select name="unit" class="form-select" required>
                         <option value="">Select unit</option>
                         <option value="kg" @selected($selectedUnit === 'kg')>kg</option>
                         <option value="nos" @selected($selectedUnit === 'nos')>nos</option>
@@ -146,7 +146,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Low Stock</label>
-                    <input type="number" min="0" name="low_stock_threshold" value="{{ old('low_stock_threshold', $product->inventory?->low_stock_threshold) }}" class="form-control">
+                    <input type="number" min="0" name="low_stock_threshold" value="{{ old('low_stock_threshold', $product->inventory?->low_stock_threshold) }}" class="form-control" id="lowStockThreshold">
                 </div>
 
                 <div class="col-12">
@@ -200,6 +200,8 @@
                     return;
                 }
 
+                discountValue?.toggleAttribute('required', Boolean(discountType.value));
+
                 if (discountType.value === 'percentage') {
                     discountValueLabel.textContent = 'Discount Value (%)';
                     discountValueSuffix.textContent = '%';
@@ -244,15 +246,44 @@
             }
 
             const maxBytes = Number(imageInput.dataset.maxFileSize || 0);
+            const maxFiles = Number(imageInput.dataset.maxFiles || 0);
             const maxMb = Math.round((maxBytes / 1024 / 1024) * 10) / 10;
 
-            const validateImageSizes = () => {
-                const oversized = Array.from(imageInput.files || []).find((file) => file.size > maxBytes);
-                imageInput.setCustomValidity(oversized ? `${oversized.name} is larger than ${maxMb} MB.` : '');
+            const validateImages = () => {
+                const files = Array.from(imageInput.files || []);
+                const oversized = files.find((file) => file.size > maxBytes);
+                let message = '';
+
+                if (maxFiles && files.length > maxFiles) {
+                    message = `You can upload up to ${maxFiles} product images.`;
+                } else if (oversized) {
+                    message = `${oversized.name} is larger than ${maxMb} MB.`;
+                }
+
+                imageInput.setCustomValidity(message);
                 imageInput.reportValidity();
             };
 
-            imageInput.addEventListener('change', validateImageSizes);
+            imageInput.addEventListener('change', validateImages);
+        })();
+
+        (() => {
+            const stockQuantity = document.getElementById('stockQuantity');
+            const lowStockThreshold = document.getElementById('lowStockThreshold');
+            if (!stockQuantity || !lowStockThreshold) {
+                return;
+            }
+
+            const syncLowStockLimit = () => {
+                lowStockThreshold.max = stockQuantity.value || '';
+                const stock = Number(stockQuantity.value || 0);
+                const threshold = Number(lowStockThreshold.value || 0);
+                lowStockThreshold.setCustomValidity(threshold > stock ? 'Low stock cannot be greater than stock quantity.' : '');
+            };
+
+            stockQuantity.addEventListener('input', syncLowStockLimit);
+            lowStockThreshold.addEventListener('input', syncLowStockLimit);
+            syncLowStockLimit();
         })();
     </script>
 @endpush

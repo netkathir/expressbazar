@@ -238,14 +238,14 @@ class ProductController extends Controller
                     ->where('country_id', Auth::guard('vendor')->user()?->country_id ?: 0)
                     ->where('status', 'active'),
             ],
-            'price' => ['required', 'numeric', 'min:0', 'max:'.self::MAX_MONEY_AMOUNT, 'regex:'.self::MONEY_PATTERN],
+            'price' => ['required', 'numeric', 'min:0.01', 'max:'.self::MAX_MONEY_AMOUNT, 'regex:'.self::MONEY_PATTERN],
             'discount_type' => ['nullable', Rule::in(['percentage', 'fixed'])],
-            'discount_value' => ['nullable', 'numeric', 'min:0', 'max:'.self::MAX_MONEY_AMOUNT, 'regex:'.self::MONEY_PATTERN],
-            'discount_start_date' => ['nullable', 'date'],
-            'discount_end_date' => ['nullable', 'date'],
+            'discount_value' => ['nullable', 'required_with:discount_type', 'numeric', 'min:0.01', 'max:'.self::MAX_MONEY_AMOUNT, 'regex:'.self::MONEY_PATTERN],
+            'discount_start_date' => ['nullable', 'required_with:discount_end_date', 'date'],
+            'discount_end_date' => ['nullable', 'required_with:discount_start_date', 'date', 'after_or_equal:discount_start_date'],
             'inventory_mode' => ['required', Rule::in(['internal', 'epos'])],
             'stock_quantity' => ['required_if:inventory_mode,internal', 'integer', 'min:0'],
-            'unit' => ['nullable', Rule::in(['kg', 'nos', 'pieces'])],
+            'unit' => ['required', Rule::in(['kg', 'nos', 'pieces'])],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
@@ -253,13 +253,24 @@ class ProductController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
             'price.regex' => 'Price must be 99,999,999.99 or less with up to two decimal places.',
+            'price.min' => 'Price must be greater than zero.',
             'price.max' => 'Price cannot be more than 99,999,999.99.',
+            'discount_value.required_with' => 'Discount value is required when a discount type is selected.',
+            'discount_value.min' => 'Discount value must be greater than zero.',
             'discount_value.regex' => 'Discount value must be 99,999,999.99 or less with up to two decimal places.',
             'discount_value.max' => 'Discount value cannot be more than 99,999,999.99.',
+            'discount_start_date.required_with' => 'Discount start date is required when discount end date is selected.',
+            'discount_end_date.required_with' => 'Discount end date is required when discount start date is selected.',
+            'discount_end_date.after_or_equal' => 'Discount end date must be after or equal to the start date.',
             'stock_quantity.required_if' => 'Stock quantity is required for internal inventory products.',
+            'unit.required' => 'Unit is required.',
             'images.*.max' => 'Each product image must be 2 MB or smaller.',
             'images.*.mimes' => 'Product images must be JPG, JPEG, PNG, WEBP or GIF files.',
         ]);
+
+        if (isset($data['low_stock_threshold'], $data['stock_quantity']) && $data['low_stock_threshold'] > $data['stock_quantity']) {
+            throw ValidationException::withMessages(['low_stock_threshold' => 'Low stock threshold cannot be greater than stock quantity.']);
+        }
 
         if (empty($data['discount_type']) || empty($data['discount_value'])) {
             $data['discount_type'] = null;

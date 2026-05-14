@@ -1649,3 +1649,45 @@
         grid-template-columns: 1fr;
     }
 }
+
+.sf-order-history-card {
+    align-items: center;
+    gap: 16px;
+}
+
+.sf-order-history-main {
+    align-items: center;
+}
+
+.sf-order-history-image {
+    width: 88px;
+    height: 88px;
+    border-radius: 8px;
+}
+
+.sf-order-history-eyebrow {
+    margin-bottom: 4px;
+    color: var(--sf-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sf-order-history-title {
+    display: block;
+    color: var(--sf-charcoal);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+@media (max-width: 575.98px) {
+    .sf-order-history-card,
+    .sf-order-history-main {
+        align-items: flex-start;
+    }
+
+    .sf-order-history-image {
+        width: 72px;
+        height: 72px;
+    }
+}

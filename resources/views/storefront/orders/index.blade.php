@@ -56,13 +56,13 @@
                                         @endif
 
                                         <div class="sf-order-history-copy">
-                                            <div class="text-secondary small">Product</div>
+                                            <div class="sf-order-history-eyebrow">Order ID {{ $order->order_number }}</div>
                                             @if ($productUrl)
-                                                <a href="{{ $productUrl }}" class="fw-semibold text-decoration-none text-dark">
+                                                <a href="{{ $productUrl }}" class="sf-order-history-title text-decoration-none">
                                                     {{ $item->item_name }}
                                                 </a>
                                             @else
-                                                <div class="fw-semibold">{{ $item->item_name ?: 'Product unavailable' }}</div>
+                                                <div class="sf-order-history-title">{{ $item->item_name ?: 'Product unavailable' }}</div>
                                                 <div class="small text-secondary">Product unavailable</div>
                                             @endif
                                             <div class="text-secondary small mt-2">
