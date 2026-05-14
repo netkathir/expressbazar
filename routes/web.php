@@ -174,6 +174,9 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::get('notifications/{id}/read', [VendorNotificationController::class, 'read'])->name('notifications.read');
         Route::get('notifications', [VendorReferenceModuleController::class, 'notifications'])->name('notifications.index');
         Route::get('reports', [VendorReferenceModuleController::class, 'reports'])->name('reports.index');
+        Route::get('products/bulk', [VendorProductController::class, 'bulkCreate'])->name('products.bulk');
+        Route::post('products/bulk', [VendorProductController::class, 'bulkStore'])->name('products.bulk.store');
+        Route::get('products/bulk/template', [VendorProductController::class, 'bulkTemplate'])->name('products.bulk.template');
         Route::resource('products', VendorProductController::class)->except(['show']);
         Route::delete('products/images/{image}', [VendorProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::resource('coupons', VendorCouponController::class)->except(['show']);

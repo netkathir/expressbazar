@@ -15,7 +15,7 @@
                     'products' => $searchResults,
                     'emptyMessage' => !empty($requiresLocation ?? false)
                         ? 'Enter your delivery location to see exact availability'
-                        : config('ui_messages.no_products'),
+                        : 'No results found',
                 ])
             </div>
         </section>

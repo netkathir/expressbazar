@@ -8,6 +8,8 @@ const locationModalEl = document.getElementById('locationModal');
 const locationModal = locationModalEl ? new bootstrap.Modal(locationModalEl) : null;
 const checkoutAuthModalEl = document.getElementById('checkoutAuthModal');
 const checkoutAuthModal = checkoutAuthModalEl ? new bootstrap.Modal(checkoutAuthModalEl) : null;
+const addressDeleteConfirmModalEl = document.getElementById('addressDeleteConfirmModal');
+const addressDeleteConfirmModal = addressDeleteConfirmModalEl ? new bootstrap.Modal(addressDeleteConfirmModalEl) : null;
 const locationForm = locationModalEl?.querySelector('.js-location-form') || document.querySelector('.js-location-form');
 const countrySelect = locationForm?.querySelector('.js-country-select') || null;
 const citySelect = locationForm?.querySelector('.js-city-select') || null;
@@ -21,6 +23,7 @@ const guestCartKey = 'expressbazar.guestCart';
 const legacyGuestCartKey = 'guest_cart';
 const selectedVendorIdKey = 'expressbazar.selectedVendorId';
 const selectedVendorNameKey = 'expressbazar.selectedVendorName';
+let pendingAddressDeleteForm = null;
 window.storefrontAjaxFilters = true;
 
 function hidePageLoader() {
@@ -986,6 +989,14 @@ document.addEventListener('submit', async (event) => {
         return;
     }
 
+    const addressDeleteForm = event.target.closest('.js-address-delete-form');
+    if (addressDeleteForm && addressDeleteConfirmModal) {
+        event.preventDefault();
+        pendingAddressDeleteForm = addressDeleteForm;
+        addressDeleteConfirmModal.show();
+        return;
+    }
+
     const form = event.target.closest('.js-location-form');
     if (!form) {
         return;
@@ -1026,6 +1037,18 @@ document.addEventListener('submit', async (event) => {
     locationModal?.hide();
     clearSelectedVendor();
     reloadWithoutVendorFilter();
+});
+
+document.querySelector('.js-confirm-address-delete')?.addEventListener('click', () => {
+    if (!pendingAddressDeleteForm) {
+        addressDeleteConfirmModal?.hide();
+        return;
+    }
+
+    const form = pendingAddressDeleteForm;
+    pendingAddressDeleteForm = null;
+    addressDeleteConfirmModal?.hide();
+    form.submit();
 });
 
 countrySelect?.addEventListener('change', async () => {
@@ -1138,7 +1161,10 @@ function renderSearchSuggestions(items) {
     }
 
     searchSuggestions.innerHTML = items
-        .map((item) => `<button type="button" class="sf-search-suggestion" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>`)
+        .map((item) => {
+            const value = typeof item === 'string' ? item : (item.name || '');
+            return `<button type="button" class="sf-search-suggestion" data-value="${escapeHtml(value)}">${escapeHtml(value)}</button>`;
+        })
         .join('');
     searchSuggestions.hidden = false;
 }

@@ -11,6 +11,8 @@ use App\Models\ProductInventory;
 use App\Models\Subcategory;
 use App\Models\Tax;
 use App\Services\InventoryService;
+use App\Services\ProductBulkImportService;
+use App\Services\ProductBulkTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -65,6 +67,52 @@ class ProductController extends Controller
             'routePrefix' => 'vendor.products',
             'isVendorPanel' => true,
         ]);
+    }
+
+    public function bulkCreate()
+    {
+        return view('admin.products.bulk', [
+            'title' => 'Bulk Import Products',
+            'activeMenu' => 'products',
+            'routePrefix' => 'vendor.products',
+            'isVendorPanel' => true,
+            'categories' => Category::query()->with(['subcategories' => fn ($query) => $query->orderBy('subcategory_name')])->orderBy('category_name')->get(['id', 'category_name']),
+        ]);
+    }
+
+    public function bulkStore(Request $request, ProductBulkImportService $importer)
+    {
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'max:5120'],
+        ]);
+
+        $result = $importer->import($data['file'], [
+            'vendor' => Auth::guard('vendor')->user(),
+            'queue_epos_sync' => true,
+        ]);
+
+        if ($result['created'] === 0 && ! empty($result['errors'])) {
+            return redirect()
+                ->route('vendor.products.bulk')
+                ->withErrors(['file' => 'No products were imported. Please review the skipped row details below.'])
+                ->with('bulk_errors', $result['errors']);
+        }
+
+        return redirect()
+            ->route('vendor.products.bulk')
+            ->with('success', $result['created'].' products imported successfully.'.(empty($result['errors']) ? '' : ' Some rows were skipped.'))
+            ->with('bulk_errors', $result['errors']);
+    }
+
+    public function bulkTemplate(ProductBulkTemplateService $templateService)
+    {
+        $path = $templateService->vendorTemplate(Auth::guard('vendor')->user());
+
+        return response()
+            ->download($path, 'vendor-product-bulk-template.xlsx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend(true);
     }
 
     public function store(Request $request)

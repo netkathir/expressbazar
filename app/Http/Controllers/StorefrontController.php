@@ -119,7 +119,7 @@ class StorefrontController extends Controller
 
                 return $this->productGridResponse(
                     $products,
-                    config('ui_messages.no_products'),
+                    'No results found',
                     [
                         'recent_searches' => $this->recentSearches(),
                 ]
@@ -144,9 +144,19 @@ class StorefrontController extends Controller
             }
 
             $products = $this->productsQuery($this->browsingLocation())
-                ->where('product_name', 'like', "%{$keyword}%")
+                ->where(function ($query) use ($keyword) {
+                    $query->where('product_name', 'like', "%{$keyword}%")
+                        ->orWhereHas('category', function ($categoryQuery) use ($keyword) {
+                            $categoryQuery->where('status', 'active')
+                                ->where('category_name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('subcategory', function ($subcategoryQuery) use ($keyword) {
+                            $subcategoryQuery->where('status', 'active')
+                                ->where('subcategory_name', 'like', "%{$keyword}%");
+                        });
+                })
                 ->orderBy('product_name')
-                ->limit(5)
+                ->limit(8)
                 ->pluck('product_name');
 
             return response()->json($products);
@@ -887,6 +897,10 @@ class StorefrontController extends Controller
                         ->orWhereHas('category', function ($categoryQuery) use ($keyword) {
                             $categoryQuery->where('status', 'active')
                                 ->where('category_name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('subcategory', function ($subcategoryQuery) use ($keyword) {
+                            $subcategoryQuery->where('status', 'active')
+                                ->where('subcategory_name', 'like', "%{$keyword}%");
                         });
                 })
                     ->orderByRaw(

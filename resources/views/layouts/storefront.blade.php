@@ -17,7 +17,16 @@
     <link rel="stylesheet" href="{{ asset('css/custom-overrides.css') }}">
     @stack('head')
 </head>
-<body class="storefront-shell" data-cart-count="{{ $cartCount ?? 0 }}">
+@php
+    $hideStorefrontHeader = request()->routeIs(
+        'storefront.login',
+        'storefront.login.store',
+        'storefront.register',
+        'storefront.register.store',
+        'storefront.password.*'
+    );
+@endphp
+<body class="storefront-shell {{ $hideStorefrontHeader ? 'storefront-auth-shell' : '' }}" data-cart-count="{{ $cartCount ?? 0 }}">
     <div class="sf-page-loader" role="status" aria-live="polite" aria-label="Loading">
         <div class="sf-page-loader-card">
             <img src="{{ asset('favicon.png') }}" alt="" class="sf-page-loader-logo">
@@ -25,93 +34,95 @@
         </div>
     </div>
 
-    <header class="sf-topbar sticky-top">
-        <div class="container-fluid px-3 px-lg-4">
-            <div class="sf-searchbar">
-                <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
-                    <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="sf-brand-logo">
-                </a>
+    @unless ($hideStorefrontHeader)
+        <header class="sf-topbar sticky-top">
+            <div class="container-fluid px-3 px-lg-4">
+                <div class="sf-searchbar">
+                    <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
+                        <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="sf-brand-logo">
+                    </a>
 
-                <div class="sf-header-controls">
-                    <button class="sf-location-btn js-open-location" type="button">
-                        <i class="ti ti-map-pin me-1"></i>
-                        <span class="js-location-label">{{ $locationLabel ?? 'Select Location' }}</span>
-                        <i class="ti ti-chevron-down ms-1"></i>
-                    </button>
-
-                    <div class="dropdown sf-vendor-selector js-vendor-selector {{ empty($location ?? null) ? 'd-none' : '' }}">
-                        <button class="sf-vendor-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-building-store me-1"></i>
-                            <span class="js-selected-vendor-text">Vendors</span>
+                    <div class="sf-header-controls">
+                        <button class="sf-location-btn js-open-location" type="button">
+                            <i class="ti ti-map-pin me-1"></i>
+                            <span class="js-location-label">{{ $locationLabel ?? 'Select Location' }}</span>
                             <i class="ti ti-chevron-down ms-1"></i>
                         </button>
-                        <ul class="dropdown-menu sf-vendor-menu js-vendor-list">
-                            <li class="dropdown-item text-muted">Loading...</li>
-                        </ul>
+
+                        <div class="dropdown sf-vendor-selector js-vendor-selector {{ empty($location ?? null) ? 'd-none' : '' }}">
+                            <button class="sf-vendor-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ti ti-building-store me-1"></i>
+                                <span class="js-selected-vendor-text">Vendors</span>
+                                <i class="ti ti-chevron-down ms-1"></i>
+                            </button>
+                            <ul class="dropdown-menu sf-vendor-menu js-vendor-list">
+                                <li class="dropdown-item text-muted">Loading...</li>
+                            </ul>
+                        </div>
+
+                        <form action="{{ route('user.home') }}" method="GET" class="sf-search-form js-search-form">
+                            <i class="ti ti-search"></i>
+                            <input type="search" id="searchInput" class="js-search-input" name="search" placeholder="Search for products, categories or brands" value="{{ request('search', request('q')) }}" autocomplete="off">
+                            @if (request()->filled('vendor_id'))
+                                <input type="hidden" name="vendor_id" value="{{ request('vendor_id') }}">
+                            @endif
+                            <div class="sf-search-suggestions js-search-suggestions" hidden></div>
+                        </form>
                     </div>
 
-                    <form action="{{ route('user.home') }}" method="GET" class="sf-search-form js-search-form">
-                        <i class="ti ti-search"></i>
-                        <input type="search" id="searchInput" class="js-search-input" name="search" placeholder="Search for products, categories or brands" value="{{ request('search', request('q')) }}" autocomplete="off">
-                        @if (request()->filled('vendor_id'))
-                            <input type="hidden" name="vendor_id" value="{{ request('vendor_id') }}">
-                        @endif
-                        <div class="sf-search-suggestions js-search-suggestions" hidden></div>
-                    </form>
-                </div>
-
-                <div class="sf-actions">
-                    @auth
-                        @if (auth()->user()->role === 'customer')
-                            <a href="{{ route('storefront.account') }}" class="sf-avatar-link text-decoration-none">
-                                <span class="sf-avatar">
-                                    @if (auth()->user()->avatar_path)
-                                        <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
-                                    @else
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                    @endif
-                                </span>
-                            </a>
-                            <div class="dropdown">
-                                <button class="sf-action-link sf-alert-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
-                                    <i class="ti ti-bell-filled" aria-hidden="true"></i>
-                                    <span id="notification-count" class="sf-cart-badge js-notification-count d-none">0</span>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
-                                    <div class="d-flex align-items-center justify-content-between gap-2 px-2 py-1">
-                                        <div class="small fw-semibold">Notifications</div>
-                                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none js-notifications-clear-all d-none">Clear all</button>
-                                    </div>
-                                    <div id="notification-list">
-                                        <div class="dropdown-item-text small text-secondary px-2 py-2">No notifications</div>
+                    <div class="sf-actions">
+                        @auth
+                            @if (auth()->user()->role === 'customer')
+                                <a href="{{ route('storefront.account') }}" class="sf-avatar-link text-decoration-none">
+                                    <span class="sf-avatar">
+                                        @if (auth()->user()->avatar_path)
+                                            <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                                        @else
+                                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                        @endif
+                                    </span>
+                                </a>
+                                <div class="dropdown">
+                                    <button class="sf-action-link sf-alert-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                                        <i class="ti ti-bell-filled" aria-hidden="true"></i>
+                                        <span id="notification-count" class="sf-cart-badge js-notification-count d-none">0</span>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
+                                        <div class="d-flex align-items-center justify-content-between gap-2 px-2 py-1">
+                                            <div class="small fw-semibold">Notifications</div>
+                                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none js-notifications-clear-all d-none">Clear all</button>
+                                        </div>
+                                        <div id="notification-list">
+                                            <div class="dropdown-item-text small text-secondary px-2 py-2">No notifications</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @else
+                                <a href="{{ route('admin.dashboard') }}" class="sf-action-link">
+                                    <i class="ti ti-shield-lock"></i>
+                                    <span>Admin</span>
+                                </a>
+                            @endif
                         @else
-                            <a href="{{ route('admin.dashboard') }}" class="sf-action-link">
-                                <i class="ti ti-shield-lock"></i>
-                                <span>Admin</span>
+                            <a href="{{ route('storefront.login') }}" class="sf-action-link">
+                                <i class="ti ti-user-circle"></i>
+                                <span>Login</span>
                             </a>
-                        @endif
-                    @else
-                        <a href="{{ route('storefront.login') }}" class="sf-action-link">
-                            <i class="ti ti-user-circle"></i>
-                            <span>Login</span>
-                        </a>
-                        <a href="{{ route('storefront.register') }}" class="sf-action-link">
-                            <i class="ti ti-user-plus"></i>
-                            <span>Register</span>
-                        </a>
-                    @endauth
-                    <button class="sf-action-link js-open-cart" type="button">
-                        <i class="ti ti-shopping-cart"></i>
-                        <span>Cart</span>
-                        <span class="sf-cart-badge js-cart-count {{ ($cartCount ?? 0) > 0 ? '' : 'd-none' }}">{{ $cartCount ?? 0 }}</span>
-                    </button>
+                            <a href="{{ route('storefront.register') }}" class="sf-action-link">
+                                <i class="ti ti-user-plus"></i>
+                                <span>Register</span>
+                            </a>
+                        @endauth
+                        <button class="sf-action-link js-open-cart" type="button">
+                            <i class="ti ti-shopping-cart"></i>
+                            <span>Cart</span>
+                            <span class="sf-cart-badge js-cart-count {{ ($cartCount ?? 0) > 0 ? '' : 'd-none' }}">{{ $cartCount ?? 0 }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
+    @endunless
 
     <div class="container-fluid px-3 px-lg-4 pt-3">
         @if (session('success'))
@@ -138,6 +149,28 @@
 
     <footer class="sf-footer">
         <div class="container-fluid px-3 px-lg-4">
+            <div class="sf-footer-benefits">
+                <div>
+                    <i class="ti ti-building-store"></i>
+                    <span>Vendor-stocked products</span>
+                    <small>Browse nearby stores</small>
+                </div>
+                <div>
+                    <i class="ti ti-truck-delivery"></i>
+                    <span>Fast checkout flow</span>
+                    <small>Location validation when needed</small>
+                </div>
+                <div>
+                    <i class="ti ti-shield-check"></i>
+                    <span>One vendor cart</span>
+                    <small>Clear basket rules</small>
+                </div>
+                <div>
+                    <i class="ti ti-headset"></i>
+                    <span>Customer support</span>
+                    <small>Help with your orders</small>
+                </div>
+            </div>
             <div class="sf-footer-grid">
                 <div class="sf-footer-brand">
                     <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
@@ -185,6 +218,12 @@
                         <a href="#" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
                         <a href="#" aria-label="Twitter"><i class="ti ti-brand-x"></i></a>
                         <a href="#" aria-label="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
+                    </div>
+                    <div class="sf-payment-row" aria-label="Payment methods">
+                        <span>UPI</span>
+                        <span>Visa</span>
+                        <span>Mastercard</span>
+                        <span>Stripe</span>
                     </div>
                 </div>
             </div>
@@ -268,6 +307,27 @@
                         <a href="{{ route('storefront.login') }}" class="btn btn-danger rounded-pill px-4">Login</a>
                         <a href="{{ route('storefront.register') }}" class="btn btn-outline-dark rounded-pill px-4">Register</a>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addressDeleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold">Delete address?</h5>
+                        <div class="text-secondary small">This saved address will be removed from your account.</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0 text-secondary">Are you sure you want to delete this address?</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 js-confirm-address-delete">Delete</button>
                 </div>
             </div>
         </div>

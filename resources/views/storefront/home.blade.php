@@ -19,6 +19,23 @@
         @elseif (!$isSearch && $showNoPincodeData)
             @php($topStatusMessage = config('ui_messages.no_products'))
         @endif
+        @if ($isSearch)
+            <section class="container-fluid px-3 px-lg-4 pt-0">
+                <div class="sf-section-header">
+                    <div>
+                        <h3>Search Results</h3>
+                        <p class="text-secondary mb-0">Results for "{{ $search }}"</p>
+                    </div>
+                    <a href="{{ route('user.home', $filterQuery) }}" class="btn btn-sm btn-light ms-2">Clear</a>
+                </div>
+                <div class="sf-grid js-product-list" id="product-list">
+                    @include('storefront.partials.product-grid', [
+                        'products' => $searchResults,
+                        'emptyMessage' => 'No results found',
+                    ])
+                </div>
+            </section>
+        @endif
         <section class="container-fluid px-3 px-lg-4 pt-0">
             <div class="sf-category-strip-header">
                 <div>
@@ -68,23 +85,7 @@
             </section>
         @endif
 
-        @if ($isSearch)
-            <section class="container-fluid px-3 px-lg-4 mt-4">
-                <div class="sf-section-header">
-                    <div>
-                        <h3>Search Results</h3>
-                        <p class="text-secondary mb-0">Results for "{{ $search }}"</p>
-                    </div>
-                    <a href="{{ route('user.home', $filterQuery) }}" class="btn btn-sm btn-light ms-2">Clear</a>
-                </div>
-                <div class="sf-grid js-product-list" id="product-list">
-                    @include('storefront.partials.product-grid', [
-                        'products' => $searchResults,
-                        'emptyMessage' => 'No results found',
-                    ])
-                </div>
-            </section>
-        @else
+        @if (!$isSearch)
         <section class="container-fluid px-3 px-lg-4 mt-3">
             <div class="sf-hero-grid">
                 <div class="sf-hero-card sf-hero-card-soft">
@@ -115,6 +116,30 @@
                 <x-empty-state>{{ config('ui_messages.no_products') }}</x-empty-state>
             </section>
         @elseif (!$isSearch)
+            <section class="container-fluid px-3 px-lg-4 mt-4">
+                <div class="sf-promo-board">
+                    @php($promoCategoryOne = $categories->first())
+                    @php($promoCategoryTwo = $categories->skip(1)->first())
+                    @php($promoCategoryThree = $categories->skip(2)->first())
+                    <a href="{{ $promoCategoryOne ? route('storefront.category', array_merge(['category' => $promoCategoryOne], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-card-large sf-promo-fresh">
+                        <span class="sf-kicker">Fresh picks</span>
+                        <h2>Daily essentials, better prices.</h2>
+                        <p>Quick grocery runs with fresh staples and instant cart flow.</p>
+                        <span class="sf-promo-cta">Shop deals <i class="ti ti-arrow-right"></i></span>
+                    </a>
+                    <a href="{{ $promoCategoryTwo ? route('storefront.category', array_merge(['category' => $promoCategoryTwo], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-orange">
+                        <span class="sf-kicker">Weekend basket</span>
+                        <h3>Save on pantry favourites.</h3>
+                        <span class="sf-promo-cta">Explore <i class="ti ti-arrow-right"></i></span>
+                    </a>
+                    <a href="{{ $promoCategoryThree ? route('storefront.category', array_merge(['category' => $promoCategoryThree], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-cool">
+                        <span class="sf-kicker">Fast delivery</span>
+                        <h3>Vendor-stocked products near you.</h3>
+                        <span class="sf-promo-cta">Browse <i class="ti ti-arrow-right"></i></span>
+                    </a>
+                </div>
+            </section>
+
             @if (($discountedProducts ?? collect())->isNotEmpty())
                 @php($topOfferCategory = $discountedProducts->first()?->category ?? $categories->first())
                 <section class="container-fluid px-3 px-lg-4 mt-4">
@@ -143,6 +168,28 @@
                 </section>
             @endif
 
+            @if (($availableVendors ?? collect())->isNotEmpty())
+                <section class="container-fluid px-3 px-lg-4 mt-4">
+                    <div class="sf-brand-store-panel">
+                        <div class="sf-section-header mb-3">
+                            <div>
+                                <h3>Explore vendor stores</h3>
+                                <p class="text-secondary mb-0">Browse trusted local stores and keep your cart with one vendor.</p>
+                            </div>
+                        </div>
+                        <div class="sf-store-tile-grid">
+                            @foreach ($availableVendors->take(8) as $vendor)
+                                <button type="button" class="sf-store-tile js-vendor-item" data-id="{{ $vendor->id }}" data-name="{{ $vendor->vendor_name }}">
+                                    <span>{{ strtoupper(substr($vendor->vendor_name, 0, 1)) }}</span>
+                                    <strong>{{ $vendor->vendor_name }}</strong>
+                                    <small>Shop available products</small>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+            @endif
+
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <div class="sf-section-header">
                     <div>
@@ -165,6 +212,24 @@
                     <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll trending products right">
                         <i class="ti ti-chevron-right"></i>
                     </button>
+                </div>
+            </section>
+
+            <section class="container-fluid px-3 px-lg-4 mt-4">
+                <div class="sf-ad-mosaic">
+                    <div class="sf-ad-card sf-ad-green">
+                        <span class="sf-kicker">Kitchen restock</span>
+                        <h3>Rice, spices, snacks and home basics.</h3>
+                        <p>Build a basket from nearby vendors and checkout in one smooth flow.</p>
+                    </div>
+                    <div class="sf-ad-card sf-ad-pink">
+                        <span class="sf-kicker">Offer zone</span>
+                        <h3>Fresh deals refreshed for everyday shopping.</h3>
+                    </div>
+                    <div class="sf-ad-card sf-ad-blue">
+                        <span class="sf-kicker">One cart</span>
+                        <h3>Clear vendor cart rules, no surprises.</h3>
+                    </div>
                 </div>
             </section>
 
@@ -215,12 +280,20 @@
         @endif
 
         <section class="container-fluid px-3 px-lg-4 mt-5">
-            <div class="sf-info-card">
-                <h4 class="mb-3">How it works</h4>
-                <div class="row g-3">
+            <div class="sf-info-card sf-how-it-works">
+                <div class="sf-how-header">
+                    <div>
+                        <span class="sf-kicker">Simple flow</span>
+                        <h4 class="mb-0">How it works</h4>
+                    </div>
+                    <span class="sf-how-badge">3 steps</span>
+                </div>
+                <div class="row g-3 sf-how-grid">
                     <div class="col-12 col-md-4">
                         <div class="sf-mini-step">
                             <strong>1</strong>
+                            <i class="ti ti-compass"></i>
+                            <span class="sf-step-line"></span>
                             <div>
                                 <div class="fw-semibold">Open the app</div>
                                 <div class="text-secondary small">Browse instantly without a blocking popup.</div>
@@ -230,6 +303,8 @@
                     <div class="col-12 col-md-4">
                         <div class="sf-mini-step">
                             <strong>2</strong>
+                            <i class="ti ti-basket-plus"></i>
+                            <span class="sf-step-line"></span>
                             <div>
                                 <div class="fw-semibold">Add items</div>
                                 <div class="text-secondary small">Quick add keeps the cart locked to one vendor.</div>
@@ -239,6 +314,8 @@
                     <div class="col-12 col-md-4">
                         <div class="sf-mini-step">
                             <strong>3</strong>
+                            <i class="ti ti-map-check"></i>
+                            <span class="sf-step-line"></span>
                             <div>
                                 <div class="fw-semibold">Checkout</div>
                                 <div class="text-secondary small">Exact delivery validation happens only when needed.</div>
