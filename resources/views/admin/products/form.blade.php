@@ -7,6 +7,7 @@
     @endphp
     <div class="card shell-card">
         <div class="card-body p-4 p-md-5">
+            @php($maxMoneyAmount = '99999999.99')
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
                     <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Product' : 'Edit Product' }}</h1>
@@ -78,8 +79,8 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label">Product Images</label>
-                    <input type="file" name="images[]" class="form-control" multiple accept="image/*">
-                    <div class="form-text">You can upload up to 5 images. Leave blank to keep the current images on edit.</div>
+                    <input type="file" name="images[]" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" data-max-file-size="2097152">
+                    <div class="form-text">You can upload up to 5 images: JPG, JPEG, PNG, WEBP or GIF, maximum 2 MB each. Leave blank to keep the current images on edit.</div>
                 </div>
                 @if ($mode === 'edit' && $product->images->isNotEmpty())
                     <div class="col-12">
@@ -97,7 +98,7 @@
                 @endif
                 <div class="col-md-3">
                     <label class="form-label">Price</label>
-                    <input type="number" step="0.01" min="0" name="price" value="{{ old('price', $product->price) }}" class="form-control" required>
+                    <input type="number" step="0.01" min="0" max="{{ $maxMoneyAmount }}" name="price" value="{{ old('price', $product->price) }}" class="form-control" required>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount Type</label>
@@ -110,7 +111,7 @@
                 <div class="col-md-3">
                     <label class="form-label" id="discountValueLabel">Discount Value</label>
                     <div class="input-group">
-                        <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue">
+                        <input type="number" step="0.01" min="0" max="{{ $maxMoneyAmount }}" name="discount_value" value="{{ old('discount_value', $product->discount_value) }}" class="form-control" id="discountValue" data-max-money="{{ $maxMoneyAmount }}">
                         <span class="input-group-text" id="discountValueSuffix">Value</span>
                     </div>
                 </div>
@@ -202,12 +203,15 @@
                 if (discountType.value === 'percentage') {
                     discountValueLabel.textContent = 'Discount Value (%)';
                     discountValueSuffix.textContent = '%';
+                    discountValue?.setAttribute('max', '100');
                 } else if (discountType.value === 'fixed') {
                     discountValueLabel.textContent = 'Discount Value (Amount)';
                     discountValueSuffix.textContent = '₹';
+                    discountValue?.setAttribute('max', discountValue.dataset.maxMoney || '{{ $maxMoneyAmount }}');
                 } else {
                     discountValueLabel.textContent = 'Discount Value';
                     discountValueSuffix.textContent = 'Value';
+                    discountValue?.setAttribute('max', discountValue.dataset.maxMoney || '{{ $maxMoneyAmount }}');
                 }
             };
 
@@ -231,6 +235,24 @@
             discountValue?.addEventListener('input', syncDiscountDates);
             syncDiscountValueLabel();
             syncDiscountDates();
+        })();
+
+        (() => {
+            const imageInput = document.querySelector('input[name="images[]"][data-max-file-size]');
+            if (!imageInput) {
+                return;
+            }
+
+            const maxBytes = Number(imageInput.dataset.maxFileSize || 0);
+            const maxMb = Math.round((maxBytes / 1024 / 1024) * 10) / 10;
+
+            const validateImageSizes = () => {
+                const oversized = Array.from(imageInput.files || []).find((file) => file.size > maxBytes);
+                imageInput.setCustomValidity(oversized ? `${oversized.name} is larger than ${maxMb} MB.` : '');
+                imageInput.reportValidity();
+            };
+
+            imageInput.addEventListener('change', validateImageSizes);
         })();
     </script>
 @endpush

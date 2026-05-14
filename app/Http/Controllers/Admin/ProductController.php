@@ -18,6 +18,9 @@ use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
+    private const MAX_MONEY_AMOUNT = 99999999.99;
+    private const MONEY_PATTERN = '/^\d{1,8}(\.\d{1,2})?$/';
+
     public function index(Request $request)
     {
         $products = Product::query()
@@ -150,9 +153,9 @@ class ProductController extends Controller
             'subcategory_id' => ['nullable', 'exists:subcategories,id'],
             'vendor_id' => ['required', 'exists:vendors,id'],
             'tax_id' => ['nullable', 'exists:taxes,id'],
-            'price' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'price' => ['required', 'numeric', 'min:0', 'max:'.self::MAX_MONEY_AMOUNT, 'regex:'.self::MONEY_PATTERN],
             'discount_type' => ['nullable', Rule::in(['percentage', 'fixed'])],
-            'discount_value' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'discount_value' => ['nullable', 'numeric', 'min:0', 'max:'.self::MAX_MONEY_AMOUNT, 'regex:'.self::MONEY_PATTERN],
             'discount_start_date' => ['nullable', 'date'],
             'discount_end_date' => ['nullable', 'date'],
             'inventory_mode' => ['required', Rule::in(['internal', 'epos'])],
@@ -160,13 +163,17 @@ class ProductController extends Controller
             'unit' => ['nullable', Rule::in(['kg', 'nos', 'pieces'])],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['image', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
             'remove_image_ids' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
-            'price.regex' => 'Price can have up to two decimal places.',
-            'discount_value.regex' => 'Discount value can have up to two decimal places.',
+            'price.regex' => 'Price must be 99,999,999.99 or less with up to two decimal places.',
+            'price.max' => 'Price cannot be more than 99,999,999.99.',
+            'discount_value.regex' => 'Discount value must be 99,999,999.99 or less with up to two decimal places.',
+            'discount_value.max' => 'Discount value cannot be more than 99,999,999.99.',
             'stock_quantity.required_if' => 'Stock quantity is required for internal inventory products.',
+            'images.*.max' => 'Each product image must be 2 MB or smaller.',
+            'images.*.mimes' => 'Product images must be JPG, JPEG, PNG, WEBP or GIF files.',
         ]);
 
         if (empty($data['discount_type']) || empty($data['discount_value'])) {
