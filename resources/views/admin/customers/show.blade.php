@@ -9,7 +9,9 @@
                     <p class="text-secondary mb-0">{{ $customer->email }}</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-primary">Edit</a>
+                    @canRoute('admin.customers.edit')
+                        <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-primary">Edit</a>
+                    @endcanRoute
                     <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">Back</a>
                 </div>
             </div>
@@ -40,10 +42,12 @@
                     <div class="soft-card p-3 mb-3">
                         Address and order history modules can be linked here once the customer address and order tables are added.
                     </div>
-                    <form action="{{ route('admin.customers.toggle-status', $customer) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-warning">Toggle Status</button>
-                    </form>
+                    @canRoute('admin.customers.toggle-status', 'POST')
+                        <form action="{{ route('admin.customers.toggle-status', $customer) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-warning">Toggle Status</button>
+                        </form>
+                    @endcanRoute
                 </div>
             </div>
         </div>

@@ -1,3 +1,17 @@
+:root {
+    --primary-color: #1F7A63;
+    --secondary-color: #A3D65C;
+    --accent-color: #FF8C42;
+    --light-color: #F9F9F9;
+    --dark-color: #333333;
+    --sf-purple: var(--primary-color);
+    --sf-pink: var(--accent-color);
+    --sf-lime: var(--secondary-color);
+    --sf-bg: var(--light-color);
+    --sf-surface: var(--light-color);
+    --sf-charcoal: var(--dark-color);
+}
+
 /* Non-breaking storefront UI refinements */
 .storefront-shell input::placeholder,
 .storefront-shell textarea::placeholder {
@@ -34,10 +48,12 @@
 .sf-page-loader {
     position: fixed;
     inset: 0;
-    z-index: 3000;
-    display: grid;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     place-items: center;
-    background: rgba(249, 249, 249, .94);
+    background: #fff;
     transition: opacity .25s ease, visibility .25s ease;
 }
 
@@ -47,30 +63,14 @@
     pointer-events: none;
 }
 
-.sf-page-loader-card {
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    border: 1px solid rgba(31, 122, 99, .14);
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 16px 40px rgba(31, 122, 99, .12);
-}
-
-.sf-page-loader-logo {
-    width: 42px;
-    height: 42px;
-    object-fit: contain;
-}
-
+.loader-ring,
 .sf-page-loader-spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid rgba(31, 122, 99, .16);
-    border-top-color: var(--sf-purple);
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e5e5e5;
+    border-top-color: var(--primary-color);
     border-radius: 50%;
-    animation: sf-loader-spin .75s linear infinite;
+    animation: sf-loader-spin .7s linear infinite;
 }
 
 @keyframes sf-loader-spin {
@@ -202,6 +202,45 @@
 .sf-home-page + .sf-footer .sf-footer-bottom {
     margin-top: 18px;
     padding-top: 14px;
+}
+
+.storefront-auth-shell {
+    min-height: 100vh;
+}
+
+.storefront-auth-shell .sf-page {
+    min-height: 100vh;
+    display: grid;
+    align-items: center;
+}
+
+.login-logo {
+    height: 90px;
+    width: auto;
+    max-width: min(280px, 100%);
+    object-fit: contain;
+}
+
+.auth-logo {
+    margin-top: -6px;
+}
+
+.sf-footer-bottom {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+}
+
+.sf-footer-grid {
+    width: 100%;
+}
+
+.storefront-shell a {
+    color: var(--primary-color);
+}
+
+.storefront-shell a:hover {
+    color: var(--accent-color);
 }
 
 .sf-searchbar {
@@ -1322,8 +1361,7 @@
 /* Zepto-inspired promotional storefront enhancements */
 .sf-promo-board {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(240px, .8fr);
-    grid-template-rows: repeat(2, minmax(150px, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(14px, 1.4vw, 22px);
 }
 
@@ -1371,7 +1409,6 @@
 }
 
 .sf-promo-card-large {
-    grid-row: span 2;
     min-height: 330px;
 }
 

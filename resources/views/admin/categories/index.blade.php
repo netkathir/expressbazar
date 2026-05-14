@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">Category Master</h1>
             </div>
-            <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">Add Category</a>
+            @canRoute('admin.categories.create')
+                <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">Add Category</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -57,9 +59,12 @@
                             </td>
                             <td><span class="badge text-bg-{{ $category->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($category->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit category" title="Edit category">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
+                                @canRoute('admin.categories.edit')
+                                    <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit category" title="Edit category">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.categories.destroy', 'DELETE')
                                 <form
                                     action="{{ route('admin.categories.destroy', $category) }}"
                                     method="POST"
@@ -72,6 +77,7 @@
                                         <i class="ti ti-trash"></i>
                                     </button>
                                 </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

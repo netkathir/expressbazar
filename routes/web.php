@@ -28,6 +28,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Controllers\VendorAuthController;
+use App\Http\Controllers\VendorPasswordResetController;
 use App\Http\Controllers\VendorSetupController;
 use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\Vendor\CouponController as VendorCouponController;
@@ -154,6 +155,12 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
     Route::middleware('guest:vendor')->group(function () {
         Route::get('/login', [VendorAuthController::class, 'create'])->name('login');
         Route::post('/login', [VendorAuthController::class, 'store'])->name('login.store');
+        Route::get('/forgot-password', [VendorPasswordResetController::class, 'create'])->name('password.request');
+        Route::post('/forgot-password/send-otp', [VendorPasswordResetController::class, 'sendOtp'])->name('password.send-otp');
+        Route::get('/forgot-password/otp', [VendorPasswordResetController::class, 'otpForm'])->name('password.otp.form');
+        Route::post('/forgot-password/verify-otp', [VendorPasswordResetController::class, 'verifyOtp'])->name('password.verify-otp');
+        Route::get('/forgot-password/reset', [VendorPasswordResetController::class, 'createResetForm'])->name('password.reset.form');
+        Route::post('/forgot-password/reset', [VendorPasswordResetController::class, 'resetPassword'])->name('password.reset');
     });
 
     Route::post('/logout', [VendorAuthController::class, 'destroy'])->middleware('vendor')->name('logout');

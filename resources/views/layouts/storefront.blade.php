@@ -23,15 +23,13 @@
         'storefront.login.store',
         'storefront.register',
         'storefront.register.store',
+        'storefront.otp.*',
         'storefront.password.*'
     );
 @endphp
 <body class="storefront-shell {{ $hideStorefrontHeader ? 'storefront-auth-shell' : '' }}" data-cart-count="{{ $cartCount ?? 0 }}">
-    <div class="sf-page-loader" role="status" aria-live="polite" aria-label="Loading">
-        <div class="sf-page-loader-card">
-            <img src="{{ asset('favicon.png') }}" alt="" class="sf-page-loader-logo">
-            <span class="sf-page-loader-spinner"></span>
-        </div>
+    <div id="pageLoader" class="sf-page-loader" role="status" aria-live="polite" aria-label="Loading">
+        <span class="loader-ring"></span>
     </div>
 
     @unless ($hideStorefrontHeader)
@@ -147,6 +145,7 @@
 
     @yield('content')
 
+    @unless ($hideStorefrontHeader)
     <footer class="sf-footer">
         <div class="container-fluid px-3 px-lg-4">
             <div class="sf-footer-benefits">
@@ -233,6 +232,7 @@
             </div>
         </div>
     </footer>
+    @endunless
 
     <div class="sf-drawer-backdrop js-close-cart"></div>
     <aside class="sf-cart-drawer">
@@ -283,6 +283,7 @@
                         </div>
                     </div>
                     <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 js-location-clear">Clear</button>
                         <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
                         <button class="btn btn-primary rounded-pill px-4" type="submit">Save Location</button>
                     </div>

@@ -7,8 +7,12 @@
                 <h1 class="h3 mb-1">Notification Management</h1>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.notifications.logs') }}" class="btn btn-outline-secondary">View Logs</a>
-                <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary">Add Template</a>
+                @canRoute('admin.notifications.logs')
+                    <a href="{{ route('admin.notifications.logs') }}" class="btn btn-outline-secondary">View Logs</a>
+                @endcanRoute
+                @canRoute('admin.notifications.create')
+                    <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary">Add Template</a>
+                @endcanRoute
             </div>
         </div>
     </div>
@@ -34,16 +38,20 @@
                                 <td>{{ strtoupper($template->channel) }}</td>
                                 <td><span class="badge text-bg-{{ $template->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($template->status) }}</span></td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.notifications.edit', $template) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit notification template" title="Edit notification template">
-                                        <i class="ti ti-pencil"></i>
-                                    </a>
-                                    <form action="{{ route('admin.notifications.destroy', $template) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this template?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete notification template" title="Delete notification template">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </form>
+                                    @canRoute('admin.notifications.edit')
+                                        <a href="{{ route('admin.notifications.edit', $template) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit notification template" title="Edit notification template">
+                                            <i class="ti ti-pencil"></i>
+                                        </a>
+                                    @endcanRoute
+                                    @canRoute('admin.notifications.destroy', 'DELETE')
+                                        <form action="{{ route('admin.notifications.destroy', $template) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this template?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete notification template" title="Delete notification template">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcanRoute
                                 </td>
                             </tr>
                         @empty

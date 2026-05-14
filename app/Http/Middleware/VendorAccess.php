@@ -27,6 +27,18 @@ class VendorAccess
                 ->withErrors(['email' => 'Your vendor account is inactive. Please contact admin.']);
         }
 
+        $role = method_exists($vendor, 'roleRecord') ? $vendor->roleRecord() : null;
+
+        if (! $role || $role->status !== 'active') {
+            Auth::guard('vendor')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('vendor.login')
+                ->withErrors(['email' => 'Your assigned role is inactive. Please contact admin.']);
+        }
+
         $routeName = $request->route()?->getName();
 
         if (

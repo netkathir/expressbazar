@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\AdminAccess;
 use App\Http\Middleware\EnsureEmailVerifiedForCheckout;
+use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\VendorAccess;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => AdminAccess::class,
+            'permission' => PermissionMiddleware::class,
             'vendor' => VendorAccess::class,
             'verify.checkout.email' => EnsureEmailVerifiedForCheckout::class,
         ]);

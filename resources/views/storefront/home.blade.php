@@ -119,23 +119,11 @@
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <div class="sf-promo-board">
                     @php($promoCategoryOne = $categories->first())
-                    @php($promoCategoryTwo = $categories->skip(1)->first())
-                    @php($promoCategoryThree = $categories->skip(2)->first())
                     <a href="{{ $promoCategoryOne ? route('storefront.category', array_merge(['category' => $promoCategoryOne], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-card-large sf-promo-fresh">
                         <span class="sf-kicker">Fresh picks</span>
                         <h2>Daily essentials, better prices.</h2>
                         <p>Quick grocery runs with fresh staples and instant cart flow.</p>
                         <span class="sf-promo-cta">Shop deals <i class="ti ti-arrow-right"></i></span>
-                    </a>
-                    <a href="{{ $promoCategoryTwo ? route('storefront.category', array_merge(['category' => $promoCategoryTwo], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-orange">
-                        <span class="sf-kicker">Weekend basket</span>
-                        <h3>Save on pantry favourites.</h3>
-                        <span class="sf-promo-cta">Explore <i class="ti ti-arrow-right"></i></span>
-                    </a>
-                    <a href="{{ $promoCategoryThree ? route('storefront.category', array_merge(['category' => $promoCategoryThree], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-cool">
-                        <span class="sf-kicker">Fast delivery</span>
-                        <h3>Vendor-stocked products near you.</h3>
-                        <span class="sf-promo-cta">Browse <i class="ti ti-arrow-right"></i></span>
                     </a>
                 </div>
             </section>

@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">City Management</h1>
             </div>
-            <a href="{{ route('admin.cities.create') }}" class="btn btn-primary">Add City</a>
+            @canRoute('admin.cities.create')
+                <a href="{{ route('admin.cities.create') }}" class="btn btn-primary">Add City</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -66,16 +68,20 @@
                             <td><span class="badge text-bg-{{ $city->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($city->status) }}</span></td>
                             <td>{{ $city->zones_count }}</td>
                             <td class="text-end">
-                                <a href="{{ route('admin.cities.edit', $city) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit city" title="Edit city">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.cities.destroy', $city) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this city?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete city" title="Delete city">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.cities.edit')
+                                    <a href="{{ route('admin.cities.edit', $city) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit city" title="Edit city">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.cities.destroy', 'DELETE')
+                                    <form action="{{ route('admin.cities.destroy', $city) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this city?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete city" title="Delete city">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

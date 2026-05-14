@@ -6,6 +6,7 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-lg-5">
                     <div class="sf-info-card p-4 p-md-5">
+                        @include('storefront.auth.partials.logo')
                         <h1 class="h3 fw-bold mb-2">Login</h1>
                         <p class="text-secondary mb-4">Access your cart, orders and saved addresses.</p>
                         <form method="POST" action="{{ route('storefront.login.store') }}" class="row g-3 js-login-form">

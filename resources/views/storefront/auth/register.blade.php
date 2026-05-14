@@ -6,6 +6,7 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-lg-6">
                     <div class="sf-info-card p-4 p-md-5">
+                        @include('storefront.auth.partials.logo')
                         <h1 class="h3 fw-bold mb-2">Create account</h1>
                         <p class="text-secondary mb-4">Register with your email and verify it with OTP.</p>
                         <form method="POST" action="{{ route('storefront.register.store') }}" class="row g-3" novalidate>

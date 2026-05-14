@@ -6,6 +6,7 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-lg-5">
                     <div class="sf-info-card p-4 p-md-5">
+                        @include('storefront.auth.partials.logo')
                         <h1 class="h3 fw-bold mb-2">Forgot Password</h1>
                         <p class="text-secondary mb-4">Enter your email and we will send you an OTP to reset your password.</p>
 

@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">Admin User Management</h1>
             </div>
-            <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Add Admin User</a>
+            @canRoute('admin.users.create')
+                <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Add Admin User</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -66,16 +68,20 @@
                             <td>{{ (int) $user->permissions_count }}</td>
                             <td><span class="badge text-bg-{{ $user->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($user->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit admin user" title="Edit admin user">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this admin user?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete admin user" title="Delete admin user">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.users.edit')
+                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit admin user" title="Edit admin user">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.users.destroy', 'DELETE')
+                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this admin user?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete admin user" title="Delete admin user">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

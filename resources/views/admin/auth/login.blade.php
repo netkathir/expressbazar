@@ -51,10 +51,6 @@
                         <a href="{{ route('admin.password.request') }}" class="btn btn-link px-0 text-start">Forgot password?</a>
                         <a href="{{ route('user.home') }}" class="btn btn-outline-secondary">Back to user panel</a>
                     </form>
-
-                    <div class="mt-4 small text-secondary">
-                        Default local admin: <strong>admin@expressbazar.local</strong> or <strong>admin</strong> / <strong>Admin@1234</strong>
-                    </div>
                 </div>
             </div>
         </div>

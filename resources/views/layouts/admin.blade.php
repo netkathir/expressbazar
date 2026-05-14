@@ -75,12 +75,14 @@
                     <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2" style="min-width: 280px;">
                         <div class="d-flex align-items-center justify-content-between gap-2 px-2 py-1">
                             <div class="small fw-semibold">Notifications</div>
-                            <button
-                                id="notification-clear-all"
-                                type="button"
-                                class="btn btn-sm btn-link p-0 text-decoration-none {{ $panelUnreadCount ? '' : 'd-none' }}"
-                                data-url="{{ $notificationReadAllUrl }}"
-                            >Clear all</button>
+                            @canRoute($isVendorPanel ? 'vendor.notifications.read-all' : 'admin.notifications.read-all', 'POST')
+                                <button
+                                    id="notification-clear-all"
+                                    type="button"
+                                    class="btn btn-sm btn-link p-0 text-decoration-none {{ $panelUnreadCount ? '' : 'd-none' }}"
+                                    data-url="{{ $notificationReadAllUrl }}"
+                                >Clear all</button>
+                            @endcanRoute
                         </div>
                         <div id="notification-list">
                             @forelse ($panelUnreadNotifications as $note)
@@ -135,25 +137,35 @@
 
         <div class="nav flex-column py-3">
             @foreach ($panelNavigation as $group)
+                @php
+                    $visibleItems = collect($group['items'])->filter(function ($item) use ($panelUser, $isVendorPanel) {
+                        if (! $panelUser) {
+                            return true;
+                        }
+
+                        if ($isVendorPanel && method_exists($panelUser, 'canAccessVendorRoute')) {
+                            return $panelUser->canAccessVendorRoute($item['route'], 'GET');
+                        }
+
+                        return ! $isVendorPanel && method_exists($panelUser, 'canAccessAdminRoute') && $panelUser->canAccessAdminRoute($item['route'], 'GET');
+                    });
+                @endphp
+
+                @continue($visibleItems->isEmpty())
+
                 <div class="px-4 pt-2 pb-1">
                     <small class="nav-text text-uppercase text-secondary fw-semibold">{{ $group['group'] }}</small>
                 </div>
 
-                @foreach ($group['items'] as $item)
-                    @if (
-                        ! $panelUser
-                        || ($isVendorPanel && method_exists($panelUser, 'canAccessVendorRoute') && $panelUser->canAccessVendorRoute($item['route'], 'GET'))
-                        || (! $isVendorPanel && method_exists($panelUser, 'canAccessAdminRoute') && $panelUser->canAccessAdminRoute($item['route'], 'GET'))
-                    )
-                        <a
-                            class="nav-link {{ ($activeMenu ?? '') === ($item['active'] ?? '') ? 'active' : '' }}"
-                            href="{{ route($item['route'], $item['params'] ?? []) }}"
-                            title="{{ $item['label'] }}"
-                        >
-                            <i class="ti ti-{{ $item['icon'] }}"></i>
-                            <span class="nav-text">{{ $item['label'] }}</span>
-                        </a>
-                    @endif
+                @foreach ($visibleItems as $item)
+                    <a
+                        class="nav-link {{ ($activeMenu ?? '') === ($item['active'] ?? '') ? 'active' : '' }}"
+                        href="{{ route($item['route'], $item['params'] ?? []) }}"
+                        title="{{ $item['label'] }}"
+                    >
+                        <i class="ti ti-{{ $item['icon'] }}"></i>
+                        <span class="nav-text">{{ $item['label'] }}</span>
+                    </a>
                 @endforeach
             @endforeach
         </div>

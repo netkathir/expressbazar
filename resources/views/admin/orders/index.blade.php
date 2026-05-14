@@ -11,7 +11,9 @@
                 <h1 class="h3 mb-1">Order Management</h1>
             </div>
             @unless ($isVendorPanel)
-                <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">Add Order</a>
+                @canRoute('admin.orders.create')
+                    <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">Add Order</a>
+                @endcanRoute
             @endunless
         </div>
     </div>
@@ -79,16 +81,20 @@
                                     <i class="ti ti-eye"></i>
                                 </a>
                                 @unless ($isVendorPanel)
-                                    <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit order" title="Edit order">
-                                        <i class="ti ti-pencil"></i>
-                                    </a>
-                                    <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this order?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete order" title="Delete order">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </form>
+                                    @canRoute('admin.orders.edit')
+                                        <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit order" title="Edit order">
+                                            <i class="ti ti-pencil"></i>
+                                        </a>
+                                    @endcanRoute
+                                    @canRoute('admin.orders.destroy', 'DELETE')
+                                        <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this order?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete order" title="Delete order">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcanRoute
                                 @endunless
                             </td>
                         </tr>

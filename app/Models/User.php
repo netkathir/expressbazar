@@ -57,12 +57,25 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->status === 'active' && $this->adminRole() !== null;
+        $role = $this->adminRole();
+
+        return $this->status === 'active' && $role !== null && $role->status === 'active';
     }
 
     public function adminRole(): ?Role
     {
-        return $this->role ? Role::query()->with('permissions')->where('role_name', $this->role)->first() : null;
+        if (! $this->role) {
+            return null;
+        }
+
+        return $this->relationLoaded('adminRoleRecord')
+            ? $this->getRelation('adminRoleRecord')
+            : Role::query()->with('permissions')->where('role_name', $this->role)->first();
+    }
+
+    public function adminRoleRecord()
+    {
+        return $this->belongsTo(Role::class, 'role', 'role_name')->with('permissions');
     }
 
     public function hasRolePermission(string $moduleKey, string $ability = 'view'): bool
@@ -95,6 +108,13 @@ class User extends Authenticatable
         };
     }
 
+    public function hasPermission(string $permission): bool
+    {
+        [$moduleKey, $ability] = array_pad(explode('-', $permission, 2), 2, 'view');
+
+        return $this->hasRolePermission($moduleKey, $ability ?: 'view');
+    }
+
     public function canAccessAdminRoute(?string $routeName, string $method = 'GET'): bool
     {
         if (! $routeName) {
@@ -119,8 +139,28 @@ class User extends Authenticatable
 
     private static function abilityFromRoute(string $routeName, string $method): string
     {
+        if (str_contains($routeName, '.toggle-status') || str_contains($routeName, '.read-all')) {
+            return 'edit';
+        }
+
+        if (str_contains($routeName, '.bulk')) {
+            return 'create';
+        }
+
+        if (str_ends_with($routeName, '.create') || str_ends_with($routeName, '.store')) {
+            return 'create';
+        }
+
+        if (str_ends_with($routeName, '.edit') || str_ends_with($routeName, '.update')) {
+            return 'edit';
+        }
+
+        if (str_ends_with($routeName, '.destroy') || str_contains($routeName, '.images.destroy')) {
+            return 'delete';
+        }
+
         if ($method === 'POST') {
-            return str_contains($routeName, 'toggle-status') ? 'edit' : 'create';
+            return 'create';
         }
 
         if (in_array($method, ['PUT', 'PATCH'])) {

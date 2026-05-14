@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">Customer Management</h1>
             </div>
-            <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">Add Customer</a>
+            @canRoute('admin.customers.create')
+                <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">Add Customer</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -58,16 +60,20 @@
                                 <a href="{{ route('admin.customers.show', $customer) }}" class="btn btn-sm btn-outline-secondary" aria-label="View customer" title="View customer">
                                     <i class="ti ti-eye"></i>
                                 </a>
-                                <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit customer" title="Edit customer">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this customer?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete customer" title="Delete customer">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.customers.edit')
+                                    <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit customer" title="Edit customer">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.customers.destroy', 'DELETE')
+                                    <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this customer?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete customer" title="Delete customer">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

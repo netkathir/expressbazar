@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">Tax Master</h1>
             </div>
-            <a href="{{ route('admin.taxes.create') }}" class="btn btn-primary">Add Tax</a>
+            @canRoute('admin.taxes.create')
+                <a href="{{ route('admin.taxes.create') }}" class="btn btn-primary">Add Tax</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -64,16 +66,20 @@
                             <td>{{ $tax->region_name ?: '-' }}</td>
                             <td><span class="badge text-bg-{{ $tax->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($tax->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.taxes.edit', $tax) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit tax" title="Edit tax">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.taxes.destroy', $tax) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this tax?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete tax" title="Delete tax">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.taxes.edit')
+                                    <a href="{{ route('admin.taxes.edit', $tax) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit tax" title="Edit tax">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.taxes.destroy', 'DELETE')
+                                    <form action="{{ route('admin.taxes.destroy', $tax) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this tax?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete tax" title="Delete tax">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

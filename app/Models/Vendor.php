@@ -60,7 +60,18 @@ class Vendor extends Authenticatable
 
     public function roleRecord(): ?Role
     {
-        return $this->role ? Role::query()->with('permissions')->where('role_name', $this->role)->first() : null;
+        if (! $this->role) {
+            return null;
+        }
+
+        return $this->relationLoaded('roleRecordRelation')
+            ? $this->getRelation('roleRecordRelation')
+            : Role::query()->with('permissions')->where('role_name', $this->role)->first();
+    }
+
+    public function roleRecordRelation()
+    {
+        return $this->belongsTo(Role::class, 'role', 'role_name')->with('permissions');
     }
 
     public function hasRolePermission(string $moduleKey, string $ability = 'view'): bool
@@ -87,6 +98,13 @@ class Vendor extends Authenticatable
             'delete' => $permission->can_delete,
             default => $permission->can_view,
         };
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        [$moduleKey, $ability] = array_pad(explode('-', $permission, 2), 2, 'view');
+
+        return $this->hasRolePermission($moduleKey, $ability ?: 'view');
     }
 
     public function canAccessVendorRoute(?string $routeName, string $method = 'GET'): bool
@@ -137,8 +155,16 @@ class Vendor extends Authenticatable
             return 'edit';
         }
 
+        if (str_contains($routeName, '.read-all')) {
+            return 'edit';
+        }
+
         if (str_contains($routeName, '.processing') || str_contains($routeName, '.dispatched') || str_contains($routeName, '.delivered')) {
             return 'edit';
+        }
+
+        if (str_contains($routeName, '.bulk')) {
+            return 'create';
         }
 
         if (str_ends_with($routeName, '.create') || str_ends_with($routeName, '.store')) {

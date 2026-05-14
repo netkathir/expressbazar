@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">User & Role Management</h1>
             </div>
-            <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">Add Role</a>
+            @canRoute('admin.roles.create')
+                <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">Add Role</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -30,16 +32,20 @@
                             <td>{{ (int) $role->permissions_count }}</td>
                             <td><span class="badge text-bg-{{ $role->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($role->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit role" title="Edit role">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this role?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete role" title="Delete role">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.roles.edit')
+                                    <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit role" title="Edit role">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.roles.destroy', 'DELETE')
+                                    <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this role?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete role" title="Delete role">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

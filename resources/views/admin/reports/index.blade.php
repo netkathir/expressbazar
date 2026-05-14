@@ -6,9 +6,11 @@
             <div>
                 <h1 class="h3 mb-1">Reports & Analytics</h1>
             </div>
-            <a href="{{ route('admin.reports.export', request()->query()) }}" class="btn btn-primary">
-                Export CSV
-            </a>
+            @canRoute('admin.reports.export')
+                <a href="{{ route('admin.reports.export', request()->query()) }}" class="btn btn-primary">
+                    Export CSV
+                </a>
+            @endcanRoute
         </div>
     </div>
 
@@ -134,8 +136,8 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <div class="table-responsive admin-report-sales-wrap">
+                <table class="table table-hover align-middle mb-0 admin-report-sales-table">
                     <thead>
                         <tr>
                             <th>Order</th>
@@ -165,9 +167,11 @@
                                 <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : ($order->order_status === 'cancelled' ? 'danger' : 'secondary') }}">{{ ucfirst($order->order_status) }}</span></td>
                                 <td>{{ number_format((float) $order->total_amount, 2) }}</td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
-                                        <i class="ti ti-eye"></i>
-                                    </a>
+                                    @canRoute('admin.orders.show')
+                                        <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
+                                    @endcanRoute
                                 </td>
                             </tr>
                         @empty

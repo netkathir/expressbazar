@@ -66,6 +66,9 @@
                                             <td class="fw-semibold">
                                                 <input type="checkbox" class="form-check-input me-2 module-select" data-module="{{ $moduleKey }}" @checked($isAdminRole)>
                                                 {{ $moduleLabel }}
+                                                <div class="small text-secondary">
+                                                    <span data-module-count="{{ $moduleKey }}">0</span> permissions
+                                                </div>
                                             </td>
                                             <td><input type="checkbox" name="permissions[{{ $moduleKey }}][view]" value="1" class="permission-checkbox" data-module="{{ $moduleKey }}" @checked($isAdminRole || old("permissions.$moduleKey.view", $existing?->can_view))></td>
                                             <td><input type="checkbox" name="permissions[{{ $moduleKey }}][create]" value="1" class="permission-checkbox" data-module="{{ $moduleKey }}" @checked($isAdminRole || old("permissions.$moduleKey.create", $existing?->can_create))></td>
@@ -101,15 +104,22 @@
                 const modulePermissions = checkboxes.filter(function (checkbox) {
                     return checkbox.dataset.module === module;
                 });
+                const countEl = document.querySelector('[data-module-count="' + module + '"]');
                 const allChecked = modulePermissions.every(function (checkbox) {
                     return checkbox.checked;
                 });
                 const noneChecked = modulePermissions.every(function (checkbox) {
                     return !checkbox.checked;
                 });
+                const checkedCount = modulePermissions.filter(function (checkbox) {
+                    return checkbox.checked;
+                }).length;
 
                 moduleCheckbox.checked = allChecked;
                 moduleCheckbox.indeterminate = !allChecked && !noneChecked;
+                if (countEl) {
+                    countEl.textContent = checkedCount;
+                }
             }
 
             function updateSelectAllState() {

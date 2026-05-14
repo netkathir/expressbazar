@@ -51,6 +51,17 @@ class VendorAuthController extends Controller
             ]);
         }
 
+        $role = $vendor->roleRecord();
+
+        if (! $role || $role->status !== 'active') {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'Your assigned role is inactive. Please contact admin.',
+            ]);
+        }
+
         Auth::guard('vendor')->login($vendor, $request->boolean('remember'));
         $vendor->forceFill(['last_login_at' => now()])->save();
         $request->session()->regenerate();

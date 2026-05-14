@@ -88,7 +88,9 @@
                 </div>
 
                 <div class="col-12">
-                    <button class="btn btn-primary" type="submit">Save Configuration</button>
+                    @canRoute('admin.system-config.update', 'PUT')
+                        <button class="btn btn-primary" type="submit">Save Configuration</button>
+                    @endcanRoute
                 </div>
             </form>
         </div>

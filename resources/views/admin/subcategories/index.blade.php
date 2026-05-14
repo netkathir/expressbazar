@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">Subcategory Master</h1>
             </div>
-            <a href="{{ route('admin.subcategories.create') }}" class="btn btn-primary">Add Subcategory</a>
+            @canRoute('admin.subcategories.create')
+                <a href="{{ route('admin.subcategories.create') }}" class="btn btn-primary">Add Subcategory</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -60,16 +62,20 @@
                             <td>{{ $subcategory->category?->category_name }}</td>
                             <td><span class="badge text-bg-{{ $subcategory->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($subcategory->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.subcategories.edit', $subcategory) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit subcategory" title="Edit subcategory">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.subcategories.destroy', $subcategory) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this subcategory?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete subcategory" title="Delete subcategory">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.subcategories.edit')
+                                    <a href="{{ route('admin.subcategories.edit', $subcategory) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit subcategory" title="Edit subcategory">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.subcategories.destroy', 'DELETE')
+                                    <form action="{{ route('admin.subcategories.destroy', $subcategory) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this subcategory?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete subcategory" title="Delete subcategory">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

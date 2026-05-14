@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1">Region / Zone Management</h1>
             </div>
-            <a href="{{ route('admin.zones.create') }}" class="btn btn-primary">Add Region / Zone</a>
+            @canRoute('admin.zones.create')
+                <a href="{{ route('admin.zones.create') }}" class="btn btn-primary">Add Region / Zone</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -88,16 +90,20 @@
                             </td>
                             <td><span class="badge text-bg-{{ $zone->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($zone->status) }}</span></td>
                             <td class="admin-zones-actions-cell text-end">
-                                <a href="{{ route('admin.zones.edit', $zone) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit zone" title="Edit zone">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.zones.destroy', $zone) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this zone?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete zone" title="Delete zone">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </form>
+                                @canRoute('admin.zones.edit')
+                                    <a href="{{ route('admin.zones.edit', $zone) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit zone" title="Edit zone">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.zones.destroy', 'DELETE')
+                                    <form action="{{ route('admin.zones.destroy', $zone) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this zone?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete zone" title="Delete zone">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

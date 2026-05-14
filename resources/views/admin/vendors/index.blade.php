@@ -6,7 +6,9 @@
             <div>
                 <h1 class="h3 mb-1 admin-page-title">Vendor Master</h1>
             </div>
-            <a href="{{ route('admin.vendors.create') }}" class="btn btn-primary">Add Vendor</a>
+            @canRoute('admin.vendors.create')
+                <a href="{{ route('admin.vendors.create') }}" class="btn btn-primary">Add Vendor</a>
+            @endcanRoute
         </div>
     </div>
 
@@ -81,9 +83,12 @@
                             </td>
                             <td><span class="badge text-bg-{{ $vendor->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($vendor->status) }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit vendor" title="Edit vendor">
-                                    <i class="ti ti-pencil"></i>
-                                </a>
+                                @canRoute('admin.vendors.edit')
+                                    <a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit vendor" title="Edit vendor">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                @endcanRoute
+                                @canRoute('admin.vendors.destroy', 'DELETE')
                                 <form
                                     action="{{ route('admin.vendors.destroy', $vendor) }}"
                                     method="POST"
@@ -96,6 +101,7 @@
                                         <i class="ti ti-trash"></i>
                                     </button>
                                 </form>
+                                @endcanRoute
                             </td>
                         </tr>
                     @empty

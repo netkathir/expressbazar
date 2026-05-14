@@ -23,6 +23,14 @@ class AdminAccess
 
         $routeName = $request->route()?->getName();
 
+        if ($routeName === 'admin.module') {
+            $module = (string) $request->route('module');
+
+            if ($module !== '' && ! $user->hasRolePermission($module, 'view')) {
+                abort(403, 'You do not have permission to access this module.');
+            }
+        }
+
         if ($routeName && str_starts_with($routeName, 'admin.') && ! in_array($routeName, ['admin.dashboard', 'admin.logout', 'admin.module'], true) && ! $user->canAccessAdminRoute($routeName, $request->method())) {
             abort(403, 'You do not have permission to access this module.');
         }

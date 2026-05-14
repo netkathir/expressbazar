@@ -27,15 +27,17 @@ let pendingAddressDeleteForm = null;
 window.storefrontAjaxFilters = true;
 
 function hidePageLoader() {
-    const loader = document.querySelector('.sf-page-loader');
+    const loader = document.getElementById('pageLoader') || document.querySelector('.sf-page-loader');
     if (!loader) {
         return;
     }
 
     window.setTimeout(() => {
         loader.classList.add('is-hidden');
-        window.setTimeout(() => loader.remove(), 300);
-    }, 450);
+        window.setTimeout(() => {
+            loader.style.display = 'none';
+        }, 300);
+    }, 120);
 }
 
 if (document.readyState === 'complete') {
@@ -792,7 +794,44 @@ function syncLocationInputs(initialLocation) {
     });
 }
 
+function resetLocationForm(form = locationForm) {
+    if (!form) {
+        return;
+    }
+
+    const postcodeInput = form.querySelector('input[name="postcode"]');
+    const forceClearInput = form.querySelector('input[name="force_clear"]');
+    const formCountrySelect = form.querySelector('.js-country-select');
+    const formCitySelect = form.querySelector('.js-city-select');
+    const formZoneSelect = form.querySelector('.js-zone-select');
+
+    if (postcodeInput) {
+        postcodeInput.value = '';
+    }
+    if (forceClearInput) {
+        forceClearInput.value = '0';
+    }
+    if (formCountrySelect) {
+        formCountrySelect.value = '';
+    }
+    if (formCitySelect) {
+        formCitySelect.innerHTML = '<option value="">Choose city</option>';
+    }
+    if (formZoneSelect) {
+        formZoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
+    }
+
+    clearLocationAlert();
+}
+
 document.addEventListener('click', async (event) => {
+    const locationClearButton = event.target.closest('.js-location-clear');
+    if (locationClearButton) {
+        event.preventDefault();
+        resetLocationForm(locationClearButton.closest('.js-location-form'));
+        return;
+    }
+
     const railButton = event.target.closest('.js-rail-scroll');
     if (railButton) {
         event.preventDefault();
