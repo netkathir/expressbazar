@@ -243,10 +243,17 @@ function updateRailOverflow() {
         const rail = wrap.querySelector('.sf-product-rail, .sf-chip-row');
         if (!rail) {
             wrap.classList.remove('has-overflow');
+            wrap.classList.remove('can-scroll-left', 'can-scroll-right');
             return;
         }
 
-        wrap.classList.toggle('has-overflow', rail.scrollWidth > rail.clientWidth + 4);
+        const maxScrollLeft = Math.max(rail.scrollWidth - rail.clientWidth, 0);
+        const scrollLeft = Math.max(rail.scrollLeft, 0);
+        const hasOverflow = maxScrollLeft > 4;
+
+        wrap.classList.toggle('has-overflow', hasOverflow);
+        wrap.classList.toggle('can-scroll-left', hasOverflow && scrollLeft > 4);
+        wrap.classList.toggle('can-scroll-right', hasOverflow && scrollLeft < maxScrollLeft - 4);
     });
 }
 
@@ -858,6 +865,7 @@ document.addEventListener('click', async (event) => {
                 left: direction * Math.max(rail.clientWidth * 0.8, 220),
                 behavior: 'smooth',
             });
+            window.setTimeout(updateRailOverflow, 280);
         }
         return;
     }
@@ -1295,5 +1303,8 @@ if (config.currentUserRole === 'customer' && config.guestCartMerged) {
 
 hydrateGuestCartCount();
 updateRailOverflow();
+document.querySelectorAll('.sf-product-rail, .sf-chip-row').forEach((rail) => {
+    rail.addEventListener('scroll', updateRailOverflow, { passive: true });
+});
 window.addEventListener('resize', updateRailOverflow);
 window.addEventListener('load', updateRailOverflow, { once: true });

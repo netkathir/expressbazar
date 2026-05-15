@@ -141,8 +141,8 @@ textarea:-ms-input-placeholder {
 
 /* Align the home page "Shop by categories" rail without changing its scroll behavior. */
 .storefront-shell .sf-category-rail-wrap {
-    --sf-category-tile: clamp(112px, 7.3vw, 144px);
-    padding-right: 48px;
+    --sf-category-tile: clamp(92px, 6.2vw, 124px);
+    padding-right: 42px;
 }
 
 .storefront-shell .sf-category-rail-wrap .sf-chip-row {
@@ -151,16 +151,17 @@ textarea:-ms-input-placeholder {
     grid-auto-columns: var(--sf-category-tile);
     grid-template-columns: none;
     align-items: start;
-    gap: clamp(14px, 1.25vw, 24px);
+    gap: clamp(12px, 1vw, 20px);
     overflow-x: auto;
-    padding-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 .storefront-shell .sf-category-rail-wrap .sf-chip {
     width: var(--sf-category-tile);
     justify-items: center;
     align-content: start;
-    gap: 12px;
+    gap: 8px;
+    font-size: clamp(.72rem, .24vw + .72rem, .88rem);
 }
 
 .storefront-shell .sf-category-rail-wrap .sf-chip-image {
@@ -184,11 +185,211 @@ textarea:-ms-input-placeholder {
 }
 
 .storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-right {
+    display: inline-flex;
+    right: 2px;
     top: calc(var(--sf-category-tile) / 2);
+    width: 38px;
+    height: 38px;
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-left {
+    left: 2px;
+    top: calc(var(--sf-category-tile) / 2);
+    width: 38px;
+    height: 38px;
+    background: #000;
+    color: #fff;
+    border-color: #000;
+    transform: translateY(-50%);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, .22);
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow:not(.can-scroll-left) .sf-rail-arrow-left,
+.storefront-shell .sf-category-rail-wrap.has-overflow:not(.can-scroll-right) .sf-rail-arrow-right {
+    display: none !important;
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow.can-scroll-left .sf-rail-arrow-left {
+    display: inline-flex !important;
 }
 
 .storefront-shell .sf-category-rail-wrap.has-overflow::after {
     height: var(--sf-category-tile);
+    opacity: 0;
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow.can-scroll-right::after {
+    opacity: 1;
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 92px;
+    height: var(--sf-category-tile);
+    pointer-events: none;
+    background: linear-gradient(270deg, rgba(249, 249, 249, 0), var(--sf-bg) 72%);
+    opacity: 0;
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow.can-scroll-left::before {
+    opacity: 1;
+}
+
+/* Compact the marked storefront header controls and category strip. */
+.storefront-shell {
+    --sf-header-control-height: 38px;
+}
+
+.storefront-shell .sf-searchbar {
+    padding-block: 8px;
+    gap: 12px;
+}
+
+.storefront-shell .sf-topbar .sf-brand-logo {
+    height: 64px !important;
+    max-width: min(320px, 100%);
+}
+
+.storefront-shell .sf-logo {
+    align-items: center;
+}
+
+.storefront-shell .sf-header-controls {
+    gap: 10px;
+}
+
+.storefront-shell .sf-header-controls .sf-location-btn,
+.storefront-shell .sf-header-controls .sf-vendor-btn {
+    padding-inline: 12px;
+    font-size: 13px;
+}
+
+.storefront-shell .sf-header-controls .sf-search-form {
+    grid-template-columns: var(--sf-header-control-height) minmax(0, 1fr);
+}
+
+.storefront-shell .sf-header-controls .sf-search-form > i {
+    width: var(--sf-header-control-height);
+}
+
+.storefront-shell .sf-header-controls .sf-search-form input {
+    font-size: 13px;
+    padding-inline: 12px;
+}
+
+.storefront-shell .sf-category-showcase {
+    padding-top: 18px !important;
+    padding-bottom: 6px;
+}
+
+@media (min-width: 992px) {
+    .storefront-shell .sf-header-controls {
+        width: min(100%, 760px);
+        grid-template-columns: minmax(160px, 200px) minmax(120px, 150px) minmax(260px, 390px);
+    }
+
+    .storefront-shell .sf-header-controls .sf-vendor-selector.d-none + .sf-search-form,
+    .storefront-shell .sf-header-controls .sf-search-form {
+        grid-column: auto;
+        max-width: none;
+    }
+
+    .storefront-shell .sf-header-controls .sf-vendor-selector.d-none + .sf-search-form {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .storefront-shell .sf-searchbar {
+        padding-block: 8px;
+    }
+
+    .storefront-shell .sf-topbar .sf-brand-logo {
+        height: 58px !important;
+        max-width: min(230px, 100%);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .storefront-shell .sf-searchbar {
+        padding-block: 6px;
+        gap: 8px;
+    }
+
+    .storefront-shell .sf-logo {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .storefront-shell .sf-topbar .sf-brand-logo {
+        height: 46px !important;
+        max-width: min(190px, 100%);
+    }
+
+    .storefront-shell .sf-location-btn,
+    .storefront-shell .sf-vendor-btn,
+    .storefront-shell .sf-search-form,
+    .storefront-shell .sf-actions .sf-action-link {
+        min-height: 36px;
+    }
+
+    .storefront-shell .sf-header-controls {
+        gap: 8px;
+    }
+
+    .storefront-shell .sf-header-controls .sf-location-btn,
+    .storefront-shell .sf-header-controls .sf-vendor-btn {
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .storefront-shell .sf-header-controls .sf-search-form input {
+        font-size: 12px;
+        padding-inline: 10px;
+    }
+
+    .storefront-shell .sf-category-rail-wrap {
+        padding-right: 0;
+    }
+
+    .storefront-shell .sf-category-rail-wrap .sf-rail-arrow,
+    .storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-left,
+    .storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-right {
+        display: none !important;
+    }
+
+    .storefront-shell .sf-category-rail-wrap.has-overflow::before,
+    .storefront-shell .sf-category-rail-wrap.has-overflow::after {
+        display: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .storefront-shell .sf-topbar .sf-brand-logo {
+        height: 42px !important;
+        max-width: min(180px, 100%);
+    }
+
+    .storefront-shell .sf-location-btn,
+    .storefront-shell .sf-vendor-btn,
+    .storefront-shell .sf-search-form,
+    .storefront-shell .sf-actions .sf-action-link {
+        min-height: 34px;
+    }
+
+    .storefront-shell .sf-category-rail-wrap {
+        --sf-category-tile: 86px;
+        padding-right: 0;
+    }
+
+    .storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-left,
+    .storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-right {
+        width: 32px;
+        height: 32px;
+    }
 }
 
 @media (max-width: 768px) {
