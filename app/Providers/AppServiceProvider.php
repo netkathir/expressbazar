@@ -8,10 +8,12 @@ use App\Listeners\DispatchOrderPlacedTemplateNotification;
 use App\Listeners\SendCustomerBellOrderPlacedNotification;
 use App\Listeners\SendTemplateNotification;
 use App\Listeners\SendVendorNotification;
+use App\Http\Controllers\StorefrontController;
 use App\Support\StorefrontLayoutData;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -61,5 +63,22 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.storefront', function ($view): void {
             $view->with(app(StorefrontLayoutData::class)->defaults($view->getData()));
         });
+
+        $this->registerContactUsFallbackRoutes();
+    }
+
+    private function registerContactUsFallbackRoutes(): void
+    {
+        if (! Route::has('storefront.contact')) {
+            Route::middleware('web')
+                ->get('/contact-us', [StorefrontController::class, 'contact'])
+                ->name('storefront.contact');
+        }
+
+        if (! Route::has('storefront.contact.submit')) {
+            Route::middleware('web')
+                ->post('/contact-us', [StorefrontController::class, 'submitContact'])
+                ->name('storefront.contact.submit');
+        }
     }
 }
