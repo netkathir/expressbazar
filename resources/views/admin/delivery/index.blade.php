@@ -82,7 +82,7 @@
                             <td>{{ $config->city?->city_name ?? '-' }}</td>
                             <td>{{ $config->zone?->zone_name ?? '-' }}</td>
                             <td><span class="badge text-bg-{{ $config->delivery_available ? 'success' : 'secondary' }}">{{ $config->delivery_available ? 'Yes' : 'No' }}</span></td>
-                            <td>{{ number_format((float) $config->delivery_charge, 2) }}</td>
+                            <td>{{ \App\Support\StoreCurrency::format($config->delivery_charge) }}</td>
                             <td><span class="badge text-bg-{{ $config->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($config->status) }}</span></td>
                             <td class="text-end">
                                 @canRoute('admin.delivery.edit')

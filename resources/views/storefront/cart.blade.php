@@ -18,10 +18,10 @@
                             <div class="flex-grow-1">
                                 <div class="fw-semibold">{{ $item['product']->product_name }}</div>
                                 <div class="text-secondary small">{{ $item['product']->vendor?->vendor_name }}</div>
-                                <div class="text-secondary small">{{ $item['quantity'] }} x ₹{{ number_format($item['unit_price'], 0) }}</div>
+                                <div class="text-secondary small">{{ $item['quantity'] }} x {{ \App\Support\StoreCurrency::format($item['unit_price'], 0) }}</div>
                             </div>
                             <div class="text-end">
-                                <div class="fw-semibold">₹{{ number_format($item['subtotal'], 0) }}</div>
+                                <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</div>
                                 <div class="sf-stepper sf-stepper-sm mt-2">
                                     <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="{{ $item['product']->id }}">−</button>
                                     <span class="sf-stepper-value" data-cart-stepper-value>{{ $item['quantity'] }}</span>
@@ -36,10 +36,10 @@
                 </div>
                 <div class="sf-info-card sf-cart-summary">
                     <h4 class="mb-3">Bill Summary</h4>
-                    <div class="d-flex justify-content-between mb-2"><span>Item Total</span><strong>₹{{ number_format($cartTotals['itemTotal'], 0) }}</strong></div>
-                    <div class="d-flex justify-content-between mb-2"><span>Delivery Fee</span><strong>₹{{ number_format($cartTotals['delivery'], 0) }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Item Total</span><strong>{{ \App\Support\StoreCurrency::format($cartTotals['itemTotal'], 0) }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Delivery Fee</span><strong>{{ \App\Support\StoreCurrency::format($cartTotals['delivery'], 0) }}</strong></div>
                     <hr>
-                    <div class="d-flex justify-content-between"><span class="fw-semibold">To Pay</span><strong class="fs-5">₹{{ number_format($cartTotals['grandTotal'], 0) }}</strong></div>
+                    <div class="d-flex justify-content-between"><span class="fw-semibold">To Pay</span><strong class="fs-5">{{ \App\Support\StoreCurrency::format($cartTotals['grandTotal'], 0) }}</strong></div>
                     <a href="{{ route('storefront.checkout') }}" class="btn btn-danger w-100 rounded-pill mt-3 {{ $canCheckout ? '' : 'js-checkout-auth-required' }}">
                         @if ($canCheckout)
                             Proceed to Checkout

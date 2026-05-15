@@ -15,7 +15,7 @@
                 <div class="flex-grow-1">
                     <div class="fw-semibold small">{{ $item['product']->product_name }}</div>
                     <div class="small text-secondary">{{ $item['product']->vendor?->vendor_name }}</div>
-                    <div class="small fw-semibold text-success">₹{{ number_format($item['subtotal'], 0) }}</div>
+                    <div class="small fw-semibold text-success">{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</div>
                 </div>
                 <div class="text-end">
                     <form method="POST" action="{{ route('storefront.cart.remove', $item['product']) }}" class="js-cart-remove mb-2">
@@ -41,7 +41,7 @@
     <div class="sf-cart-footer">
         <div class="d-flex justify-content-between small mb-2">
             <span>Item total</span>
-            <strong>₹{{ number_format($cartTotals['itemTotal'] ?? 0, 0) }}</strong>
+            <strong>{{ \App\Support\StoreCurrency::format($cartTotals['itemTotal'] ?? 0, 0) }}</strong>
         </div>
         <a href="{{ route('storefront.cart') }}" class="btn btn-danger w-100 rounded-pill">Go to Cart</a>
     </div>

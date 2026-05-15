@@ -15,6 +15,7 @@ use App\Models\RegionZone;
 use App\Models\Subcategory;
 use App\Models\Tax;
 use App\Models\User;
+use App\Support\StoreCurrency;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -195,7 +196,7 @@ class ReferenceModuleController extends Controller
             'Country' => fn ($row) => $row->country?->country_name ?: '-',
             'City' => fn ($row) => $row->city?->city_name ?: '-',
             'Zone' => fn ($row) => $row->zone?->zone_name ?: '-',
-            'Charge' => fn ($row) => number_format((float) $row->delivery_charge, 2),
+            'Charge' => fn ($row) => StoreCurrency::format($row->delivery_charge),
             'Available' => fn ($row) => $row->delivery_available ? 'Yes' : 'No',
             'Status' => fn ($row) => ucfirst($row->status),
         ]);
@@ -223,7 +224,7 @@ class ReferenceModuleController extends Controller
         $vendorId = Auth::guard('vendor')->id();
         $rows = collect([
             (object) ['metric' => 'Total Orders', 'value' => Order::where('vendor_id', $vendorId)->count()],
-            (object) ['metric' => 'Delivered Revenue', 'value' => number_format((float) Order::where('vendor_id', $vendorId)->where('order_status', 'delivered')->sum('total_amount'), 2)],
+            (object) ['metric' => 'Delivered Revenue', 'value' => StoreCurrency::format(Order::where('vendor_id', $vendorId)->where('order_status', 'delivered')->sum('total_amount'))],
             (object) ['metric' => 'Products', 'value' => Product::where('vendor_id', $vendorId)->count()],
             (object) ['metric' => 'Low Stock Items', 'value' => ProductInventory::whereHas('product', fn ($query) => $query->where('vendor_id', $vendorId))->whereColumn('stock_quantity', '<=', 'low_stock_threshold')->count()],
         ]);

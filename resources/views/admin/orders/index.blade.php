@@ -72,7 +72,7 @@
                             <td class="fw-semibold">{{ $order->order_number }}</td>
                             <td>{{ $order->customer?->name ?? '-' }}</td>
                             <td>{{ $order->vendor?->vendor_name ?? '-' }}</td>
-                            <td>{{ number_format((float) $order->total_amount, 2) }}</td>
+                            <td>{{ \App\Support\StoreCurrency::format($order->total_amount) }}</td>
                             <td><span class="badge text-bg-light">{{ ucfirst($order->payment_status) }}</span></td>
                             <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : 'secondary' }}">{{ ucfirst($order->order_status) }}</span></td>
                             <td>{{ $order->placed_at?->format('M d, Y') ?? '-' }}</td>

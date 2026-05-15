@@ -22,7 +22,7 @@
                     <div class="d-flex justify-content-between align-items-start gap-3">
                         <div>
                             <div class="text-secondary small">Revenue Overview</div>
-                            <div class="display-6 fw-bold mb-1">&#8377;{{ number_format((float) $summary['monthly_revenue'], 2) }}</div>
+                            <div class="display-6 fw-bold mb-1">{{ \App\Support\StoreCurrency::format($summary['monthly_revenue']) }}</div>
                             <div class="text-secondary small">Monthly revenue from paid orders</div>
                         </div>
                         <span class="admin-insight-icon"><i class="ti ti-chart-line"></i></span>
@@ -30,7 +30,7 @@
                     <div class="admin-mini-stat-grid mt-4">
                         <div>
                             <span>Today</span>
-                            <strong>&#8377;{{ number_format((float) $summary['today_sales'], 2) }}</strong>
+                            <strong>{{ \App\Support\StoreCurrency::format($summary['today_sales']) }}</strong>
                         </div>
                         <div>
                             <span>Conversion</span>
@@ -42,51 +42,12 @@
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="metric-card h-100 p-4">
-                    <div class="text-secondary small">Total Sales</div>
-                    <div class="h3 mb-0">&#8377;{{ number_format((float) $summary['total_sales'], 2) }}</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="metric-card h-100 p-4">
-                    <div class="text-secondary small">Total Orders</div>
-                    <div class="h3 mb-0">{{ number_format((int) $summary['orders']) }}</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="metric-card h-100 p-4">
-                    <div class="text-secondary small">Total Customers</div>
-                    <div class="h3 mb-0">{{ number_format((int) $summary['active_customers']) }}</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="metric-card h-100 p-4">
-                    <div class="text-secondary small">Total Products</div>
-                    <div class="h3 mb-0">{{ number_format((int) $summary['products']) }}</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="metric-card h-100 p-4">
-                    <div class="text-secondary small">Pending Orders</div>
-                    <div class="h3 mb-0">{{ number_format((int) $summary['pending_orders']) }}</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="metric-card h-100 p-4">
-                    <div class="text-secondary small">Low Stock</div>
-                    <div class="h3 mb-0">{{ number_format((int) $summary['low_stock']) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 admin-kpi-row">
             @foreach ($kpis as $kpi)
                 <div class="col-12 col-sm-6 col-xl-2">
                     <div class="dashboard-card admin-kpi-card h-100">
                         <div class="text-secondary small">{{ $kpi['label'] }}</div>
-                        <div class="h4 fw-bold mb-1">@if(!empty($kpi['currency']))&#8377;@endif{{ $kpi['value'] }}</div>
+                        <div class="h4 fw-bold mb-1">{{ ! empty($kpi['currency']) ? \App\Support\StoreCurrency::format($kpi['value']) : $kpi['value'] }}</div>
                         <div class="text-secondary small">{{ $kpi['hint'] }}</div>
                     </div>
                 </div>
@@ -142,7 +103,7 @@
                             <div class="admin-product-row">
                                 <div>
                                     <div class="fw-semibold">{{ $item->product?->product_name ?? $item->item_name ?? 'Product unavailable' }}</div>
-                                    <div class="text-secondary small">Revenue &#8377;{{ number_format((float) $item->revenue, 2) }}</div>
+                                    <div class="text-secondary small">Revenue {{ \App\Support\StoreCurrency::format($item->revenue) }}</div>
                                 </div>
                                 <strong>{{ number_format((int) $item->total_sold) }}</strong>
                             </div>
@@ -193,8 +154,8 @@
                             <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-primary btn-sm rounded-pill">View orders</a>
                         @endcanRoute
                     </div>
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                    <div class="table-responsive admin-transactions-table-wrap">
+                        <table class="table align-middle mb-0 admin-transactions-table">
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
@@ -210,7 +171,7 @@
                                     <tr>
                                         <td class="fw-semibold">{{ $transaction->order_number }}</td>
                                         <td>{{ $transaction->customer?->name ?? 'Guest customer' }}</td>
-                                        <td>&#8377;{{ number_format((float) $transaction->total_amount, 2) }}</td>
+                                        <td>{{ \App\Support\StoreCurrency::format($transaction->total_amount) }}</td>
                                         <td><span class="badge text-bg-light">{{ ucfirst($latestPayment?->status ?? $transaction->payment_status) }}</span></td>
                                         <td><span class="badge text-bg-{{ $transaction->order_status === 'cancelled' ? 'danger' : ($transaction->order_status === 'completed' ? 'success' : 'secondary') }}">{{ ucfirst($transaction->order_status) }}</span></td>
                                     </tr>

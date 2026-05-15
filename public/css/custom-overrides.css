@@ -53,6 +53,92 @@ textarea:-ms-input-placeholder {
     width: 100%;
 }
 
+/* Hide decorative helper copy across admin, vendor, and customer views without removing markup. */
+.sf-kicker,
+.sf-how-badge,
+.sf-category-strip-header p,
+.sf-section-header p,
+.sf-hero-card p,
+.sf-banner-copy p,
+.sf-mini-step .text-secondary.small,
+.storefront-shell .modal-header .text-secondary.small,
+.storefront-shell .form-text,
+.storefront-shell .subtitle,
+.storefront-shell .sub-title,
+.storefront-shell .section-subtitle,
+.storefront-shell .card-subtitle,
+.storefront-shell .page-subtitle,
+.storefront-shell .small-title,
+.admin-shell .form-text,
+.admin-shell .subtitle,
+.admin-shell .sub-title,
+.admin-shell .section-subtitle,
+.admin-shell .card-subtitle,
+.admin-shell .page-subtitle,
+.admin-shell .small-title,
+.admin-shell .hero-card p.text-secondary,
+.admin-dashboard .hero-card p,
+.admin-dashboard .hero-card .badge,
+.admin-dashboard .soft-panel > .d-flex > div > .text-secondary.small:last-child,
+.admin-dashboard .soft-panel .admin-mini-stat-grid + .text-secondary.small,
+.admin-dashboard .admin-kpi-card .text-secondary.small:last-child,
+.admin-dashboard h5 + .text-secondary.small,
+.admin-dashboard .admin-disabled-analytics span {
+    display: none !important;
+}
+
+.admin-shell .card,
+.admin-shell .shell-card,
+.admin-shell .soft-panel,
+.admin-shell .metric-card,
+.admin-shell .dashboard-card,
+.admin-shell .module-card,
+.storefront-shell .sf-info-card,
+.storefront-shell .sf-product-card,
+.storefront-shell .sf-mini-step,
+.storefront-shell .sf-banner-card,
+.storefront-shell .sf-cart-drawer,
+.storefront-shell .modal-content {
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+.admin-shell .card *,
+.admin-shell .shell-card *,
+.admin-shell .soft-panel *,
+.admin-shell .metric-card *,
+.admin-shell .dashboard-card *,
+.admin-shell .module-card *,
+.storefront-shell .sf-info-card *,
+.storefront-shell .sf-product-card *,
+.storefront-shell .sf-mini-step *,
+.storefront-shell .sf-banner-card *,
+.storefront-shell .sf-cart-drawer *,
+.storefront-shell .modal-content * {
+    max-width: 100%;
+}
+
+/* Keep helpful sub messages visible only for storefront promo banners and how-it-works steps. */
+.storefront-shell .sf-banner-copy p,
+.storefront-shell .sf-how-it-works .sf-mini-step .text-secondary.small {
+    display: block !important;
+}
+
+.storefront-shell .sf-banner-copy p {
+    margin-top: 6px;
+    color: #fff !important;
+    font-size: .92rem;
+    line-height: 1.35;
+}
+
+.storefront-shell .sf-how-it-works .sf-mini-step .text-secondary.small {
+    margin-top: 4px;
+    color: var(--sf-muted) !important;
+    font-size: .9rem;
+    line-height: 1.35;
+}
+
 @media (max-width: 768px) {
     input::placeholder,
     textarea::placeholder,

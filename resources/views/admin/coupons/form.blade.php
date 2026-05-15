@@ -41,7 +41,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Minimum Order</label>
                     <div class="input-group">
-                        <span class="input-group-text">₹</span>
+                        <span class="input-group-text">{{ \App\Support\StoreCurrency::code() }}</span>
                         <input type="number" name="min_order" step="0.01" min="0" value="{{ old('min_order', $coupon->min_order) }}" class="form-control" placeholder="Optional">
                     </div>
                 </div>
@@ -92,7 +92,7 @@
 
                 if (type.value === 'fixed') {
                     label.textContent = 'Discount Value (Amount)';
-                    suffix.textContent = '₹';
+                    suffix.textContent = @json(\App\Support\StoreCurrency::code());
                 } else {
                     label.textContent = 'Discount Value (%)';
                     suffix.textContent = '%';

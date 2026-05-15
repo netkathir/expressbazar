@@ -71,7 +71,7 @@
                             <td class="fw-semibold">{{ $payment->transaction_id }}</td>
                             <td>{{ $payment->order?->order_number ?? '-' }}</td>
                             <td>{{ strtoupper($payment->payment_method) }}</td>
-                            <td>{{ number_format((float) $payment->amount, 2) }}</td>
+                            <td>{{ \App\Support\StoreCurrency::format($payment->amount) }}</td>
                             <td><span class="badge text-bg-{{ $payment->status === 'paid' ? 'success' : 'secondary' }}">{{ ucfirst($payment->status) }}</span></td>
                             <td>{{ $payment->paid_at?->format('M d, Y h:i A') ?? '-' }}</td>
                             <td class="text-end">

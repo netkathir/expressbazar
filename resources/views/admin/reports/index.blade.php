@@ -97,7 +97,7 @@
             <div class="card shell-card h-100"><div class="card-body p-4"><div class="text-secondary small">Orders</div><div class="h3 mb-0">{{ $summary['orders'] }}</div></div></div>
         </div>
         <div class="col-md-2 col-6">
-            <div class="card shell-card h-100"><div class="card-body p-4"><div class="text-secondary small">Revenue</div><div class="h3 mb-0">{{ number_format((float) $summary['revenue'], 2) }}</div></div></div>
+            <div class="card shell-card h-100"><div class="card-body p-4"><div class="text-secondary small">Revenue</div><div class="h3 mb-0">{{ \App\Support\StoreCurrency::format($summary['revenue']) }}</div></div></div>
         </div>
         <div class="col-md-2 col-6">
             <div class="card shell-card h-100"><div class="card-body p-4"><div class="text-secondary small">Active Vendors</div><div class="h3 mb-0">{{ $summary['active_vendors'] }} / {{ $summary['vendors'] }}</div></div></div>
@@ -127,11 +127,11 @@
                     </div>
                     <div class="soft-card px-3 py-2">
                         <div class="small text-secondary">Revenue</div>
-                        <div class="fw-semibold">{{ number_format((float) $filterSummary['revenue'], 2) }}</div>
+                        <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($filterSummary['revenue']) }}</div>
                     </div>
                     <div class="soft-card px-3 py-2">
                         <div class="small text-secondary">Average Order</div>
-                        <div class="fw-semibold">{{ number_format((float) $filterSummary['average_order_value'], 2) }}</div>
+                        <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($filterSummary['average_order_value']) }}</div>
                     </div>
                 </div>
             </div>
@@ -165,7 +165,7 @@
                                 </td>
                                 <td><span class="badge text-bg-light">{{ ucfirst($latestPayment?->status ?? $order->payment_status) }}</span></td>
                                 <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : ($order->order_status === 'cancelled' ? 'danger' : 'secondary') }}">{{ ucfirst($order->order_status) }}</span></td>
-                                <td>{{ number_format((float) $order->total_amount, 2) }}</td>
+                                <td>{{ \App\Support\StoreCurrency::format($order->total_amount) }}</td>
                                 <td class="text-end">
                                     @canRoute('admin.orders.show')
                                         <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
@@ -208,7 +208,7 @@
                                     <tr>
                                         <td>{{ $row->vendor_name }}</td>
                                         <td>{{ $row->orders_count }}</td>
-                                        <td>{{ number_format((float) $row->revenue, 2) }}</td>
+                                        <td>{{ \App\Support\StoreCurrency::format($row->revenue) }}</td>
                                         <td><span class="badge text-bg-{{ $row->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($row->inventory_mode) }}</span></td>
                                         <td>
                                             <div>{{ $row->country_name }}</div>
@@ -367,7 +367,7 @@
                                 <td>{{ $row->city_name }}</td>
                                 <td>{{ $row->zone_name }}</td>
                                 <td>{{ $row->orders_count }}</td>
-                                <td>{{ number_format((float) $row->revenue, 2) }}</td>
+                                <td>{{ \App\Support\StoreCurrency::format($row->revenue) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-secondary py-4">No location analytics available.</td></tr>

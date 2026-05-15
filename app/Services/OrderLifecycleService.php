@@ -6,6 +6,7 @@ use App\Events\TriggerNotificationEvent;
 use App\Models\Order;
 use App\Models\OrderLog;
 use App\Support\NotificationHelper;
+use App\Support\StoreCurrency;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -98,8 +99,8 @@ class OrderLifecycleService
                 'status' => ucfirst($status),
                 'order_status' => ucfirst($status),
                 'vendor_name' => $order->vendor?->vendor_name ?? 'Express Bazar',
-                'amount' => number_format((float) $order->total_amount, 2),
-                'total_amount' => number_format((float) $order->total_amount, 2),
+                'amount' => StoreCurrency::format($order->total_amount),
+                'total_amount' => StoreCurrency::format($order->total_amount),
             ]));
         } catch (Throwable $exception) {
             Log::error('Order status customer notification dispatch failed.', [

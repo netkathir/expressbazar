@@ -6,6 +6,7 @@ use App\Events\TriggerNotificationEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Support\StoreCurrency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -120,8 +121,8 @@ class PaymentController extends Controller
                 'name' => $customer->name,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'amount' => number_format((float) $payment->amount, 2),
-                'total_amount' => number_format((float) $order->total_amount, 2),
+                'amount' => StoreCurrency::format($payment->amount),
+                'total_amount' => StoreCurrency::format($order->total_amount),
                 'transaction_id' => $payment->transaction_id,
             ]));
         } catch (Throwable $exception) {

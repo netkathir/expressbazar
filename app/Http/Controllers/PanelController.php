@@ -80,7 +80,7 @@ class PanelController extends Controller
     private function dashboardKpis(array $summary): array
     {
         return [
-            ['label' => 'Total Revenue', 'value' => number_format((float) $summary['revenue'], 2), 'hint' => 'Paid order value', 'currency' => true],
+            ['label' => 'Total Revenue', 'value' => (float) $summary['revenue'], 'hint' => 'Paid order value', 'currency' => true],
             ['label' => 'Orders Today', 'value' => number_format((int) $summary['orders_today']), 'hint' => 'Created today'],
             ['label' => 'Active Users', 'value' => number_format((int) $summary['active_customers']), 'hint' => 'Active customers'],
             ['label' => 'Products Available', 'value' => number_format((int) $summary['products']), 'hint' => 'Catalog products'],

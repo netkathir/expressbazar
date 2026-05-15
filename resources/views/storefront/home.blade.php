@@ -116,18 +116,6 @@
                 <x-empty-state>{{ config('ui_messages.no_products') }}</x-empty-state>
             </section>
         @elseif (!$isSearch)
-            <section class="container-fluid px-3 px-lg-4 mt-4">
-                <div class="sf-promo-board">
-                    @php($promoCategoryOne = $categories->first())
-                    <a href="{{ $promoCategoryOne ? route('storefront.category', array_merge(['category' => $promoCategoryOne], $filterQuery)) : '#featured-sections' }}" class="sf-promo-card sf-promo-card-large sf-promo-fresh">
-                        <span class="sf-kicker">Fresh picks</span>
-                        <h2>Daily essentials, better prices.</h2>
-                        <p>Quick grocery runs with fresh staples and instant cart flow.</p>
-                        <span class="sf-promo-cta">Shop deals <i class="ti ti-arrow-right"></i></span>
-                    </a>
-                </div>
-            </section>
-
             @if (($discountedProducts ?? collect())->isNotEmpty())
                 @php($topOfferCategory = $discountedProducts->first()?->category ?? $categories->first())
                 <section class="container-fluid px-3 px-lg-4 mt-4">
@@ -156,28 +144,6 @@
                 </section>
             @endif
 
-            @if (($availableVendors ?? collect())->isNotEmpty())
-                <section class="container-fluid px-3 px-lg-4 mt-4">
-                    <div class="sf-brand-store-panel">
-                        <div class="sf-section-header mb-3">
-                            <div>
-                                <h3>Explore vendor stores</h3>
-                                <p class="text-secondary mb-0">Browse trusted local stores and keep your cart with one vendor.</p>
-                            </div>
-                        </div>
-                        <div class="sf-store-tile-grid">
-                            @foreach ($availableVendors->take(8) as $vendor)
-                                <button type="button" class="sf-store-tile js-vendor-item" data-id="{{ $vendor->id }}" data-name="{{ $vendor->vendor_name }}">
-                                    <span>{{ strtoupper(substr($vendor->vendor_name, 0, 1)) }}</span>
-                                    <strong>{{ $vendor->vendor_name }}</strong>
-                                    <small>Shop available products</small>
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                </section>
-            @endif
-
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <div class="sf-section-header">
                     <div>
@@ -200,24 +166,6 @@
                     <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll trending products right">
                         <i class="ti ti-chevron-right"></i>
                     </button>
-                </div>
-            </section>
-
-            <section class="container-fluid px-3 px-lg-4 mt-4">
-                <div class="sf-ad-mosaic">
-                    <div class="sf-ad-card sf-ad-green">
-                        <span class="sf-kicker">Kitchen restock</span>
-                        <h3>Rice, spices, snacks and home basics.</h3>
-                        <p>Build a basket from nearby vendors and checkout in one smooth flow.</p>
-                    </div>
-                    <div class="sf-ad-card sf-ad-pink">
-                        <span class="sf-kicker">Offer zone</span>
-                        <h3>Fresh deals refreshed for everyday shopping.</h3>
-                    </div>
-                    <div class="sf-ad-card sf-ad-blue">
-                        <span class="sf-kicker">One cart</span>
-                        <h3>Clear vendor cart rules, no surprises.</h3>
-                    </div>
                 </div>
             </section>
 

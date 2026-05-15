@@ -30,7 +30,7 @@
                                 <div class="text-secondary small">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
                             </div>
                             <div class="sf-order-history-meta">
-                                <div class="fw-semibold fs-4">&#8377;{{ number_format((float) $order->total_amount, 0) }}</div>
+                                <div class="fw-semibold fs-4">{{ \App\Support\StoreCurrency::format($order->total_amount, 0) }}</div>
                                 <span class="badge rounded-pill text-bg-{{ $displayPaymentStatus === 'paid' ? 'success' : ($displayPaymentStatus === 'cancelled' ? 'secondary' : 'warning') }}">
                                     {{ ucfirst($displayPaymentStatus) }}
                                 </span>
@@ -67,10 +67,10 @@
                                             @endif
                                             <div class="text-secondary small mt-2">
                                                 Qty: {{ $item->quantity }} &bull;
-                                                Price: &#8377;{{ number_format((float) $item->price, 0) }}
+                                                Price: {{ \App\Support\StoreCurrency::format($item->price, 0) }}
                                             </div>
                                             <div class="text-secondary small">
-                                                Item total: &#8377;{{ number_format((float) $item->subtotal, 0) }}
+                                                Item total: {{ \App\Support\StoreCurrency::format($item->subtotal, 0) }}
                                             </div>
                                         </div>
                                     </div>
@@ -87,7 +87,7 @@
 
                         <div class="mt-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
                             <div class="text-secondary small">
-                                {{ $order->items->count() }} item(s) &bull; Delivery &#8377;{{ number_format((float) $order->delivery_charge, 0) }}
+                                {{ $order->items->count() }} item(s) &bull; Delivery {{ \App\Support\StoreCurrency::format($order->delivery_charge, 0) }}
                             </div>
                             <div class="d-flex flex-wrap justify-content-end gap-2">
                                 <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-outline-dark btn-sm rounded-pill">View Details</a>

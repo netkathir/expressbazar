@@ -27,7 +27,7 @@
                         <span class="sf-rating">4.3</span>
                         <span class="text-secondary small">Fast delivery ready</span>
                     </div>
-                    <div class="sf-price fs-2">₹{{ number_format((float) ($product->final_price ?: $product->price), 0) }}</div>
+                    <div class="sf-price fs-2">{{ \App\Support\StoreCurrency::format((float) ($product->final_price ?: $product->price), 0) }}</div>
                     <div class="text-secondary mb-3">{{ $product->inventory?->unit ?: '1 pc' }}</div>
                     <p class="lead mb-4">{{ $product->description ?: 'Fresh everyday product, ready for quick delivery.' }}</p>
 
@@ -88,7 +88,7 @@
                         <dt>Vendor</dt><dd>{{ $product->vendor?->vendor_name ?? '-' }}</dd>
                         <dt>City</dt><dd>{{ $product->vendor?->city?->city_name ?? '-' }}</dd>
                         <dt>Zone</dt><dd>{{ $product->vendor?->zone?->zone_name ?? '-' }}</dd>
-                        <dt>Price</dt><dd>₹{{ number_format((float) ($product->price), 0) }}</dd>
+                        <dt>Price</dt><dd>{{ \App\Support\StoreCurrency::format((float) $product->price, 0) }}</dd>
                     </dl>
                 </div>
             </div>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Support\StoreCurrency;
 use Stripe\StripeClient;
 use RuntimeException;
 
@@ -68,11 +69,12 @@ class StripeCheckoutService
     {
         $itemAndDeliveryTotal = (float) $order->items->sum('subtotal') + (float) $order->delivery_charge;
         $orderTotal = (float) $order->total_amount;
+        $currency = strtolower(StoreCurrency::code());
 
         if ($orderTotal > 0 && abs($itemAndDeliveryTotal - $orderTotal) > 0.01) {
             return [[
                 'price_data' => [
-                    'currency' => 'inr',
+                    'currency' => $currency,
                     'product_data' => [
                         'name' => 'Order '.$order->order_number,
                     ],
@@ -87,7 +89,7 @@ class StripeCheckoutService
         foreach ($order->items as $item) {
             $lineItems[] = [
                 'price_data' => [
-                    'currency' => 'inr',
+                    'currency' => $currency,
                     'product_data' => [
                         'name' => $item->item_name,
                     ],
@@ -100,7 +102,7 @@ class StripeCheckoutService
         if ((float) $order->delivery_charge > 0) {
             $lineItems[] = [
                 'price_data' => [
-                    'currency' => 'inr',
+                    'currency' => $currency,
                     'product_data' => [
                         'name' => 'Delivery Charge',
                     ],

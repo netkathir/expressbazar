@@ -75,11 +75,7 @@
             const countrySelect = form.querySelector('[data-country-select]');
             const citySelect = form.querySelector('[data-city-select]');
             const selectedCity = citySelect?.dataset.selectedCity || '';
-            const cities = @json($cities->map(fn ($city) => [
-                'id' => (string) $city->id,
-                'country_id' => (string) $city->country_id,
-                'city_name' => $city->city_name,
-            ])->values());
+            const cities = @json($cityOptions);
 
             if (!countrySelect || !citySelect) {
                 return;

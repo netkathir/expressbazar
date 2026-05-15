@@ -82,7 +82,7 @@
 
                                 <div class="sf-recent-order-total">
                                     <div class="small text-secondary">Total Amount</div>
-                                    <strong>&#8377;{{ number_format((float) $order->total_amount, 0) }}</strong>
+                                    <strong>{{ \App\Support\StoreCurrency::format($order->total_amount, 0) }}</strong>
                                     <div class="small text-secondary">Placed {{ optional($order->placed_at)->format('d M Y') }}</div>
                                     <div>
                                         <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-sm btn-outline-dark rounded-pill">View</a>

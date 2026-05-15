@@ -28,13 +28,13 @@
         <div class="sf-product-price-row">
             <div>
                 <div class="sf-product-price-line">
-                    <span class="sf-price">&#8377;{{ number_format($salePrice, 0) }}</span>
+                    <span class="sf-price">{{ \App\Support\StoreCurrency::format($salePrice, 0) }}</span>
                     @if ($hasDiscount)
                         <span class="sf-product-saving">{{ $discountPercent }}% OFF</span>
                     @endif
                 </div>
                 @if ($hasDiscount)
-                    <div class="sf-mrp">&#8377;{{ number_format($basePrice, 0) }}</div>
+                    <div class="sf-mrp">{{ \App\Support\StoreCurrency::format($basePrice, 0) }}</div>
                 @endif
             </div>
 

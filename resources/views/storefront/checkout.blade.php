@@ -35,7 +35,7 @@
                                             <div class="fw-semibold">{{ $address->label ?: $address->recipient_name }}</div>
                                             <div class="small text-secondary">{{ $address->address_line_1 }}, {{ $address->city?->city_name }}</div>
                                             <div class="small text-secondary">{{ $address->zone?->zone_name ?? '-' }} | {{ $address->postcode }}</div>
-                                            <div class="small text-secondary mt-1">Delivery fee: ₹{{ number_format($deliveryCharge, 0) }}</div>
+                                            <div class="small text-secondary mt-1">Delivery fee: {{ \App\Support\StoreCurrency::format($deliveryCharge, 0) }}</div>
                                         </div>
                                     </div>
                                 </label>
@@ -113,27 +113,27 @@
                             @foreach ($cartItems as $item)
                                 <div class="d-flex justify-content-between small mb-2">
                                     <span>{{ $item['product']->product_name }} x {{ $item['quantity'] }}</span>
-                                    <strong>₹{{ number_format($item['subtotal'], 0) }}</strong>
+                                    <strong>{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</strong>
                                 </div>
                             @endforeach
                             <hr>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Item Total</span>
-                                <strong data-item-total>&#8377;{{ number_format($cartTotals['itemTotal'], 0) }}</strong>
+                                <strong data-item-total>{{ \App\Support\StoreCurrency::format($cartTotals['itemTotal'], 0) }}</strong>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Delivery Fee</span>
-                                <strong data-delivery-total>&#8377;{{ number_format($cartTotals['delivery'], 0) }}</strong>
+                                <strong data-delivery-total>{{ \App\Support\StoreCurrency::format($cartTotals['delivery'], 0) }}</strong>
                             </div>
                             @if (($cartTotals['discount'] ?? 0) > 0)
                                 <div class="d-flex justify-content-between mb-2 text-success">
                                     <span>Discount{{ ! empty($cartTotals['coupon']['code']) ? ' ('.$cartTotals['coupon']['code'].')' : '' }}</span>
-                                    <strong data-discount-total>-&#8377;{{ number_format($cartTotals['discount'], 0) }}</strong>
+                                    <strong data-discount-total>-{{ \App\Support\StoreCurrency::format($cartTotals['discount'], 0) }}</strong>
                                 </div>
                             @endif
                             <div class="d-flex justify-content-between">
                                 <span class="fw-semibold">To Pay</span>
-                                <strong class="fs-5" data-grand-total>₹{{ number_format($cartTotals['grandTotal'], 0) }}</strong>
+                                <strong class="fs-5" data-grand-total>{{ \App\Support\StoreCurrency::format($cartTotals['grandTotal'], 0) }}</strong>
                             </div>
 
                             <button id="checkoutSubmit" class="btn btn-danger w-100 rounded-pill mt-3" type="submit" {{ $addresses->isEmpty() ? 'disabled' : '' }}>
@@ -159,6 +159,7 @@
 @push('scripts')
     <script>
         window.checkoutDeliveryCharges = @json($deliveryChargeByAddress ?? []);
+        window.storeCurrency = @json(\App\Support\StoreCurrency::jsConfig());
         const checkoutSubmit = document.getElementById('checkoutSubmit');
         const addressToggle = document.querySelector('.js-toggle-checkout-addresses');
 
@@ -183,11 +184,11 @@
             const grandNode = document.querySelector('[data-grand-total]');
 
             if (deliveryNode) {
-                deliveryNode.textContent = `₹${delivery.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+                deliveryNode.textContent = `${window.storeCurrency.code} ${delivery.toLocaleString(window.storeCurrency.locale, { maximumFractionDigits: 0 })}`;
             }
 
             if (grandNode) {
-                grandNode.textContent = `₹${grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+                grandNode.textContent = `${window.storeCurrency.code} ${grandTotal.toLocaleString(window.storeCurrency.locale, { maximumFractionDigits: 0 })}`;
             }
         });
 

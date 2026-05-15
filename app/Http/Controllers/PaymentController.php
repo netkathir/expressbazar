@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Services\StripeCheckoutService;
 use App\Support\NotificationHelper;
+use App\Support\StoreCurrency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -301,8 +302,8 @@ class PaymentController extends Controller
                 'name' => $customer->name,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'amount' => number_format((float) $order->total_amount, 2),
-                'total_amount' => number_format((float) $order->total_amount, 2),
+                'amount' => StoreCurrency::format($order->total_amount),
+                'total_amount' => StoreCurrency::format($order->total_amount),
             ]));
         } catch (Throwable $exception) {
             Log::error('Payment success template notification dispatch failed.', [

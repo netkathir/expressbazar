@@ -87,9 +87,9 @@
                         <tr>
                             <td class="fw-semibold">{{ $coupon->code }}</td>
                             <td>
-                                {{ $coupon->type === 'percentage' ? rtrim(rtrim(number_format((float) $coupon->value, 2), '0'), '.').'%' : '₹'.number_format((float) $coupon->value, 0) }}
+                                {{ $coupon->type === 'percentage' ? rtrim(rtrim(number_format((float) $coupon->value, 2), '0'), '.').'%' : \App\Support\StoreCurrency::format($coupon->value, 0) }}
                             </td>
-                            <td>{{ $coupon->min_order !== null ? '₹'.number_format((float) $coupon->min_order, 0) : '-' }}</td>
+                            <td>{{ $coupon->min_order !== null ? \App\Support\StoreCurrency::format($coupon->min_order, 0) : '-' }}</td>
                             <td>{{ $coupon->vendor?->vendor_name ?: 'Vendors' }}</td>
                             <td>{{ $coupon->expires_at ? $coupon->expires_at->format('d M Y') : '-' }}</td>
                             <td><span class="badge text-bg-{{ $coupon->is_active ? 'success' : 'secondary' }}">{{ $coupon->is_active ? 'Active' : 'Inactive' }}</span></td>

@@ -31,6 +31,7 @@ class SystemConfigController extends Controller
             'default_country' => ['nullable', 'string', 'max:255'],
             'default_city' => ['nullable', 'string', 'max:255'],
             'default_zone' => ['nullable', 'string', 'max:255'],
+            'store_currency' => ['nullable', 'string', 'regex:/^[A-Za-z]{3}$/'],
             'minimum_order_value' => ['nullable', 'numeric', 'min:0'],
             'free_delivery_threshold' => ['nullable', 'numeric', 'min:0'],
             'delivery_time_estimate' => ['nullable', 'string', 'max:255'],
@@ -43,6 +44,10 @@ class SystemConfigController extends Controller
         ]);
 
         foreach ($data as $key => $value) {
+            if ($key === 'store_currency') {
+                $value = strtoupper(trim((string) $value));
+            }
+
             SystemConfig::updateOrCreate(
                 ['config_key' => $key],
                 ['config_value' => is_bool($value) ? ($value ? '1' : '0') : (string) $value]

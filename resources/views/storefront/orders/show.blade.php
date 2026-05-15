@@ -16,7 +16,7 @@
                         <div class="text-secondary">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
                     </div>
                     <div class="text-end">
-                        <div class="fw-semibold fs-4">&#8377;{{ number_format((float) $order->total_amount, 0) }}</div>
+                        <div class="fw-semibold fs-4">{{ \App\Support\StoreCurrency::format($order->total_amount, 0) }}</div>
                         <span class="badge rounded-pill text-bg-{{ $displayPaymentStatus === 'paid' ? 'success' : ($displayPaymentStatus === 'cancelled' ? 'secondary' : 'warning') }}">
                             {{ ucfirst($displayPaymentStatus) }}
                         </span>
@@ -40,10 +40,10 @@
                                         @endif
                                         <div>
                                             <a href="{{ $item->product ? route('storefront.product', $item->product) : '#' }}" class="fw-semibold text-decoration-none text-dark">{{ $item->item_name }}</a>
-                                            <div class="small text-secondary">{{ $item->quantity }} &times; &#8377;{{ number_format((float) $item->price, 0) }}</div>
+                                            <div class="small text-secondary">{{ $item->quantity }} &times; {{ \App\Support\StoreCurrency::format($item->price, 0) }}</div>
                                         </div>
                                     </div>
-                                    <div class="fw-semibold">&#8377;{{ number_format((float) $item->subtotal, 0) }}</div>
+                                    <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($item->subtotal, 0) }}</div>
                                 </div>
                             </div>
                         @endforeach
@@ -56,7 +56,7 @@
                         <dt>Vendor</dt><dd>{{ $order->vendor?->vendor_name ?? '-' }}</dd>
                         <dt>Payment Method</dt><dd>{{ ucfirst($latestPayment?->payment_method ?? 'cod') }}</dd>
                         <dt>Payment Status</dt><dd>{{ ucfirst($displayPaymentStatus) }}</dd>
-                        <dt>Delivery Charge</dt><dd>&#8377;{{ number_format((float) $order->delivery_charge, 0) }}</dd>
+                        <dt>Delivery Charge</dt><dd>{{ \App\Support\StoreCurrency::format($order->delivery_charge, 0) }}</dd>
                         <dt>Order Status</dt><dd id="order-status-summary">{{ ucfirst($order->order_status) }}</dd>
                     </dl>
 

@@ -41,7 +41,7 @@ class OrderController extends Controller
         return view('admin.orders.show', [
             'title' => 'Order Details',
             'activeMenu' => 'orders',
-            'order' => $order->load(['customer', 'vendor', 'items']),
+            'order' => $order->load(['customer', 'vendor', 'items.product.images', 'items.product.category']),
             'routePrefix' => 'vendor.orders',
             'isVendorPanel' => true,
         ]);

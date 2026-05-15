@@ -140,7 +140,7 @@ body.admin-shell {
     height: 100vh;
     background: var(--admin-sidebar);
     border-right: 1px solid var(--admin-border);
-    padding-top: 92px;
+    padding-top: 106px;
     z-index: 1030;
     overflow-x: hidden;
     overflow-y: auto;
@@ -150,7 +150,7 @@ body.admin-shell {
 .logo-area {
     position: absolute;
     inset: 0 0 auto 0;
-    height: 92px;
+    height: 106px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -161,9 +161,9 @@ body.admin-shell {
 
 .admin-brand-logo {
     display: block;
-    width: min(245px, 100%);
+    width: min(270px, 100%);
     height: auto;
-    max-height: 70px;
+    max-height: 84px;
     object-fit: contain;
     background: transparent;
 }
@@ -886,7 +886,7 @@ body.admin-shell {
     }
 
     .admin-brand-logo {
-        max-width: 230px;
+        max-width: 250px;
     }
 
     .sidebar {
@@ -1142,6 +1142,8 @@ body.admin-shell {
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .admin-analytics-hero {
@@ -1179,6 +1181,15 @@ body.admin-shell {
     background: rgba(245, 247, 250, .9);
 }
 
+.admin-mini-stat-grid > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    justify-items: start;
+    gap: 6px;
+    padding-inline: 12px;
+}
+
 .admin-mini-stat-grid span,
 .admin-status-list span {
     color: var(--admin-muted);
@@ -1192,8 +1203,60 @@ body.admin-shell {
     font-weight: 800;
 }
 
+.admin-mini-stat-grid span,
+.admin-mini-stat-grid strong {
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.admin-mini-stat-grid strong {
+    justify-self: start;
+    font-size: 1rem;
+}
+
 .admin-kpi-card {
     min-height: 128px;
+}
+
+.admin-dashboard .admin-kpi-card .small,
+.admin-dashboard .admin-kpi-card .h4,
+.admin-mini-stat-grid span,
+.admin-mini-stat-grid strong,
+.admin-status-list span,
+.admin-status-list strong {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+.admin-dashboard .admin-kpi-card .h4,
+.admin-status-list strong {
+    white-space: nowrap;
+}
+
+.admin-mini-stat-grid span,
+.admin-mini-stat-grid strong {
+    white-space: normal;
+}
+
+@media (min-width: 1200px) {
+    .admin-dashboard .admin-kpi-row {
+        flex-wrap: nowrap;
+    }
+
+    .admin-dashboard .admin-kpi-row > [class*="col-"] {
+        flex: 1 1 0;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .admin-dashboard .admin-kpi-card {
+        padding: 18px;
+    }
+
+    .admin-dashboard .admin-kpi-card .small {
+        white-space: normal;
+    }
 }
 
 .admin-chart-wrap {
@@ -1218,6 +1281,39 @@ body.admin-shell {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.admin-dashboard .admin-transactions-table {
+    min-width: 760px;
+}
+
+.admin-dashboard .admin-transactions-table th,
+.admin-dashboard .admin-transactions-table td {
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+}
+
+.admin-dashboard .admin-transactions-table th:nth-child(1),
+.admin-dashboard .admin-transactions-table td:nth-child(1) {
+    min-width: 210px;
+}
+
+.admin-dashboard .admin-transactions-table th:nth-child(2),
+.admin-dashboard .admin-transactions-table td:nth-child(2) {
+    min-width: 130px;
+}
+
+.admin-dashboard .admin-transactions-table th:nth-child(3),
+.admin-dashboard .admin-transactions-table td:nth-child(3) {
+    min-width: 120px;
+}
+
+.admin-dashboard .admin-transactions-table th:nth-child(4),
+.admin-dashboard .admin-transactions-table td:nth-child(4),
+.admin-dashboard .admin-transactions-table th:nth-child(5),
+.admin-dashboard .admin-transactions-table td:nth-child(5) {
+    min-width: 120px;
 }
 
 .admin-status-list {
@@ -1319,6 +1415,190 @@ body.admin-shell {
     white-space: nowrap !important;
 }
 
+.order-detail-page .shell-card {
+    border-radius: 16px;
+}
+
+.order-detail-hero {
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 92% 12%, rgba(163, 214, 92, .22), transparent 28%),
+        linear-gradient(135deg, #fff, rgba(249, 249, 249, .92));
+}
+
+.order-detail-kicker {
+    display: inline-flex;
+    margin-bottom: .45rem;
+    color: var(--admin-brand-dark);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
+.order-detail-title h1 {
+    color: var(--admin-brand-dark);
+}
+
+.order-detail-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.order-detail-metrics > div,
+.order-summary-list > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid rgba(31, 122, 99, .1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .78);
+}
+
+.order-detail-metrics span,
+.order-summary-list span,
+.order-detail-list dt,
+.order-product-meta,
+.order-product-pricing {
+    color: var(--admin-muted);
+    font-size: .78rem;
+    font-weight: 500;
+}
+
+.order-detail-metrics strong,
+.order-summary-list strong {
+    color: var(--admin-charcoal);
+    font-size: .98rem;
+    font-weight: 800;
+}
+
+.order-product-list {
+    display: grid;
+    gap: 14px;
+}
+
+.order-product-card {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 16px;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid rgba(31, 122, 99, .1);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(31, 122, 99, .05);
+}
+
+.order-product-media {
+    display: grid;
+    width: 112px;
+    min-height: 112px;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(31, 122, 99, .08);
+    color: var(--admin-brand-dark);
+    font-size: 2rem;
+}
+
+.order-product-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.order-product-copy {
+    min-width: 0;
+}
+
+.order-product-copy h3 {
+    margin: 0 0 4px;
+    color: var(--admin-charcoal);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.order-product-copy p {
+    margin: 10px 0 0;
+    color: var(--admin-muted);
+    font-size: .86rem;
+    line-height: 1.45;
+}
+
+.order-product-copy > .d-flex > strong {
+    color: var(--admin-brand-dark);
+    white-space: nowrap;
+}
+
+.order-product-meta,
+.order-product-pricing {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.order-product-meta span,
+.order-product-pricing span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(245, 247, 250, .9);
+}
+
+.order-product-pricing {
+    margin-top: 12px;
+}
+
+.order-summary-list {
+    display: grid;
+    gap: 10px;
+}
+
+.order-summary-list > div {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+}
+
+.order-summary-total {
+    background: rgba(31, 122, 99, .08) !important;
+}
+
+.order-detail-list {
+    display: grid;
+    grid-template-columns: minmax(110px, .45fr) minmax(0, 1fr);
+    gap: 10px 14px;
+}
+
+.order-detail-list dd {
+    margin: 0;
+    color: var(--admin-charcoal);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 991.98px) {
+    .order-detail-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .order-detail-metrics,
+    .order-product-card,
+    .order-detail-list {
+        grid-template-columns: 1fr;
+    }
+
+    .order-product-media {
+        width: 100%;
+        min-height: 180px;
+    }
+}
+
 @media (max-width: 575.98px) {
     .admin-dashboard .dashboard-card,
     .admin-dashboard .admin-kpi-card {
@@ -1347,5 +1627,38 @@ body.admin-shell {
     .admin-shell main h1.h3,
     .admin-page-title {
         font-size: clamp(1.42rem, 6vw, 1.7rem);
+    }
+}
+
+/* Topbar notification sizing */
+.topbar .btn-icon[aria-label="Notifications"] {
+    width: 42px;
+    height: 42px;
+    overflow: visible;
+}
+
+.topbar .btn-icon[aria-label="Notifications"] .ti-bell {
+    font-size: 1.38rem;
+    line-height: 1;
+}
+
+.topbar .btn-icon[aria-label="Notifications"] #notification-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border: 2px solid #fff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 16px;
+}
+
+@media (max-width: 575.98px) {
+    .topbar .btn-icon[aria-label="Notifications"] {
+        width: 44px;
+        height: 44px;
+    }
+
+    .topbar .btn-icon[aria-label="Notifications"] .ti-bell {
+        font-size: 1.5rem;
     }
 }

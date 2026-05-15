@@ -122,7 +122,7 @@
                             </td>
                             <td>{{ $product->tax?->tax_name ?? '-' }}</td>
                             <td>{{ $product->vendor?->vendor_name ?? '-' }}</td>
-                            <td>{{ number_format((float) $product->price, 2) }}</td>
+                            <td>{{ \App\Support\StoreCurrency::format($product->price) }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $product->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($product->inventory_mode) }}</span>
                                 <div class="small text-secondary">

@@ -25,10 +25,10 @@
                     <div class="sf-info-card text-start">
                         <h4 class="mb-3">Order Summary</h4>
                         <dl class="sf-specs mb-0">
-                            <dt>Total Amount</dt><dd>&#8377;{{ number_format((float) $order->total_amount, 0) }}</dd>
+                            <dt>Total Amount</dt><dd>{{ \App\Support\StoreCurrency::format($order->total_amount, 0) }}</dd>
                             <dt>Payment Status</dt><dd>{{ ucfirst($latestPayment?->status ?? $order->payment_status) }}</dd>
                             <dt>Payment Method</dt><dd>{{ ucfirst($latestPayment?->payment_method ?? 'cod') }}</dd>
-                            <dt>Delivery Charge</dt><dd>&#8377;{{ number_format((float) $order->delivery_charge, 0) }}</dd>
+                            <dt>Delivery Charge</dt><dd>{{ \App\Support\StoreCurrency::format($order->delivery_charge, 0) }}</dd>
                             <dt>Vendor</dt><dd>{{ $order->vendor?->vendor_name ?? '-' }}</dd>
                         </dl>
                     </div>

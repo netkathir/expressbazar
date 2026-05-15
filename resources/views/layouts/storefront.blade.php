@@ -148,28 +148,6 @@
     @unless ($hideStorefrontHeader)
     <footer class="sf-footer">
         <div class="container-fluid px-3 px-lg-4">
-            <div class="sf-footer-benefits">
-                <div>
-                    <i class="ti ti-building-store"></i>
-                    <span>Vendor-stocked products</span>
-                    <small>Browse nearby stores</small>
-                </div>
-                <div>
-                    <i class="ti ti-truck-delivery"></i>
-                    <span>Fast checkout flow</span>
-                    <small>Location validation when needed</small>
-                </div>
-                <div>
-                    <i class="ti ti-shield-check"></i>
-                    <span>One vendor cart</span>
-                    <small>Clear basket rules</small>
-                </div>
-                <div>
-                    <i class="ti ti-headset"></i>
-                    <span>Customer support</span>
-                    <small>Help with your orders</small>
-                </div>
-            </div>
             <div class="sf-footer-grid">
                 <div class="sf-footer-brand">
                     <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
@@ -228,7 +206,7 @@
             </div>
 
             <div class="sf-footer-bottom">
-                <div>&copy; {{ date('Y') }} Express Bazaar. All rights reserved.</div>
+                <div class="sf-footer-copyright">&copy; {{ date('Y') }} Express Bazaar. All rights reserved.</div>
             </div>
         </div>
     </footer>

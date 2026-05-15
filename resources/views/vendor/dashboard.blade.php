@@ -47,7 +47,7 @@
             <div class="col-md-4">
                 <div class="metric-card">
                     <div class="text-secondary small">Delivered Revenue</div>
-                    <div class="h3 mb-0">{{ number_format((float) $deliveredRevenue, 2) }}</div>
+                    <div class="h3 mb-0">{{ \App\Support\StoreCurrency::format($deliveredRevenue) }}</div>
                 </div>
             </div>
         @endif

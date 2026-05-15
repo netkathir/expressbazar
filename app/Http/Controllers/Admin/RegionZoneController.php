@@ -43,12 +43,15 @@ class RegionZoneController extends Controller
 
     public function create()
     {
+        $cities = City::orderBy('city_name')->get();
+
         return view('admin.zones.form', [
             'title' => 'Add Region / Zone',
             'activeMenu' => 'zones',
             'zone' => new RegionZone(),
             'countries' => Country::orderBy('country_name')->get(),
-            'cities' => City::orderBy('city_name')->get(),
+            'cities' => $cities,
+            'cityOptions' => $this->cityOptions($cities),
             'mode' => 'create',
         ]);
     }
@@ -75,12 +78,15 @@ class RegionZoneController extends Controller
 
     public function edit(RegionZone $zone)
     {
+        $cities = City::orderBy('city_name')->get();
+
         return view('admin.zones.form', [
             'title' => 'Edit Region / Zone',
             'activeMenu' => 'zones',
             'zone' => $zone,
             'countries' => Country::orderBy('country_name')->get(),
-            'cities' => City::orderBy('city_name')->get(),
+            'cities' => $cities,
+            'cityOptions' => $this->cityOptions($cities),
             'mode' => 'edit',
         ]);
     }
@@ -147,5 +153,14 @@ class RegionZoneController extends Controller
         }
 
         return $data;
+    }
+
+    private function cityOptions($cities): array
+    {
+        return $cities->map(fn (City $city) => [
+            'id' => (string) $city->id,
+            'country_id' => (string) $city->country_id,
+            'city_name' => $city->city_name,
+        ])->values()->all();
     }
 }

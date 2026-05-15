@@ -208,7 +208,7 @@
                     discountValue?.setAttribute('max', '100');
                 } else if (discountType.value === 'fixed') {
                     discountValueLabel.textContent = 'Discount Value (Amount)';
-                    discountValueSuffix.textContent = '₹';
+                    discountValueSuffix.textContent = @json(\App\Support\StoreCurrency::code());
                     discountValue?.setAttribute('max', discountValue.dataset.maxMoney || '{{ $maxMoneyAmount }}');
                 } else {
                     discountValueLabel.textContent = 'Discount Value';
