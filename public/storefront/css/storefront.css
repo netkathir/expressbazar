@@ -370,7 +370,7 @@ body.storefront-shell {
     width: var(--sf-category-tile);
     height: var(--sf-category-tile);
     border-radius: 15px;
-    background: #f8f8f8;
+    background: #f9f9f9;
     border: 1px solid rgba(226, 232, 240, .55);
     box-shadow: 0 8px 22px rgba(15, 23, 42, .04);
     display: flex;

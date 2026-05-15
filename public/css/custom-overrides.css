@@ -154,19 +154,88 @@ textarea:-ms-input-placeholder {
     margin-top: 0;
 }
 
+/* Header account/cart actions as stacked icon labels. */
+.storefront-shell .sf-actions {
+    align-items: center;
+    gap: 14px;
+}
+
+.storefront-shell .sf-actions .sf-action-link {
+    display: inline-grid;
+    grid-template-rows: auto auto;
+    place-items: center;
+    min-width: 42px;
+    min-height: 46px;
+    padding: 0;
+    gap: 2px;
+    border: 0;
+    background: transparent;
+    color: #111;
+    font-size: .72rem;
+    font-weight: 500;
+    line-height: 1.05;
+    text-decoration: none;
+}
+
+.storefront-shell .sf-actions .sf-action-link > i {
+    color: #111;
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.storefront-shell .sf-actions .js-open-cart > i {
+    font-size: 1.9rem;
+}
+
+.storefront-shell .sf-actions .sf-cart-badge {
+    top: -3px;
+    right: 2px;
+}
+
 /* Compact category listing typography without changing link/filter behavior. */
+.storefront-shell .sf-category-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 18px;
+}
+
+.storefront-shell .sf-category-sidebar {
+    padding: 14px;
+    border-radius: 18px;
+}
+
 .storefront-shell .sf-category-sidebar h4 {
-    font-size: .98rem;
+    margin-bottom: 12px !important;
+    font-size: .88rem;
     line-height: 1.22;
 }
 
+.storefront-shell .sf-category-sidebar .sf-side-links {
+    gap: 7px;
+    margin-top: 10px;
+}
+
 .storefront-shell .sf-category-sidebar .sf-side-links a {
-    font-size: .78rem;
+    min-height: 48px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: .68rem;
     line-height: 1.18;
+}
+
+.storefront-shell .sf-category-sidebar .sf-side-links a img {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
 }
 
 .storefront-shell .sf-category-sidebar .sf-side-links a span {
     min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+    .storefront-shell .sf-category-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 /* Align the home page "Shop by categories" rail without changing its scroll behavior. */
@@ -311,8 +380,17 @@ textarea:-ms-input-placeholder {
 }
 
 .storefront-shell .sf-category-showcase {
+    background: var(--sf-bg);
     padding-top: 18px !important;
     padding-bottom: 6px;
+}
+
+.storefront-shell .sf-category-rail-wrap {
+    background: var(--sf-bg);
+}
+
+.storefront-shell .sf-category-rail-wrap .sf-chip-image {
+    background: var(--sf-surface);
 }
 
 @media (min-width: 992px) {

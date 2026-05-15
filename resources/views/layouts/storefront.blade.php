@@ -99,14 +99,9 @@
                     <div class="sf-actions">
                         @auth
                             @if (auth()->user()->role === 'customer')
-                                <a href="{{ route('storefront.account') }}" class="sf-avatar-link text-decoration-none">
-                                    <span class="sf-avatar">
-                                        @if (auth()->user()->avatar_path)
-                                            <img src="{{ asset(auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
-                                        @else
-                                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                        @endif
-                                    </span>
+                                <a href="{{ route('storefront.account') }}" class="sf-action-link sf-profile-link">
+                                    <i class="ti ti-user-circle"></i>
+                                    <span>Profile</span>
                                 </a>
                                 <div class="dropdown">
                                     <button class="sf-action-link sf-alert-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
