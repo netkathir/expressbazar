@@ -41,6 +41,8 @@ use App\Http\Controllers\Vendor\ReferenceModuleController as VendorReferenceModu
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'home'])->name('user.home');
+Route::get('/contact-us', [StorefrontController::class, 'contact'])->name('storefront.contact');
+Route::post('/contact-us', [StorefrontController::class, 'submitContact'])->name('storefront.contact.submit');
 Route::get('/login', [CustomerAuthController::class, 'createLogin'])->name('storefront.login');
 Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->name('storefront.login.store');
 Route::get('/register', [CustomerAuthController::class, 'createRegister'])->name('storefront.register');
@@ -84,8 +86,6 @@ Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])
 Route::get('/categories/{category}', [StorefrontController::class, 'category'])->name('storefront.category');
 Route::get('/subcategories/{subcategory}', [StorefrontController::class, 'subcategory'])->name('storefront.subcategory');
 Route::get('/products/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
-Route::get('/contact-us', [StorefrontController::class, 'contact'])->name('storefront.contact');
-Route::post('/contact-us', [StorefrontController::class, 'submitContact'])->name('storefront.contact.submit');
 Route::get('/search', [StorefrontController::class, 'search'])->name('storefront.search');
 Route::get('/search-suggestions', [StorefrontController::class, 'searchSuggestions'])->name('storefront.search.suggestions');
 Route::get('/cart', [StorefrontController::class, 'cart'])->name('storefront.cart');
