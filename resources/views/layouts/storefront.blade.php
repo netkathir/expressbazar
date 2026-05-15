@@ -4,7 +4,35 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>ExpressBazaar</title>
+    @php
+        $isStorefrontHomeTitle = request()->routeIs('user.home')
+            && ! request()->hasAny(['search', 'q', 'vendor_id', 'pincode', 'postcode']);
+        $browserTitle = $isStorefrontHomeTitle
+            ? 'Welcome to ExpressBazaar'
+            : 'ExpressBazaar / '.($title ?? 'Home');
+    @endphp
+    <title>{{ $browserTitle }}</title>
+    <script>
+        (function () {
+            const isHome = @json($isStorefrontHomeTitle);
+            const visitKey = 'expressbazar.storefrontVisited';
+
+            if (!isHome) {
+                try {
+                    sessionStorage.setItem(visitKey, '1');
+                } catch (error) {}
+                return;
+            }
+
+            try {
+                if (sessionStorage.getItem(visitKey)) {
+                    document.title = 'ExpressBazaar / Home';
+                } else {
+                    sessionStorage.setItem(visitKey, '1');
+                }
+            } catch (error) {}
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -105,10 +133,6 @@
                             <a href="{{ route('storefront.login') }}" class="sf-action-link">
                                 <i class="ti ti-user-circle"></i>
                                 <span>Login</span>
-                            </a>
-                            <a href="{{ route('storefront.register') }}" class="sf-action-link">
-                                <i class="ti ti-user-plus"></i>
-                                <span>Register</span>
                             </a>
                         @endauth
                         <button class="sf-action-link js-open-cart" type="button">

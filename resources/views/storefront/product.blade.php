@@ -37,10 +37,6 @@
                     </div>
                 </div>
                 <div class="sf-product-summary">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                        <span class="badge rounded-pill text-bg-light">{{ $product->category?->category_name }}</span>
-                        <span class="text-secondary small">{{ $product->vendor?->vendor_name }}</span>
-                    </div>
                     <h1 class="h2 fw-bold">{{ $product->product_name }}</h1>
                     <div class="sf-rating-line mb-3">
                         <span class="sf-rating">4.3</span>
@@ -86,7 +82,7 @@
                     </dl>
                 </div>
                 <div class="sf-info-card">
-                    <h4 class="mb-3">Product specification</h4>
+                    <h4 class="mb-3">Product description</h4>
                     <dl class="sf-specs">
                         <dt>Unit</dt><dd>{{ $product->inventory?->unit ?: '1 pc' }}</dd>
                         <dt>Availability</dt><dd>{{ $product->inventory?->inventory_mode === 'internal' ? ((int) $product->inventory?->stock_quantity > 0 ? 'In stock' : 'Out of stock') : 'Vendor managed' }}</dd>

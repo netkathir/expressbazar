@@ -139,6 +139,36 @@ textarea:-ms-input-placeholder {
     line-height: 1.35;
 }
 
+/* Keep auth logos even across customer login, create account, and admin login. */
+.storefront-shell .login-logo,
+.admin-shell .auth-panel-logo {
+    display: block;
+    width: min(260px, 100%);
+    height: 76px;
+    margin-left: auto;
+    margin-right: auto;
+    object-fit: contain;
+}
+
+.storefront-shell .auth-logo {
+    margin-top: 0;
+}
+
+/* Compact category listing typography without changing link/filter behavior. */
+.storefront-shell .sf-category-sidebar h4 {
+    font-size: .98rem;
+    line-height: 1.22;
+}
+
+.storefront-shell .sf-category-sidebar .sf-side-links a {
+    font-size: .78rem;
+    line-height: 1.18;
+}
+
+.storefront-shell .sf-category-sidebar .sf-side-links a span {
+    min-width: 0;
+}
+
 /* Align the home page "Shop by categories" rail without changing its scroll behavior. */
 .storefront-shell .sf-category-rail-wrap {
     --sf-category-tile: clamp(92px, 6.2vw, 124px);
