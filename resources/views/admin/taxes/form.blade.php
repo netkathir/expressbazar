@@ -33,7 +33,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Country</label>
-                    <select name="country_id" class="form-select" required>
+                    <select name="country_id" class="form-select js-tax-country" required>
                         <option value="">Select country</option>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected((string) old('country_id', $tax->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
@@ -42,7 +42,19 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Region</label>
-                    <input type="text" name="region_name" value="{{ old('region_name', $tax->region_name) }}" class="form-control" placeholder="Region or zone name" pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&'()\/-]+$" required>
+                    @php($selectedRegion = old('region_name', $tax->region_name))
+                    <select name="region_name" class="form-select js-tax-region" required>
+                        <option value="">Select region</option>
+                        @foreach ($regions as $region)
+                            <option
+                                value="{{ $region->zone_name }}"
+                                data-country="{{ $region->country_id }}"
+                                @selected($selectedRegion === $region->zone_name)
+                            >
+                                {{ $region->zone_name }}{{ $region->country?->country_name ? ' - '.$region->country->country_name : '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-12">
                     <button class="btn btn-primary" type="submit">{{ $mode === 'create' ? 'Save Tax' : 'Update Tax' }}</button>
@@ -51,3 +63,32 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const country = document.querySelector('.js-tax-country');
+            const region = document.querySelector('.js-tax-region');
+
+            if (!country || !region) {
+                return;
+            }
+
+            const filterRegions = () => {
+                const countryId = country.value;
+
+                region.querySelectorAll('option[data-country]').forEach((option) => {
+                    option.hidden = countryId !== '' && option.dataset.country !== countryId;
+                });
+
+                const selectedOption = region.selectedOptions[0];
+                if (selectedOption?.hidden) {
+                    region.value = '';
+                }
+            };
+
+            country.addEventListener('change', filterRegions);
+            filterRegions();
+        })();
+    </script>
+@endpush

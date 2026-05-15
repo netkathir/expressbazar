@@ -128,7 +128,7 @@
         @elseif (!$isSearch)
             @if (($discountedProducts ?? collect())->isNotEmpty())
                 @php($topOfferCategory = $discountedProducts->first()?->category ?? $categories->first())
-                <section class="container-fluid px-3 px-lg-4 mt-4">
+                <section id="top-offers" class="container-fluid px-3 px-lg-4 mt-4">
                     <div class="sf-section-header">
                         <div>
                             <h3>Top offers today</h3>

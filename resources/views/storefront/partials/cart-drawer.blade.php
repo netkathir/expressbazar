@@ -1,4 +1,7 @@
-@php($items = $cartItems ?? collect())
+@php
+    $items = $cartItems ?? collect();
+    $offerSavings = \App\Support\StoreOfferPricing::cartSavings($items);
+@endphp
 <div class="sf-cart-panel">
     <div class="sf-cart-header">
         <div>
@@ -10,11 +13,26 @@
 
     <div class="sf-cart-body">
         @forelse ($items as $item)
+            @php
+                $baseUnit = \App\Support\StoreOfferPricing::cartItemBaseUnit($item);
+                $offerUnit = \App\Support\StoreOfferPricing::cartItemOfferUnit($item);
+                $itemSavings = \App\Support\StoreOfferPricing::cartItemSavings($item);
+                $discountLabel = \App\Support\StoreOfferPricing::discountLabel($item['product'], $baseUnit, $offerUnit);
+            @endphp
             <div class="sf-cart-item">
                 <img src="{{ $item['product']->images->first() ? asset($item['product']->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $item['product']->product_name }}">
                 <div class="flex-grow-1">
                     <div class="fw-semibold small">{{ $item['product']->product_name }}</div>
                     <div class="small text-secondary">{{ $item['product']->vendor?->vendor_name }}</div>
+                    <div class="small text-secondary">
+                        Offer price: <span class="fw-semibold text-success">{{ \App\Support\StoreCurrency::format($offerUnit, 0) }}</span>
+                        @if ($baseUnit > $offerUnit)
+                            <span class="text-decoration-line-through ms-1">{{ \App\Support\StoreCurrency::format($baseUnit, 0) }}</span>
+                        @endif
+                    </div>
+                    @if ($itemSavings > 0)
+                        <div class="small text-success">{{ $discountLabel ?? 'Offer applied' }}. Save {{ \App\Support\StoreCurrency::format($itemSavings, 0) }}</div>
+                    @endif
                     <div class="small fw-semibold text-success">{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</div>
                 </div>
                 <div class="text-end">
@@ -43,6 +61,18 @@
             <span>Item total</span>
             <strong>{{ \App\Support\StoreCurrency::format($cartTotals['itemTotal'] ?? 0, 0) }}</strong>
         </div>
+        @if ($offerSavings > 0)
+            <div class="d-flex justify-content-between small mb-2 text-success">
+                <span>Offer savings</span>
+                <strong>{{ \App\Support\StoreCurrency::format($offerSavings, 0) }}</strong>
+            </div>
+        @endif
+        @if (($cartTotals['tax'] ?? 0) > 0)
+            <div class="d-flex justify-content-between small mb-2">
+                <span>Tax</span>
+                <strong>{{ \App\Support\StoreCurrency::format($cartTotals['tax'], 0) }}</strong>
+            </div>
+        @endif
         <a href="{{ route('storefront.cart') }}" class="btn btn-danger w-100 rounded-pill">Go to Cart</a>
     </div>
 </div>

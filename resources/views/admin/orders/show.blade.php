@@ -20,6 +20,8 @@
             'accepted', 'processing', 'dispatched' => 'primary',
             default => 'secondary',
         };
+        $offerSavings = \App\Support\StoreOfferPricing::orderSavings($order);
+        $itemTotal = $order->items->sum(fn ($item) => ! is_null($item->subtotal) ? (float) $item->subtotal : ((float) $item->price * (int) $item->quantity));
     @endphp
     <div class="order-detail-page">
         <div class="card shell-card order-detail-hero mb-4">
@@ -76,7 +78,7 @@
                     </div>
                     <div>
                         <span>Placed At</span>
-                        <strong>{{ $order->placed_at?->format('M d, Y h:i A') ?? '-' }}</strong>
+                        <strong>{{ \App\Support\StoreDate::dateTime($order->placed_at) }}</strong>
                     </div>
                     <div>
                         <span>Total Amount</span>
@@ -101,6 +103,10 @@
                                     $product = $item->product;
                                     $imagePath = $product?->images?->first()?->image_path;
                                     $lineTotal = ! is_null($item->subtotal) ? (float) $item->subtotal : ((float) $item->price * (int) $item->quantity);
+                                    $baseUnit = \App\Support\StoreOfferPricing::orderItemBaseUnit($item);
+                                    $offerUnit = \App\Support\StoreOfferPricing::orderItemOfferUnit($item);
+                                    $itemSavings = \App\Support\StoreOfferPricing::orderItemSavings($item);
+                                    $discountLabel = \App\Support\StoreOfferPricing::discountLabel($product, $baseUnit, $offerUnit);
                                 @endphp
                                 <div class="order-product-card">
                                     <div class="order-product-media">
@@ -128,7 +134,13 @@
                                         @endif
                                         <div class="order-product-pricing">
                                             <span>Qty: {{ (int) $item->quantity }}</span>
-                                            <span>Unit price: {{ \App\Support\StoreCurrency::format($item->price) }}</span>
+                                            <span>Offer price: {{ \App\Support\StoreCurrency::format($offerUnit) }}</span>
+                                            @if ($baseUnit > $offerUnit)
+                                                <span>Original price: {{ \App\Support\StoreCurrency::format($baseUnit) }}</span>
+                                            @endif
+                                            @if ($itemSavings > 0)
+                                                <span>{{ $discountLabel ?? 'Offer applied' }}. Saved {{ \App\Support\StoreCurrency::format($itemSavings) }}</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -144,7 +156,10 @@
                     <div class="card-body p-4">
                         <h2 class="h5 mb-3">Order Summary</h2>
                         <div class="order-summary-list">
-                            <div><span>Subtotal</span><strong>{{ \App\Support\StoreCurrency::format(max(0, (float) $order->total_amount - (float) $order->delivery_charge)) }}</strong></div>
+                            <div><span>Item Total</span><strong>{{ \App\Support\StoreCurrency::format($itemTotal) }}</strong></div>
+                            @if ($offerSavings > 0)
+                                <div><span>Offer Savings</span><strong class="text-success">{{ \App\Support\StoreCurrency::format($offerSavings) }}</strong></div>
+                            @endif
                             <div><span>Delivery Charge</span><strong>{{ \App\Support\StoreCurrency::format($order->delivery_charge) }}</strong></div>
                             <div class="order-summary-total"><span>Total</span><strong>{{ \App\Support\StoreCurrency::format($order->total_amount) }}</strong></div>
                         </div>

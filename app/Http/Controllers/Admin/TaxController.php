@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
+use App\Models\RegionZone;
 use App\Models\Tax;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,7 @@ class TaxController extends Controller
             'activeMenu' => 'taxes',
             'tax' => new Tax(),
             'countries' => Country::orderBy('country_name')->get(),
+            'regions' => RegionZone::with('country')->orderBy('zone_name')->get(),
             'mode' => 'create',
         ]);
     }
@@ -64,6 +66,7 @@ class TaxController extends Controller
             'activeMenu' => 'taxes',
             'tax' => $tax,
             'countries' => Country::orderBy('country_name')->get(),
+            'regions' => RegionZone::with('country')->orderBy('zone_name')->get(),
             'mode' => 'edit',
         ]);
     }
@@ -96,14 +99,19 @@ class TaxController extends Controller
             'tax_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/', Rule::unique('taxes', 'tax_name')->ignore($tax?->id)],
             'tax_percentage' => ['required', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,2})?$/'],
             'country_id' => ['required', 'exists:countries,id'],
-            'region_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z0-9])[A-Za-z0-9 .&\'()\/-]+$/'],
+            'region_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::exists('region_zones', 'zone_name')->where('country_id', $request->input('country_id')),
+            ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
             'tax_name.regex' => 'Tax name must include letters or numbers and cannot contain unsupported special characters.',
             'tax_percentage.regex' => 'Percentage can have up to two decimal places.',
             'country_id.required' => 'Select a country.',
             'region_name.required' => 'Region is required.',
-            'region_name.regex' => 'Region must include letters or numbers and cannot contain unsupported special characters.',
+            'region_name.exists' => 'Select a valid region for the selected country.',
         ]);
     }
 }

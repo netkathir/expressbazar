@@ -26,6 +26,7 @@ class AdminRoleSeeder extends Seeder
             'Payment Management',
             'Delivery & Logistics',
             'Notification Management',
+            'Contact Inquiries',
             'Reports & Analytics',
             'User & Role Management',
             'Admin User Management',

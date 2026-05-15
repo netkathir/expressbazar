@@ -27,6 +27,7 @@ class RoleController extends Controller
         'payments' => 'Payment Management',
         'delivery' => 'Delivery & Logistics',
         'notifications' => 'Notification Management',
+        'contacts' => 'Contact Inquiries',
         'reports' => 'Reports & Analytics',
         'roles' => 'User & Role Management',
         'users' => 'Admin User Management',

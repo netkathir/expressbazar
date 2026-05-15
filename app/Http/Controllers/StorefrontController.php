@@ -8,6 +8,7 @@ use App\Models\Banner;
 use App\Models\Coupon;
 use App\Models\DeliveryConfig;
 use App\Models\City;
+use App\Models\ContactInquiry;
 use App\Models\Country;
 use App\Models\CustomerAddress;
 use App\Models\Order;
@@ -170,6 +171,47 @@ class StorefrontController extends Controller
         return view('storefront.cart', $this->storefrontData($request, 'Your Cart'));
     }
 
+    public function contact(Request $request)
+    {
+        return view('storefront.contact', $this->storefrontData($request, 'Contact Us'));
+    }
+
+    public function submitContact(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
+            'subject' => ['required', 'string', 'max:160'],
+            'message' => ['required', 'string', 'max:2000'],
+        ], [
+            'phone.regex' => 'Phone number can contain only numbers, spaces, +, -, and brackets.',
+        ]);
+
+        $contactInquiry = ContactInquiry::create([
+            'user_id' => $request->user()?->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'subject' => $data['subject'],
+            'message' => $data['message'],
+            'ip_address' => $request->ip(),
+            'status' => 'new',
+        ]);
+
+        Log::info('Storefront contact inquiry received.', [
+            'contact_inquiry_id' => $contactInquiry->id,
+            'name' => $contactInquiry->name,
+            'email' => $contactInquiry->email,
+            'phone' => $contactInquiry->phone,
+            'subject' => $contactInquiry->subject,
+            'user_id' => $request->user()?->id,
+            'ip' => $request->ip(),
+        ]);
+
+        return back()->with('success', 'Thank you for contacting us. We will get back to you soon.');
+    }
+
     public function checkout(Request $request)
     {
         $user = $request->user();
@@ -255,11 +297,13 @@ class StorefrontController extends Controller
         $order = null;
         $payment = null;
 
-        DB::transaction(function () use ($cartItems, $address, $user, $vendorId, $deliveryCharge, $location, $request, &$orderItems, &$itemTotal, &$order, &$payment) {
+        $taxTotal = 0.0;
+
+        DB::transaction(function () use ($cartItems, $address, $user, $vendorId, $deliveryCharge, $location, $request, &$orderItems, &$itemTotal, &$taxTotal, &$order, &$payment) {
             $orderNumber = $this->generateOrderNumber();
 
             $freshProducts = Product::query()
-                ->with(['vendor', 'inventory'])
+                ->with(['vendor', 'inventory', 'tax'])
                 ->whereIn('id', $cartItems->pluck('product.id')->all())
                 ->lockForUpdate()
                 ->get()
@@ -315,6 +359,8 @@ class StorefrontController extends Controller
                 $price = (float) ($product->final_price ?: $product->price);
                 $subtotal = $price * $quantity;
                 $itemTotal += $subtotal;
+                $taxAmount = $this->cartItemTax($product, $subtotal);
+                $taxTotal += $taxAmount;
 
                 $orderItems[] = [
                     'product_id' => $product->id,
@@ -327,7 +373,7 @@ class StorefrontController extends Controller
 
             $coupon = $this->validCouponForCart($itemTotal, $vendorId);
             $discount = $coupon ? $this->couponDiscount($coupon, $itemTotal) : 0.0;
-            $grandTotal = max(0, $itemTotal - $discount) + $deliveryCharge;
+            $grandTotal = max(0, $itemTotal - $discount) + $taxTotal + $deliveryCharge;
 
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -338,7 +384,7 @@ class StorefrontController extends Controller
                 'payment_status' => 'pending',
                 'order_status' => 'pending',
                 'placed_at' => now(),
-                'notes' => trim('Placed from storefront checkout. Delivery to zone '.$location['zone_id'].($coupon ? '. Coupon applied: '.$coupon->code.' (-'.number_format($discount, 2).')' : '')),
+                'notes' => trim('Placed from storefront checkout. Delivery to zone '.$location['zone_id'].'. Tax applied: '.number_format($taxTotal, 2).($coupon ? '. Coupon applied: '.$coupon->code.' (-'.number_format($discount, 2).')' : '')),
                 'created_by' => $user->id,
                 'updated_by' => $user->id,
             ]);
@@ -783,6 +829,7 @@ class StorefrontController extends Controller
             'cartCount' => $this->cartCount(),
             'drawerHtml' => $this->renderCartDrawer(),
             'cartState' => $this->cartState(),
+            'cartTotals' => $this->cartTotals(),
         ]);
     }
 
@@ -1399,7 +1446,7 @@ class StorefrontController extends Controller
     {
         $cart = session()->get('storefront.cart', []);
         $products = Product::query()
-            ->with(['images', 'vendor', 'inventory'])
+            ->with(['images', 'vendor', 'inventory', 'tax'])
             ->whereIn('id', array_keys($cart))
             ->get()
             ->keyBy('id');
@@ -1413,12 +1460,15 @@ class StorefrontController extends Controller
 
             $quantity = (int) $item['quantity'];
             $unitPrice = (float) ($product->final_price ?: $product->price);
+            $subtotal = $unitPrice * $quantity;
+            $taxAmount = $this->cartItemTax($product, $subtotal);
 
             return [
                 'product' => $product,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
-                'subtotal' => $unitPrice * $quantity,
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
             ];
         })->filter()->values();
     }
@@ -1452,6 +1502,7 @@ class StorefrontController extends Controller
     {
         $items = $this->cartItems();
         $itemTotal = $items->sum('subtotal');
+        $taxTotal = $items->sum('tax_amount');
         $delivery = $deliveryCharge ?? $this->cartDeliveryCharge();
         $vendorId = $this->cartVendorId();
         $coupon = $this->validCouponForCart((float) $itemTotal, $vendorId);
@@ -1459,9 +1510,10 @@ class StorefrontController extends Controller
 
         return [
             'itemTotal' => $itemTotal,
+            'tax' => $taxTotal,
             'delivery' => $delivery,
             'discount' => $discount,
-            'grandTotal' => max(0, $itemTotal - $discount) + $delivery,
+            'grandTotal' => max(0, $itemTotal - $discount) + $taxTotal + $delivery,
             'coupon' => $coupon ? [
                 'code' => $coupon->code,
                 'type' => $coupon->type,
@@ -1530,6 +1582,15 @@ class StorefrontController extends Controller
             : $itemTotal * ((float) $coupon->value / 100);
 
         return min($itemTotal, max(0, round($discount, 2)));
+    }
+
+    private function cartItemTax(Product $product, float $subtotal): float
+    {
+        if (! $product->tax || $product->tax->status !== 'active') {
+            return 0.0;
+        }
+
+        return round($subtotal * ((float) $product->tax->tax_percentage / 100), 2);
     }
 
     private function deliveryChargeForZone(?int $zoneId): ?float

@@ -89,7 +89,7 @@
                                 <td>{{ $log->template?->template_name ?? '-' }}</td>
                                 <td>{{ strtoupper($log->channel) }}</td>
                                 <td>{{ ucfirst($log->status) }}</td>
-                                <td>{{ $log->created_at?->format('M d, Y h:i A') }}</td>
+                                <td>{{ \App\Support\StoreDate::dateTime($log->created_at) }}</td>
                             </tr>
                         @empty
                             <tr>

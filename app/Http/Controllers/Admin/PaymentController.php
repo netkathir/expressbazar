@@ -17,7 +17,7 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         $payments = Payment::query()
-            ->with(['order.customer', 'order.vendor'])
+            ->with(['order.customer', 'order.vendor', 'order.items.product'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->where('transaction_id', 'like', "%{$search}%");

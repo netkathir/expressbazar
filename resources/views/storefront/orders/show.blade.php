@@ -4,6 +4,8 @@
     @php($latestPayment = $order->payments->last())
     @php($orderStatus = mb_strtolower((string) $order->order_status))
     @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
+    @php($offerSavings = \App\Support\StoreOfferPricing::orderSavings($order))
+    @php($itemTotal = $order->items->sum(fn ($item) => ! is_null($item->subtotal) ? (float) $item->subtotal : ((float) $item->price * (int) $item->quantity)))
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
             <nav class="sf-breadcrumbs">
@@ -19,7 +21,7 @@
                     <div>
                         <span class="badge rounded-pill text-bg-light mb-2">Order Details</span>
                         <h1 class="h3 fw-bold mb-2">{{ $order->order_number }}</h1>
-                        <div class="text-secondary">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
+                        <div class="text-secondary">Placed on {{ \App\Support\StoreDate::dateTime($order->placed_at) }}</div>
                     </div>
                     <div class="text-end">
                         <div class="fw-semibold fs-4">{{ \App\Support\StoreCurrency::format($order->total_amount, 0) }}</div>
@@ -36,6 +38,12 @@
                     <h4 class="mb-3">Order Items</h4>
                     <div class="d-grid gap-3">
                         @foreach ($order->items as $item)
+                            @php
+                                $baseUnit = \App\Support\StoreOfferPricing::orderItemBaseUnit($item);
+                                $offerUnit = \App\Support\StoreOfferPricing::orderItemOfferUnit($item);
+                                $itemSavings = \App\Support\StoreOfferPricing::orderItemSavings($item);
+                                $discountLabel = \App\Support\StoreOfferPricing::discountLabel($item->product, $baseUnit, $offerUnit);
+                            @endphp
                             <div class="sf-sidepanel p-3">
                                 <div class="d-flex justify-content-between gap-3 align-items-center">
                                     <div class="d-flex gap-3 align-items-center">
@@ -46,7 +54,15 @@
                                         @endif
                                         <div>
                                             <a href="{{ $item->product ? route('storefront.product', $item->product) : '#' }}" class="fw-semibold text-decoration-none text-dark">{{ $item->item_name }}</a>
-                                            <div class="small text-secondary">{{ $item->quantity }} &times; {{ \App\Support\StoreCurrency::format($item->price, 0) }}</div>
+                                            <div class="small text-secondary">
+                                                {{ $item->quantity }} &times; Offer price: <span class="fw-semibold text-success">{{ \App\Support\StoreCurrency::format($offerUnit, 0) }}</span>
+                                                @if ($baseUnit > $offerUnit)
+                                                    <span class="text-decoration-line-through ms-1">{{ \App\Support\StoreCurrency::format($baseUnit, 0) }}</span>
+                                                @endif
+                                            </div>
+                                            @if ($itemSavings > 0)
+                                                <div class="small text-success">{{ $discountLabel ?? 'Offer applied' }}. You saved {{ \App\Support\StoreCurrency::format($itemSavings, 0) }}.</div>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($item->subtotal, 0) }}</div>
@@ -62,6 +78,10 @@
                         <dt>Vendor</dt><dd>{{ $order->vendor?->vendor_name ?? '-' }}</dd>
                         <dt>Payment Method</dt><dd>{{ ucfirst($latestPayment?->payment_method ?? 'cod') }}</dd>
                         <dt>Payment Status</dt><dd>{{ ucfirst($displayPaymentStatus) }}</dd>
+                        <dt>Item Total</dt><dd>{{ \App\Support\StoreCurrency::format($itemTotal, 0) }}</dd>
+                        @if ($offerSavings > 0)
+                            <dt>Offer Savings</dt><dd class="text-success">{{ \App\Support\StoreCurrency::format($offerSavings, 0) }}</dd>
+                        @endif
                         <dt>Delivery Charge</dt><dd>{{ \App\Support\StoreCurrency::format($order->delivery_charge, 0) }}</dd>
                         <dt>Order Status</dt><dd id="order-status-summary">{{ ucfirst($order->order_status) }}</dd>
                     </dl>

@@ -1,6 +1,9 @@
 @extends('layouts.storefront')
 
 @section('content')
+    @php
+        $offerSavings = \App\Support\StoreOfferPricing::cartSavings($cartItems);
+    @endphp
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
             <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> Checkout</nav>
@@ -14,8 +17,10 @@
                         <div class="sf-info-card">
                             <h3 class="mb-3">Delivery Address</h3>
                             @forelse ($addresses as $address)
-                                @php($deliveryCharge = (float) ($deliveryChargeByAddress[$address->id] ?? 0))
-                                @php($isSelectedAddress = (int) $selectedAddressId === (int) $address->id)
+                                @php
+                                    $deliveryCharge = (float) ($deliveryChargeByAddress[$address->id] ?? 0);
+                                    $isSelectedAddress = (int) $selectedAddressId === (int) $address->id;
+                                @endphp
                                 <label
                                     class="sf-sidepanel p-3 mb-3 d-block js-checkout-address {{ $loop->index >= 3 && ! $isSelectedAddress ? 'd-none' : '' }}"
                                     data-delivery-charge="{{ $deliveryCharge }}"
@@ -40,14 +45,14 @@
                                     </div>
                                 </label>
                             @empty
-                                <div class="sf-empty-state mb-3">No saved address yet. Add one from My Account.</div>
+                                <div class="sf-empty-state mb-3">No saved address yet. Add one from Address.</div>
                             @endforelse
                             @if ($addresses->count() > 3)
                                 <button type="button" class="btn btn-light rounded-pill px-4 mb-3 js-toggle-checkout-addresses" data-expanded="false">
                                     View more addresses
                                 </button>
                             @endif
-                            <a href="{{ route('storefront.account') }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
+                            <a href="{{ route('storefront.addresses.index') }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
                         </div>
 
                         <div class="sf-info-card">
@@ -69,7 +74,6 @@
                                     <span class="sf-payment-check" aria-hidden="true"></span>
                                     <div class="sf-payment-copy">
                                         <span>Cash on Delivery</span>
-                                        <small>Pay safely when the order reaches your doorstep.</small>
                                     </div>
                                 </label>
                                 <label class="sf-payment-option">
@@ -83,7 +87,6 @@
                                     <span class="sf-payment-check" aria-hidden="true"></span>
                                     <div class="sf-payment-copy">
                                         <span>Online Payment</span>
-                                        <small>Continue to secure Stripe checkout after placing the order.</small>
                                     </div>
                                 </label>
                             </div>
@@ -111,9 +114,26 @@
                                 </div>
                             </div>
                             @foreach ($cartItems as $item)
-                                <div class="d-flex justify-content-between small mb-2">
-                                    <span>{{ $item['product']->product_name }} x {{ $item['quantity'] }}</span>
-                                    <strong>{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</strong>
+                                @php
+                                    $baseUnit = \App\Support\StoreOfferPricing::cartItemBaseUnit($item);
+                                    $offerUnit = \App\Support\StoreOfferPricing::cartItemOfferUnit($item);
+                                    $itemSavings = \App\Support\StoreOfferPricing::cartItemSavings($item);
+                                    $discountLabel = \App\Support\StoreOfferPricing::discountLabel($item['product'], $baseUnit, $offerUnit);
+                                @endphp
+                                <div class="d-flex justify-content-between align-items-start gap-3 small mb-2">
+                                    <span>
+                                        <span class="d-block">{{ $item['product']->product_name }} x {{ $item['quantity'] }}</span>
+                                        <span class="d-block text-secondary">
+                                            Offer price: <span class="fw-semibold text-success">{{ \App\Support\StoreCurrency::format($offerUnit, 0) }}</span>
+                                            @if ($baseUnit > $offerUnit)
+                                                <span class="text-decoration-line-through ms-1">{{ \App\Support\StoreCurrency::format($baseUnit, 0) }}</span>
+                                            @endif
+                                        </span>
+                                        @if ($itemSavings > 0)
+                                            <span class="d-block text-success">{{ $discountLabel ?? 'Offer applied' }}. You save {{ \App\Support\StoreCurrency::format($itemSavings, 0) }}.</span>
+                                        @endif
+                                    </span>
+                                    <strong class="text-nowrap">{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</strong>
                                 </div>
                             @endforeach
                             <hr>
@@ -121,6 +141,18 @@
                                 <span>Item Total</span>
                                 <strong data-item-total>{{ \App\Support\StoreCurrency::format($cartTotals['itemTotal'], 0) }}</strong>
                             </div>
+                            @if ($offerSavings > 0)
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>Offer Savings</span>
+                                    <strong>{{ \App\Support\StoreCurrency::format($offerSavings, 0) }}</strong>
+                                </div>
+                            @endif
+                            @if (($cartTotals['tax'] ?? 0) > 0)
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tax</span>
+                                    <strong data-tax-total>{{ \App\Support\StoreCurrency::format($cartTotals['tax'], 0) }}</strong>
+                                </div>
+                            @endif
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Delivery Fee</span>
                                 <strong data-delivery-total>{{ \App\Support\StoreCurrency::format($cartTotals['delivery'], 0) }}</strong>
@@ -139,9 +171,6 @@
                             <button id="checkoutSubmit" class="btn btn-danger w-100 rounded-pill mt-3" type="submit" {{ $addresses->isEmpty() ? 'disabled' : '' }}>
                                 Place Order
                             </button>
-                            <div class="text-secondary small mt-2">
-                                Delivery is validated against the selected address before the order is created.
-                            </div>
                         </div>
                     </div>
                 </form>
@@ -177,8 +206,9 @@
             const wrapper = radio.closest('.js-checkout-address');
             const delivery = Number(wrapper?.dataset.deliveryCharge || 0);
             const itemTotal = Number(@json((float) ($cartTotals['itemTotal'] ?? 0)));
+            const tax = Number(@json((float) ($cartTotals['tax'] ?? 0)));
             const discount = Number(@json((float) ($cartTotals['discount'] ?? 0)));
-            const grandTotal = Math.max(0, itemTotal - discount) + delivery;
+            const grandTotal = Math.max(0, itemTotal - discount) + tax + delivery;
 
             const deliveryNode = document.querySelector('[data-delivery-total]');
             const grandNode = document.querySelector('[data-grand-total]');

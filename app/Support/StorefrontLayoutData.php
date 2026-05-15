@@ -69,7 +69,7 @@ class StorefrontLayoutData
         }
 
         $products = Product::query()
-            ->with(['images', 'vendor', 'inventory'])
+            ->with(['images', 'vendor', 'inventory', 'tax'])
             ->whereIn('id', array_keys($cart))
             ->get()
             ->keyBy('id');
@@ -83,12 +83,15 @@ class StorefrontLayoutData
 
             $quantity = (int) ($item['quantity'] ?? 0);
             $unitPrice = (float) ($product->final_price ?: $product->price);
+            $subtotal = $unitPrice * $quantity;
+            $taxAmount = $this->cartItemTax($product, $subtotal);
 
             return [
                 'product' => $product,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
-                'subtotal' => $unitPrice * $quantity,
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
             ];
         })->filter()->values();
     }
@@ -115,14 +118,16 @@ class StorefrontLayoutData
     private function cartTotals($items): array
     {
         $itemTotal = $items->sum('subtotal');
+        $taxTotal = $items->sum('tax_amount');
         $coupon = $this->validCouponForCart((float) $itemTotal);
         $discount = $coupon ? $this->couponDiscount($coupon, (float) $itemTotal) : 0.0;
 
         return [
             'itemTotal' => $itemTotal,
+            'tax' => $taxTotal,
             'delivery' => 0,
             'discount' => $discount,
-            'grandTotal' => max(0, $itemTotal - $discount),
+            'grandTotal' => max(0, $itemTotal - $discount) + $taxTotal,
             'coupon' => $coupon ? [
                 'code' => $coupon->code,
                 'type' => $coupon->type,
@@ -170,6 +175,15 @@ class StorefrontLayoutData
             : $itemTotal * ((float) $coupon->value / 100);
 
         return min($itemTotal, max(0, round($discount, 2)));
+    }
+
+    private function cartItemTax(Product $product, float $subtotal): float
+    {
+        if (! $product->tax || $product->tax->status !== 'active') {
+            return 0.0;
+        }
+
+        return round($subtotal * ((float) $product->tax->tax_percentage / 100), 2);
     }
 
     private function activeCategories()

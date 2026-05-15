@@ -99,10 +99,23 @@
                     <div class="sf-actions">
                         @auth
                             @if (auth()->user()->role === 'customer')
-                                <a href="{{ route('storefront.account') }}" class="sf-action-link sf-profile-link">
-                                    <i class="ti ti-user-circle"></i>
-                                    <span>Profile</span>
-                                </a>
+                                <div class="dropdown">
+                                    <button class="sf-action-link sf-profile-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ti ti-user-circle"></i>
+                                        <span>Profile</span>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2">
+                                        <a href="{{ route('storefront.account') }}" class="dropdown-item rounded-2">
+                                            <i class="ti ti-user-circle me-2"></i>My Account
+                                        </a>
+                                        <a href="{{ route('user.home') }}#top-offers" class="dropdown-item rounded-2">
+                                            <i class="ti ti-discount-2 me-2"></i>Offers
+                                        </a>
+                                        <a href="{{ route('storefront.addresses.index') }}" class="dropdown-item rounded-2">
+                                            <i class="ti ti-map-pin me-2"></i>Address
+                                        </a>
+                                    </div>
+                                </div>
                                 <div class="dropdown">
                                     <button class="sf-action-link sf-alert-link position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                                         <i class="ti ti-bell-filled" aria-hidden="true"></i>
@@ -184,19 +197,16 @@
                 <div class="sf-footer-col">
                     <h6>About Us</h6>
                     <a href="#">About Express Bazaar</a>
-                    <a href="#">Careers</a>
-                    <a href="#">Press</a>
                     <a href="#">Terms &amp; Conditions</a>
                     <a href="#">Privacy Policy</a>
                 </div>
 
                 <div class="sf-footer-col">
                     <h6>Customer Service</h6>
-                    <a href="#">Contact Us</a>
+                    <a href="{{ route('storefront.contact') }}">Contact Us</a>
                     <a href="#">FAQs</a>
                     <a href="#">Shipping Policy</a>
-                    <a href="#">Returns &amp; Refunds</a>
-                    <a href="#">Track Your Order</a>
+                    <a href="{{ auth()->check() && auth()->user()->role === 'customer' ? route('storefront.orders.index') : route('storefront.login') }}">Track Your Order</a>
                 </div>
 
                 <div class="sf-footer-col">

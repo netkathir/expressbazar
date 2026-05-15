@@ -14,7 +14,7 @@ class PaymentController extends Controller
         $vendorId = Auth::guard('vendor')->id();
 
         $payments = Payment::query()
-            ->with(['order.customer', 'order.vendor'])
+            ->with(['order.customer', 'order.vendor', 'order.items.product'])
             ->whereHas('order', fn ($query) => $query->where('vendor_id', $vendorId))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));

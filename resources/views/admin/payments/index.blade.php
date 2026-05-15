@@ -71,9 +71,15 @@
                             <td class="fw-semibold">{{ $payment->transaction_id }}</td>
                             <td>{{ $payment->order?->order_number ?? '-' }}</td>
                             <td>{{ strtoupper($payment->payment_method) }}</td>
-                            <td>{{ \App\Support\StoreCurrency::format($payment->amount) }}</td>
+                            @php($offerSavings = $payment->order ? \App\Support\StoreOfferPricing::orderSavings($payment->order) : 0)
+                            <td>
+                                <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($payment->amount) }}</div>
+                                @if ($offerSavings > 0)
+                                    <div class="small text-success">Offer savings {{ \App\Support\StoreCurrency::format($offerSavings) }}</div>
+                                @endif
+                            </td>
                             <td><span class="badge text-bg-{{ $payment->status === 'paid' ? 'success' : 'secondary' }}">{{ ucfirst($payment->status) }}</span></td>
-                            <td>{{ $payment->paid_at?->format('M d, Y h:i A') ?? '-' }}</td>
+                            <td>{{ \App\Support\StoreDate::dateTime($payment->paid_at) }}</td>
                             <td class="text-end">
                                 @unless ($isVendorPanel)
                                     @canRoute('admin.payments.edit')

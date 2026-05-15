@@ -91,7 +91,7 @@
                             </td>
                             <td>{{ $coupon->min_order !== null ? \App\Support\StoreCurrency::format($coupon->min_order, 0) : '-' }}</td>
                             <td>{{ $coupon->vendor?->vendor_name ?: 'Vendors' }}</td>
-                            <td>{{ $coupon->expires_at ? $coupon->expires_at->format('d M Y') : '-' }}</td>
+                            <td>{{ \App\Support\StoreDate::date($coupon->expires_at) }}</td>
                             <td><span class="badge text-bg-{{ $coupon->is_active ? 'success' : 'secondary' }}">{{ $coupon->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 @if ($canEditCoupons)

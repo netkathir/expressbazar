@@ -53,6 +53,7 @@ return [
             'group' => 'System',
             'items' => [
                 ['label' => 'Notification Management', 'route' => 'admin.notifications.index', 'icon' => 'bell', 'active' => 'notifications'],
+                ['label' => 'Contact Inquiries', 'route' => 'admin.contacts.index', 'icon' => 'mail', 'active' => 'contacts'],
                 ['label' => 'Reports & Analytics', 'route' => 'admin.reports.index', 'icon' => 'chart-bar', 'active' => 'reports'],
                 ['label' => 'User & Role Management', 'route' => 'admin.roles.index', 'icon' => 'shield-lock', 'active' => 'roles'],
                 ['label' => 'Admin Users', 'route' => 'admin.users.index', 'icon' => 'user-shield', 'active' => 'users'],
@@ -320,6 +321,22 @@ return [
             'rules' => ['Filters must stay consistent.', 'Reports must reflect live data.'],
             'database' => ['orders', 'products', 'vendors', 'inventory', 'regions_zones'],
             'impact' => ['Supports operational decisions and exportable snapshots.'],
+        ],
+        'contacts' => [
+            'group' => 'System',
+            'title' => 'Contact Inquiries',
+            'subtitle' => 'Review messages submitted through the storefront contact form.',
+            'crud_route' => 'admin.contacts.index',
+            'objective' => 'Give admins a durable inbox for customer and guest contact requests.',
+            'workflow' => [
+                'Open Contact Inquiries.',
+                'Filter messages by status or search sender details.',
+                'Open a message to view the full contact details and mark it read.',
+            ],
+            'fields' => ['Name', 'Email', 'Phone', 'Subject', 'Message', 'Status', 'Received Date'],
+            'rules' => ['Contact submissions are captured from the storefront form.', 'Messages can be marked new or read.'],
+            'database' => ['contact_inquiries'],
+            'impact' => ['Admins can respond to contact requests without checking application logs.'],
         ],
         'roles' => [
             'group' => 'System',

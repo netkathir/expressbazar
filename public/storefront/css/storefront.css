@@ -263,6 +263,13 @@ body.storefront-shell {
     position: relative;
 }
 
+.sf-offer-link {
+    color: var(--sf-purple);
+    border-color: rgba(255, 140, 66, .34);
+    background: rgba(255, 140, 66, .08);
+    font-weight: 700;
+}
+
 .sf-cart-badge {
     position: absolute;
     top: -7px;

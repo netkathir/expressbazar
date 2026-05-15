@@ -18,29 +18,29 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Order Number</label>
-                    <input type="text" name="order_number" value="{{ old('order_number', $order->order_number) }}" class="form-control" placeholder="Optional auto-generated">
+                    <input type="text" name="{{ $mode === 'edit' ? '' : 'order_number' }}" value="{{ $mode === 'edit' ? $order->order_number : old('order_number', $order->order_number) }}" class="form-control" placeholder="Optional auto-generated" @disabled($mode === 'edit')>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Customer</label>
-                    <select name="customer_id" class="form-select">
+                    <select name="{{ $mode === 'edit' ? '' : 'customer_id' }}" class="form-select" @disabled($mode === 'edit')>
                         <option value="">Optional</option>
                         @foreach ($customers as $customer)
-                            <option value="{{ $customer->id }}" @selected((string) old('customer_id', $order->customer_id) === (string) $customer->id)>{{ $customer->name }} ({{ $customer->email }})</option>
+                            <option value="{{ $customer->id }}" @selected((string) ($mode === 'edit' ? $order->customer_id : old('customer_id', $order->customer_id)) === (string) $customer->id)>{{ $customer->name }} ({{ $customer->email }})</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Vendor</label>
-                    <select name="vendor_id" class="form-select">
+                    <select name="{{ $mode === 'edit' ? '' : 'vendor_id' }}" class="form-select" @disabled($mode === 'edit')>
                         <option value="">Optional</option>
                         @foreach ($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" @selected((string) old('vendor_id', $order->vendor_id) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
+                            <option value="{{ $vendor->id }}" @selected((string) ($mode === 'edit' ? $order->vendor_id : old('vendor_id', $order->vendor_id)) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Total Amount</label>
-                    <input type="number" step="0.01" min="0" name="total_amount" value="{{ old('total_amount', $order->total_amount) }}" class="form-control" required>
+                    <input type="{{ $mode === 'edit' ? 'text' : 'number' }}" step="0.01" min="0" name="{{ $mode === 'edit' ? '' : 'total_amount' }}" value="{{ $mode === 'edit' ? \App\Support\StoreCurrency::format($order->total_amount) : old('total_amount', $order->total_amount) }}" class="form-control" required @disabled($mode === 'edit')>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Delivery Charge</label>
@@ -64,7 +64,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Placed At</label>
-                    <input type="datetime-local" name="placed_at" value="{{ old('placed_at', $order->placed_at ? $order->placed_at->format('Y-m-d\TH:i') : '') }}" class="form-control">
+                    <input type="{{ $mode === 'edit' ? 'text' : 'datetime-local' }}" name="{{ $mode === 'edit' ? '' : 'placed_at' }}" value="{{ $mode === 'edit' ? \App\Support\StoreDate::date($order->placed_at) : old('placed_at', $order->placed_at ? $order->placed_at->format('Y-m-d\TH:i') : '') }}" class="form-control" @disabled($mode === 'edit')>
                 </div>
                 <div class="col-12">
                     <label class="form-label">Notes</label>

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Support\StoreCurrency;
+use App\Support\StoreOfferPricing;
 use Stripe\StripeClient;
 use RuntimeException;
 
@@ -17,7 +18,7 @@ class StripeCheckoutService
             throw new RuntimeException('Stripe is not configured.');
         }
 
-        $order->loadMissing(['items', 'customer']);
+        $order->loadMissing(['items.product', 'customer']);
 
         $stripe = new StripeClient($secret);
 
@@ -72,12 +73,19 @@ class StripeCheckoutService
         $currency = strtolower(StoreCurrency::code());
 
         if ($orderTotal > 0 && abs($itemAndDeliveryTotal - $orderTotal) > 0.01) {
+            $offerSavings = StoreOfferPricing::orderSavings($order);
+            $productData = [
+                'name' => 'Order '.$order->order_number,
+            ];
+
+            if ($offerSavings > 0) {
+                $productData['description'] = 'Offer savings: '.StoreCurrency::format($offerSavings, 0);
+            }
+
             return [[
                 'price_data' => [
                     'currency' => $currency,
-                    'product_data' => [
-                        'name' => 'Order '.$order->order_number,
-                    ],
+                    'product_data' => $productData,
                     'unit_amount' => (int) round($orderTotal * 100),
                 ],
                 'quantity' => 1,
@@ -87,11 +95,25 @@ class StripeCheckoutService
         $lineItems = [];
 
         foreach ($order->items as $item) {
+            $baseUnit = StoreOfferPricing::orderItemBaseUnit($item);
+            $offerUnit = StoreOfferPricing::orderItemOfferUnit($item);
+            $itemSavings = StoreOfferPricing::orderItemSavings($item);
+            $description = 'Offer price: '.StoreCurrency::format($offerUnit, 0);
+
+            if ($baseUnit > $offerUnit) {
+                $description .= '; Original price: '.StoreCurrency::format($baseUnit, 0);
+            }
+
+            if ($itemSavings > 0) {
+                $description .= '; Savings: '.StoreCurrency::format($itemSavings, 0);
+            }
+
             $lineItems[] = [
                 'price_data' => [
                     'currency' => $currency,
                     'product_data' => [
                         'name' => $item->item_name,
+                        'description' => $description,
                     ],
                     'unit_amount' => (int) round(((float) $item->price) * 100),
                 ],

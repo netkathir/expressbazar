@@ -27,7 +27,7 @@
                                 <div class="text-secondary small">Order ID</div>
                                 <div class="fw-semibold">{{ $order->order_number }}</div>
                                 <div class="text-secondary small mt-1">{{ $order->vendor?->vendor_name ?? 'Store order' }}</div>
-                                <div class="text-secondary small">Placed on {{ optional($order->placed_at)->format('d M Y, h:i A') }}</div>
+                                <div class="text-secondary small">Placed on {{ \App\Support\StoreDate::dateTime($order->placed_at) }}</div>
                             </div>
                             <div class="sf-order-history-meta">
                                 <div class="fw-semibold fs-4">{{ \App\Support\StoreCurrency::format($order->total_amount, 0) }}</div>
@@ -43,6 +43,10 @@
                                 @php($product = $item->product)
                                 @php($productImage = $product?->images->first())
                                 @php($productUrl = $product ? route('storefront.product', $product) : null)
+                                @php($baseUnit = \App\Support\StoreOfferPricing::orderItemBaseUnit($item))
+                                @php($offerUnit = \App\Support\StoreOfferPricing::orderItemOfferUnit($item))
+                                @php($itemSavings = \App\Support\StoreOfferPricing::orderItemSavings($item))
+                                @php($discountLabel = \App\Support\StoreOfferPricing::discountLabel($product, $baseUnit, $offerUnit))
                                 <div class="sf-order-history-card border-top pt-3">
                                     <div class="sf-order-history-main">
                                         @if ($productUrl)
@@ -67,8 +71,14 @@
                                             @endif
                                             <div class="text-secondary small mt-2">
                                                 Qty: {{ $item->quantity }} &bull;
-                                                Price: {{ \App\Support\StoreCurrency::format($item->price, 0) }}
+                                                Offer price: <span class="fw-semibold text-success">{{ \App\Support\StoreCurrency::format($offerUnit, 0) }}</span>
+                                                @if ($baseUnit > $offerUnit)
+                                                    <span class="text-decoration-line-through ms-1">{{ \App\Support\StoreCurrency::format($baseUnit, 0) }}</span>
+                                                @endif
                                             </div>
+                                            @if ($itemSavings > 0)
+                                                <div class="small text-success">{{ $discountLabel ?? 'Offer applied' }}. You saved {{ \App\Support\StoreCurrency::format($itemSavings, 0) }}.</div>
+                                            @endif
                                             <div class="text-secondary small">
                                                 Item total: {{ \App\Support\StoreCurrency::format($item->subtotal, 0) }}
                                             </div>

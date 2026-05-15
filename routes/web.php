@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ContactInquiryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CountryController;
@@ -67,6 +68,7 @@ Route::get('/account/orders/{order}/payment-cancelled', [CustomerAccountControll
 Route::get('/account/orders/{order}/status', [CustomerAccountController::class, 'orderStatus'])->middleware('auth')->name('storefront.orders.status');
 Route::post('/account/orders/{order}/cancel', [CustomerAccountController::class, 'cancelOrder'])->middleware('auth')->name('storefront.orders.cancel-order');
 Route::post('/account/orders/{order}/reorder', [CustomerAccountController::class, 'reorder'])->middleware('auth')->name('storefront.orders.reorder');
+Route::get('/account/addresses', [CustomerAccountController::class, 'addresses'])->middleware('auth')->name('storefront.addresses.index');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
 Route::get('/account/addresses/{address}/edit', [CustomerAccountController::class, 'editAddress'])->middleware('auth')->name('storefront.addresses.edit');
 Route::put('/account/addresses/{address}', [CustomerAccountController::class, 'updateAddress'])->middleware('auth')->name('storefront.addresses.update');
@@ -82,6 +84,8 @@ Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])
 Route::get('/categories/{category}', [StorefrontController::class, 'category'])->name('storefront.category');
 Route::get('/subcategories/{subcategory}', [StorefrontController::class, 'subcategory'])->name('storefront.subcategory');
 Route::get('/products/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
+Route::get('/contact-us', [StorefrontController::class, 'contact'])->name('storefront.contact');
+Route::post('/contact-us', [StorefrontController::class, 'submitContact'])->name('storefront.contact.submit');
 Route::get('/search', [StorefrontController::class, 'search'])->name('storefront.search');
 Route::get('/search-suggestions', [StorefrontController::class, 'searchSuggestions'])->name('storefront.search.suggestions');
 Route::get('/cart', [StorefrontController::class, 'cart'])->name('storefront.cart');
@@ -136,6 +140,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('notifications/read/{id}', [NotificationController::class, 'read'])->name('notifications.read');
         Route::resource('notifications', NotificationController::class)->except(['show']);
         Route::get('notifications/logs', [NotificationController::class, 'logs'])->name('notifications.logs');
+        Route::resource('contacts', ContactInquiryController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::resource('roles', RoleController::class)->except(['show']);
         Route::resource('users', AdminUserController::class)->except(['show']);
         Route::get('system-config', [SystemConfigController::class, 'edit'])->name('system-config.edit');

@@ -74,31 +74,6 @@
                 </div>
 
                 <div class="col-12">
-                    <div class="card shell-card">
-                        <div class="card-body p-4">
-                            <h2 class="h5 mb-3">Feature Toggles</h2>
-                            <div class="row g-3">
-                                @foreach ([
-                                    'online_payment_enabled' => 'Online Payment',
-                                    'cod_enabled' => 'Cash on Delivery',
-                                    'vendor_registration_enabled' => 'Vendor Registration',
-                                    'epos_enabled' => 'EPOS Integration',
-                                    'email_notifications_enabled' => 'Email Notifications',
-                                    'sms_notifications_enabled' => 'SMS Notifications',
-                                ] as $key => $label)
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input type="checkbox" name="{{ $key }}" value="1" class="form-check-input" id="{{ $key }}" @checked(old($key, $settings[$key] ?? false))>
-                                            <label class="form-check-label" for="{{ $key }}">{{ $label }}</label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12">
                     @canRoute('admin.system-config.update', 'PUT')
                         <button class="btn btn-primary" type="submit">Save Configuration</button>
                     @endcanRoute

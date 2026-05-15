@@ -36,6 +36,15 @@ class SystemConfigController extends Controller
 
     public function update(Request $request)
     {
+        $featureFlags = [
+            'online_payment_enabled',
+            'cod_enabled',
+            'vendor_registration_enabled',
+            'epos_enabled',
+            'email_notifications_enabled',
+            'sms_notifications_enabled',
+        ];
+
         $data = $request->validate([
             'application_name' => ['required', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
@@ -59,6 +68,10 @@ class SystemConfigController extends Controller
         ]);
 
         foreach ($data as $key => $value) {
+            if (in_array($key, $featureFlags, true)) {
+                continue;
+            }
+
             if ($key === 'store_currency') {
                 $value = strtoupper(trim((string) $value));
             }
@@ -69,11 +82,13 @@ class SystemConfigController extends Controller
             );
         }
 
-        foreach (['online_payment_enabled', 'cod_enabled', 'vendor_registration_enabled', 'epos_enabled', 'email_notifications_enabled', 'sms_notifications_enabled'] as $flag) {
-            SystemConfig::updateOrCreate(
-                ['config_key' => $flag],
-                ['config_value' => $request->boolean($flag) ? '1' : '0']
-            );
+        if ($request->hasAny($featureFlags)) {
+            foreach ($featureFlags as $flag) {
+                SystemConfig::updateOrCreate(
+                    ['config_key' => $flag],
+                    ['config_value' => $request->boolean($flag) ? '1' : '0']
+                );
+            }
         }
 
         return redirect()->route('admin.system-config.edit')->with('success', 'System configuration updated successfully.');

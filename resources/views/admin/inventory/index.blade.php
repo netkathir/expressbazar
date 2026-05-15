@@ -63,7 +63,7 @@
                             <td>{{ $inventory->stock_quantity }}</td>
                             <td>{{ $inventory->unit ?? '-' }}</td>
                             <td>{{ $inventory->low_stock_threshold ?? '-' }}</td>
-                            <td>{{ $inventory->updated_at?->format('M d, Y h:i A') }}</td>
+                            <td>{{ \App\Support\StoreDate::dateTime($inventory->updated_at) }}</td>
                             <td class="text-end">
                                 @canRoute('admin.inventory.edit')
                                     <a href="{{ route('admin.inventory.edit', $inventory) }}" class="btn btn-sm btn-outline-primary" aria-label="Adjust stock" title="Adjust stock">

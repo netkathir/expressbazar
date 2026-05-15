@@ -33,7 +33,6 @@ class CustomerAccountController extends Controller
         return view('storefront.account.index', [
             'title' => 'My Account',
             'user' => $user,
-            'addresses' => $user->addresses()->with(['country', 'city', 'zone'])->latest()->get(),
             'orders' => Order::query()
                 ->where('customer_id', $user->id)
                 ->with(['vendor', 'items.product.images', 'payments'])
@@ -41,6 +40,20 @@ class CustomerAccountController extends Controller
                 ->latest('id')
                 ->limit(3)
                 ->get(),
+        ]);
+    }
+
+    public function addresses(Request $request)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        return view('storefront.account.addresses', [
+            'title' => 'Contact Address',
+            'user' => $user,
+            'addresses' => $user->addresses()->with(['country', 'city', 'zone'])->latest()->get(),
+            'countries' => Country::query()->where('status', 'active')->orderBy('country_name')->get(),
         ]);
     }
 
@@ -297,7 +310,7 @@ class CustomerAccountController extends Controller
 
         return view('storefront.orders.success', [
             'title' => 'Order Confirmed',
-            'order' => $order->load(['vendor', 'items', 'payments']),
+            'order' => $order->load(['vendor', 'items.product', 'payments']),
             'user' => $user,
         ]);
     }
@@ -398,7 +411,7 @@ class CustomerAccountController extends Controller
             'status' => 'active',
         ]);
 
-        return redirect()->route('storefront.account')->with('success', 'Address saved successfully.');
+        return redirect()->route('storefront.addresses.index')->with('success', 'Address saved successfully.');
     }
 
     public function editAddress(Request $request, CustomerAddress $address)
@@ -451,7 +464,7 @@ class CustomerAccountController extends Controller
             'is_default' => $request->boolean('is_default'),
         ]);
 
-        return redirect()->route('storefront.account')->with('success', 'Address updated successfully.');
+        return redirect()->route('storefront.addresses.index')->with('success', 'Address updated successfully.');
     }
 
     public function destroyAddress(Request $request, CustomerAddress $address)

@@ -156,7 +156,7 @@
                             @php($latestPayment = $order->payments->first())
                             <tr>
                                 <td class="fw-semibold">{{ $order->order_number }}</td>
-                                <td>{{ optional($order->placed_at)->format('d M Y, h:i A') }}</td>
+                                <td>{{ \App\Support\StoreDate::dateTime($order->placed_at) }}</td>
                                 <td>{{ $order->customer?->name ?? '-' }}</td>
                                 <td>{{ $order->vendor?->vendor_name ?? '-' }}</td>
                                 <td>
@@ -316,7 +316,7 @@
                                         <td>{{ $inventory->unit ?? '-' }}</td>
                                         <td><span class="badge text-bg-{{ $inventory->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($inventory->inventory_mode) }}</span></td>
                                         <td>{{ $inventory->sync_status ?: '-' }}</td>
-                                        <td>{{ $inventory->last_synced_at?->format('d M Y, h:i A') ?? $inventory->updated_at?->format('d M Y, h:i A') }}</td>
+                                        <td>{{ \App\Support\StoreDate::dateTime($inventory->last_synced_at ?? $inventory->updated_at) }}</td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="7" class="text-center text-secondary py-4">No inventory items found.</td></tr>

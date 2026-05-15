@@ -75,7 +75,7 @@
                             <td>{{ \App\Support\StoreCurrency::format($order->total_amount) }}</td>
                             <td><span class="badge text-bg-light">{{ ucfirst($order->payment_status) }}</span></td>
                             <td><span class="badge text-bg-{{ $order->order_status === 'completed' ? 'success' : 'secondary' }}">{{ ucfirst($order->order_status) }}</span></td>
-                            <td>{{ $order->placed_at?->format('M d, Y') ?? '-' }}</td>
+                            <td>{{ \App\Support\StoreDate::date($order->placed_at) }}</td>
                             <td class="text-end">
                                 <a href="{{ route($routePrefix.'.show', $order) }}" class="btn btn-sm btn-outline-secondary" aria-label="View order" title="View order">
                                     <i class="ti ti-eye"></i>

@@ -78,7 +78,7 @@
                         <dt>Subcategory</dt><dd>{{ $product->subcategory?->subcategory_name ?? '-' }}</dd>
                         <dt>Inventory</dt><dd>{{ strtoupper($product->inventory_mode ?? 'internal') }}</dd>
                         <dt>Status</dt><dd>{{ ucfirst($product->status) }}</dd>
-                        <dt>Tax</dt><dd>{{ $product->tax?->tax_name ?? '-' }}</dd>
+                        <dt>Tax</dt><dd>{{ $product->tax ? $product->tax->tax_name.' ('.rtrim(rtrim(number_format((float) $product->tax->tax_percentage, 2), '0'), '.').'%)' : '-' }}</dd>
                     </dl>
                 </div>
                 <div class="sf-info-card">

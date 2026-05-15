@@ -28,8 +28,8 @@
                         <li><strong>Email:</strong> {{ $customer->email }}</li>
                         <li><strong>Phone:</strong> {{ $customer->phone ?: '-' }}</li>
                         <li><strong>Status:</strong> {{ ucfirst($customer->status) }}</li>
-                        <li><strong>Created:</strong> {{ optional($customer->created_at)->format('d M Y, h:i A') }}</li>
-                        <li><strong>Last Login:</strong> {{ $customer->last_login_at ? $customer->last_login_at->format('d M Y, h:i A') : '-' }}</li>
+                        <li><strong>Created:</strong> {{ \App\Support\StoreDate::dateTime($customer->created_at) }}</li>
+                        <li><strong>Last Login:</strong> {{ \App\Support\StoreDate::dateTime($customer->last_login_at) }}</li>
                     </ul>
                 </div>
             </div>

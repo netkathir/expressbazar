@@ -125,6 +125,16 @@ class OrderController extends Controller
 
     private function validateOrder(Request $request, ?Order $order = null): array
     {
+        if ($order) {
+            $request->merge([
+                'order_number' => $order->order_number,
+                'customer_id' => $order->customer_id,
+                'vendor_id' => $order->vendor_id,
+                'total_amount' => $order->total_amount,
+                'placed_at' => $order->placed_at?->toDateTimeString(),
+            ]);
+        }
+
         return $request->validate([
             'order_number' => ['nullable', 'string', 'max:255', Rule::unique('orders', 'order_number')->ignore($order?->id)],
             'customer_id' => ['nullable', 'exists:users,id'],

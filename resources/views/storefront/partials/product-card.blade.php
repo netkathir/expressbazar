@@ -39,7 +39,9 @@
                     @endif
                 </div>
                 @if ($hasDiscount)
+                    <div class="small text-success">Offer price</div>
                     <div class="sf-mrp">{{ \App\Support\StoreCurrency::format($basePrice, 0) }}</div>
+                    <div class="small text-success">You save {{ \App\Support\StoreCurrency::format($discountAmount, 0) }}</div>
                 @endif
             </div>
 

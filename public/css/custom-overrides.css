@@ -27,6 +27,20 @@ textarea:-ms-input-placeholder {
     font-size: 12px !important;
 }
 
+.admin-shell input.form-control,
+.admin-shell select.form-select {
+    height: 42px !important;
+    min-height: 42px !important;
+    line-height: 1.4 !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.admin-shell textarea.form-control {
+    min-height: 42px !important;
+    line-height: 1.4 !important;
+}
+
 .subtitle,
 .sub-title,
 .section-subtitle,
@@ -422,6 +436,64 @@ textarea:-ms-input-placeholder {
 }
 
 @media (max-width: 767.98px) {
+    .storefront-shell .sf-topbar {
+        transition: box-shadow .18s ease;
+    }
+
+    .storefront-shell .sf-topbar .sf-logo,
+    .storefront-shell .sf-topbar .sf-location-btn,
+    .storefront-shell .sf-topbar .sf-vendor-selector {
+        max-height: 80px;
+        opacity: 1;
+        overflow: hidden;
+        transform: translateY(0);
+        transition: max-height .2s ease, opacity .18s ease, transform .18s ease, margin .18s ease;
+    }
+
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-logo,
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-location-btn,
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-vendor-selector {
+        max-height: 0;
+        margin: 0;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-8px);
+    }
+
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-searchbar {
+        padding-block: 6px;
+    }
+
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-header-controls {
+        gap: 0;
+    }
+
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-search-form,
+    .storefront-shell .sf-topbar.is-mobile-compact .sf-actions {
+        position: relative;
+        z-index: 1;
+    }
+
+    .storefront-shell .sf-section-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 10px;
+    }
+
+    .storefront-shell .sf-section-header > div {
+        min-width: 0;
+    }
+
+    .storefront-shell .sf-section-header > a {
+        justify-self: end;
+        white-space: nowrap;
+    }
+
+    .storefront-shell .sf-section-header > a i {
+        display: none;
+    }
+
     .storefront-shell .sf-searchbar {
         padding-block: 6px;
         gap: 8px;
