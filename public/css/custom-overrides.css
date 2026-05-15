@@ -139,6 +139,58 @@ textarea:-ms-input-placeholder {
     line-height: 1.35;
 }
 
+/* Align the home page "Shop by categories" rail without changing its scroll behavior. */
+.storefront-shell .sf-category-rail-wrap {
+    --sf-category-tile: clamp(112px, 7.3vw, 144px);
+    padding-right: 48px;
+}
+
+.storefront-shell .sf-category-rail-wrap .sf-chip-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--sf-category-tile);
+    grid-template-columns: none;
+    align-items: start;
+    gap: clamp(14px, 1.25vw, 24px);
+    overflow-x: auto;
+    padding-bottom: 12px;
+}
+
+.storefront-shell .sf-category-rail-wrap .sf-chip {
+    width: var(--sf-category-tile);
+    justify-items: center;
+    align-content: start;
+    gap: 12px;
+}
+
+.storefront-shell .sf-category-rail-wrap .sf-chip-image {
+    width: var(--sf-category-tile);
+    height: var(--sf-category-tile);
+    flex: 0 0 var(--sf-category-tile);
+}
+
+.storefront-shell .sf-category-rail-wrap .sf-chip > span:last-child {
+    display: -webkit-box;
+    min-height: 2.45em;
+    max-height: 2.45em;
+    width: 100%;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.22;
+    text-align: center;
+    overflow: hidden;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow .sf-rail-arrow-right {
+    top: calc(var(--sf-category-tile) / 2);
+}
+
+.storefront-shell .sf-category-rail-wrap.has-overflow::after {
+    height: var(--sf-category-tile);
+}
+
 @media (max-width: 768px) {
     input::placeholder,
     textarea::placeholder,

@@ -63,8 +63,8 @@ body.admin-shell {
 }
 
 .admin-page-loader-logo {
-    width: 42px;
-    height: 42px;
+    width: min(220px, 64vw);
+    height: 54px;
     object-fit: contain;
 }
 
