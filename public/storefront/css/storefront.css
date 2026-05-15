@@ -908,9 +908,9 @@ body.storefront-shell {
     font-weight: 900;
     box-shadow: 0 8px 18px rgba(255, 122, 24, .16);
     min-width: 48px;
-    min-height: 22px;
+    min-height: 25px;
     padding: 0 .48rem;
-    font-size: .58rem;
+    font-size: 0.7rem;
     border-radius: 999px;
     letter-spacing: .02em;
     white-space: nowrap;
