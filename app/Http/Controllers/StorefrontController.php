@@ -24,6 +24,7 @@ use App\Services\OrderLifecycleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
@@ -188,23 +189,33 @@ class StorefrontController extends Controller
             'phone.regex' => 'Phone number can contain only numbers, spaces, +, -, and brackets.',
         ]);
 
-        $contactInquiry = ContactInquiry::create([
-            'user_id' => $request->user()?->id,
+        $contactInquiry = null;
+
+        if (Schema::hasTable('contact_inquiries')) {
+            $contactInquiry = ContactInquiry::create([
+                'user_id' => $request->user()?->id,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'subject' => $data['subject'],
+                'message' => $data['message'],
+                'ip_address' => $request->ip(),
+                'status' => 'new',
+            ]);
+        } else {
+            Log::warning('Contact inquiry table is missing; submission was not saved to admin inbox.', [
+                'email' => $data['email'],
+                'subject' => $data['subject'],
+                'user_id' => $request->user()?->id,
+            ]);
+        }
+
+        Log::info('Storefront contact inquiry received.', [
+            'contact_inquiry_id' => $contactInquiry?->id,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'subject' => $data['subject'],
-            'message' => $data['message'],
-            'ip_address' => $request->ip(),
-            'status' => 'new',
-        ]);
-
-        Log::info('Storefront contact inquiry received.', [
-            'contact_inquiry_id' => $contactInquiry->id,
-            'name' => $contactInquiry->name,
-            'email' => $contactInquiry->email,
-            'phone' => $contactInquiry->phone,
-            'subject' => $contactInquiry->subject,
             'user_id' => $request->user()?->id,
             'ip' => $request->ip(),
         ]);

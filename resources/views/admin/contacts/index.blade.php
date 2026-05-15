@@ -12,6 +12,11 @@
 
     <div class="card shell-card mb-4">
         <div class="card-body p-4">
+            @if (! empty($contactTableMissing))
+                <div class="alert alert-warning border-0 rounded-3 mb-3">
+                    Contact inquiries table is not available yet. Run <code>php artisan migrate</code> to enable saving and viewing Contact Us submissions.
+                </div>
+            @endif
             <form class="row g-3 align-items-end" method="GET">
                 <div class="col-md-6">
                     <label class="form-label">Search</label>
@@ -75,7 +80,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-secondary py-5">No contact inquiries found.</td>
+                            <td colspan="7" class="text-center text-secondary py-5">
+                                {{ ! empty($contactTableMissing) ? 'Contact inquiries are not available until the database migration is run.' : 'No contact inquiries found.' }}
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

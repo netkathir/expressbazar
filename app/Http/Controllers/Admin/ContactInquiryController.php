@@ -5,12 +5,26 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ContactInquiry;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class ContactInquiryController extends Controller
 {
     public function index(Request $request)
     {
+        if (! Schema::hasTable('contact_inquiries')) {
+            return view('admin.contacts.index', [
+                'title' => 'Contact Inquiries',
+                'activeMenu' => 'contacts',
+                'inquiries' => new LengthAwarePaginator([], 0, 15, $request->integer('page', 1), [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                ]),
+                'contactTableMissing' => true,
+            ]);
+        }
+
         $inquiries = ContactInquiry::query()
             ->with('user')
             ->when($request->filled('search'), function ($query) use ($request) {
@@ -32,6 +46,7 @@ class ContactInquiryController extends Controller
             'title' => 'Contact Inquiries',
             'activeMenu' => 'contacts',
             'inquiries' => $inquiries,
+            'contactTableMissing' => false,
         ]);
     }
 
