@@ -6,7 +6,13 @@
     @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
-            <nav class="sf-breadcrumbs">Home <span>&rsaquo;</span> My Orders <span>&rsaquo;</span> {{ $order->order_number }}</nav>
+            <nav class="sf-breadcrumbs">
+                <a href="{{ route('user.home') }}">Home</a>
+                <span>&rsaquo;</span>
+                <a href="{{ route('storefront.orders.index') }}">My Orders</a>
+                <span>&rsaquo;</span>
+                {{ $order->order_number }}
+            </nav>
 
             <div class="sf-info-card mb-4">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>ExpressBazaar{{ ($title ?? null) ? '/'.$title : '' }}</title>
+    <title>{{ ($title ?? null) ? $title.' | ' : 'Welcome to ' }}ExpressBazaar</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
             <div class="container-fluid px-3 px-lg-4">
                 <div class="sf-searchbar">
                     <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
-                        <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="sf-brand-logo">
+                        <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="sf-brand-logo">
                     </a>
 
                     <div class="sf-header-controls">
@@ -353,6 +353,7 @@
             currentUserRole: @json(auth()->user()->role ?? null),
             currentUserAvatar: @json(auth()->user()->avatar_path ?? null),
             csrfToken: @json(csrf_token()),
+            storeCurrency: @json(\App\Support\StoreCurrency::jsConfig()),
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

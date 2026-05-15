@@ -8,7 +8,7 @@
         ], fn ($value) => filled($value)))
         @php($emptyMessage = config('ui_messages.no_products'))
         <section class="container-fluid px-3 px-lg-4 py-3">
-            <nav class="sf-breadcrumbs">Home <span>›</span> {{ $category->category_name }}</nav>
+            <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> {{ $category->category_name }}</nav>
 
             <div class="sf-category-layout">
                 <aside class="sf-sidepanel sf-category-sidebar">

@@ -51,7 +51,14 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Store Currency</label>
-                    <input type="text" name="store_currency" value="{{ old('store_currency', $settings['store_currency'] ?? 'INR') }}" class="form-control text-uppercase" maxlength="3" placeholder="INR">
+                    @php($selectedCurrency = old('store_currency', $settings['store_currency'] ?? 'INR'))
+                    <select name="store_currency" class="form-select text-uppercase">
+                        @foreach ($currencies as $code => $currency)
+                            <option value="{{ $code }}" @selected($selectedCurrency === $code)>
+                                {{ $code }} - {{ $currency['symbol'] }} - {{ $currency['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Minimum Order Value</label>

@@ -4,7 +4,7 @@
     @php($canCheckout = auth()->check() && auth()->user()->role === 'customer')
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-3">
-            <nav class="sf-breadcrumbs">Home <span>›</span> Cart</nav>
+            <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> Cart</nav>
             <div class="sf-cart-page">
                 <div class="sf-info-card">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

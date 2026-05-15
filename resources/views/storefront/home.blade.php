@@ -20,7 +20,7 @@
             @php($topStatusMessage = config('ui_messages.no_products'))
         @endif
         @if ($isSearch)
-            <section class="container-fluid px-3 px-lg-4 pt-0">
+            <section class="container-fluid px-3 px-lg-4 pt-0 mb-4">
                 <div class="sf-section-header">
                     <div>
                         <h3>Search Results</h3>
@@ -36,7 +36,7 @@
                 </div>
             </section>
         @endif
-        <section class="container-fluid px-3 px-lg-4 pt-0">
+        <section class="container-fluid px-3 px-lg-4 pt-0 sf-category-showcase">
             <div class="sf-category-strip-header">
                 <div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
@@ -49,13 +49,23 @@
                 </div>
                 <a href="#all-categories">See all categories <i class="ti ti-chevron-right"></i></a>
             </div>
-            <div class="sf-chip-row">
-                @foreach ($categories->take(10) as $category)
-                    <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
-                        <img src="{{ $category->image_path ? asset($category->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
-                        <span>{{ $category->category_name }}</span>
-                    </a>
-                @endforeach
+            <div class="sf-rail-wrap sf-category-rail-wrap">
+                <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll categories left">
+                    <i class="ti ti-chevron-left"></i>
+                </button>
+                <div class="sf-chip-row">
+                    @foreach ($categories as $category)
+                        <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
+                            <span class="sf-chip-image">
+                                <img src="{{ $category->image_path ? asset($category->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
+                            </span>
+                            <span>{{ $category->category_name }}</span>
+                        </a>
+                    @endforeach
+                </div>
+                <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll categories right">
+                    <i class="ti ti-chevron-right"></i>
+                </button>
             </div>
         </section>
 

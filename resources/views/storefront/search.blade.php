@@ -3,7 +3,7 @@
 @section('content')
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-3">
-            <nav class="sf-breadcrumbs">Home <span>›</span> Search</nav>
+            <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> Search</nav>
             <div class="sf-section-header">
                 <div>
                     <h3>Search Results</h3>

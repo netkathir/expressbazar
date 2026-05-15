@@ -3,7 +3,7 @@
 @section('content')
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
-            <nav class="sf-breadcrumbs">Home <span>›</span> Checkout</nav>
+            <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> Checkout</nav>
 
             @if ($cartItems->isEmpty())
                 <x-empty-state>{{ config('ui_messages.empty_cart') }}</x-empty-state>

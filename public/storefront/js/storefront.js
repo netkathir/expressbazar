@@ -232,8 +232,22 @@ function cartUrl(template, productId) {
 
 function formatCartAmount(value) {
     const amount = Number(value || 0);
+    const currency = config.storeCurrency || {};
+    const symbol = currency.symbol || `${currency.code || 'INR'} `;
 
-    return `\u20b9${Math.round(amount).toLocaleString('en-IN')}`;
+    return `${symbol}${Math.round(amount).toLocaleString(currency.locale || 'en-IN')}`;
+}
+
+function updateRailOverflow() {
+    document.querySelectorAll('.sf-rail-wrap').forEach((wrap) => {
+        const rail = wrap.querySelector('.sf-product-rail, .sf-chip-row');
+        if (!rail) {
+            wrap.classList.remove('has-overflow');
+            return;
+        }
+
+        wrap.classList.toggle('has-overflow', rail.scrollWidth > rail.clientWidth + 4);
+    });
 }
 
 function updateCartPage(payload = {}) {
@@ -345,6 +359,7 @@ function updateProductList(html) {
     const productList = document.querySelector('.js-product-list');
     if (productList && typeof html === 'string') {
         productList.innerHTML = html;
+        updateRailOverflow();
     }
 }
 
@@ -835,7 +850,7 @@ document.addEventListener('click', async (event) => {
     const railButton = event.target.closest('.js-rail-scroll');
     if (railButton) {
         event.preventDefault();
-        const rail = railButton.closest('.sf-rail-wrap')?.querySelector('.sf-product-rail');
+        const rail = railButton.closest('.sf-rail-wrap')?.querySelector('.sf-product-rail, .sf-chip-row');
         const direction = Number(railButton.dataset.direction || 1);
 
         if (rail) {
@@ -1279,3 +1294,6 @@ if (config.currentUserRole === 'customer' && config.guestCartMerged) {
 }
 
 hydrateGuestCartCount();
+updateRailOverflow();
+window.addEventListener('resize', updateRailOverflow);
+window.addEventListener('load', updateRailOverflow, { once: true });

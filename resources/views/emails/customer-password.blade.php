@@ -1,3 +1,4 @@
+@include('emails.partials.logo')
 <p>Hello {{ $name }},</p>
 <p>Your Express Bazar account has been created.</p>
 <p>Your password is: <strong>{{ $password }}</strong></p>

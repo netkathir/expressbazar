@@ -163,6 +163,7 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::post('/forgot-password/reset', [VendorPasswordResetController::class, 'resetPassword'])->name('password.reset');
     });
 
+    Route::get('/logout', [VendorAuthController::class, 'destroy'])->middleware('vendor')->name('logout.fallback');
     Route::post('/logout', [VendorAuthController::class, 'destroy'])->middleware('vendor')->name('logout');
 
     Route::middleware('vendor')->group(function () {

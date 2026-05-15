@@ -3,7 +3,7 @@
 @section('content')
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
-            <nav class="sf-breadcrumbs">Home <span>&rsaquo;</span> My Orders</nav>
+            <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> My Orders</nav>
 
             <div class="sf-info-card mb-4">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">

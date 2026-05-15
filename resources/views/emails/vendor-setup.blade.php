@@ -5,6 +5,7 @@
     <title>Vendor Setup</title>
 </head>
 <body>
+    @include('emails.partials.logo')
     <p>Hello {{ $vendor->vendor_name }},</p>
     <p>Your Express Bazar vendor panel account is ready.</p>
     <p>Complete your setup here: <a href="{{ $setupUrl }}">{{ $setupUrl }}</a></p>

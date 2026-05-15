@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\SystemConfig;
+use App\Support\StoreCurrency;
 use Illuminate\Http\Request;
 
 class SystemConfigController extends Controller
@@ -11,11 +13,24 @@ class SystemConfigController extends Controller
     public function edit()
     {
         $settings = SystemConfig::all()->pluck('config_value', 'config_key')->all();
+        $currencies = StoreCurrency::currencies();
+
+        Country::query()
+            ->whereNotNull('currency')
+            ->pluck('currency')
+            ->map(fn ($currency) => strtoupper(trim((string) $currency)))
+            ->filter(fn ($currency) => preg_match('/^[A-Z]{3}$/', $currency))
+            ->unique()
+            ->each(function (string $currency) use (&$currencies) {
+                $currencies[$currency] ??= ['symbol' => $currency, 'name' => $currency];
+            });
+        ksort($currencies);
 
         return view('admin.system-config.edit', [
             'title' => 'System Configuration',
             'activeMenu' => 'config',
             'settings' => $settings,
+            'currencies' => $currencies,
         ]);
     }
 

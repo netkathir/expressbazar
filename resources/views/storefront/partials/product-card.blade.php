@@ -1,8 +1,13 @@
 @php($image = $product->images->first())
 @php($basePrice = (float) $product->price)
 @php($salePrice = (float) ($product->final_price ?: $product->price))
-@php($hasDiscount = $product->discount_type === 'percentage' && $basePrice > 0 && $salePrice > 0 && $salePrice < $basePrice)
-@php($discountPercent = $hasDiscount ? max(1, (int) round((($basePrice - $salePrice) / $basePrice) * 100)) : null)
+@php($hasDiscount = $basePrice > 0 && $salePrice >= 0 && $salePrice < $basePrice)
+@php($discountAmount = $hasDiscount ? $basePrice - $salePrice : 0)
+@php($discountLabel = $hasDiscount
+    ? ($product->discount_type === 'percentage'
+        ? max(1, (int) round((($basePrice - $salePrice) / $basePrice) * 100)).'% OFF'
+        : 'SAVE '.\App\Support\StoreCurrency::format($discountAmount, 0))
+    : null)
 @php($currentPincode = request('pincode') ?: request('postcode') ?: ($pincode ?? null))
 @php($pincodeQuery = array_filter([
     'pincode' => $currentPincode,
@@ -30,7 +35,7 @@
                 <div class="sf-product-price-line">
                     <span class="sf-price">{{ \App\Support\StoreCurrency::format($salePrice, 0) }}</span>
                     @if ($hasDiscount)
-                        <span class="sf-product-saving">{{ $discountPercent }}% OFF</span>
+                        <span class="sf-product-saving">{{ $discountLabel }}</span>
                     @endif
                 </div>
                 @if ($hasDiscount)

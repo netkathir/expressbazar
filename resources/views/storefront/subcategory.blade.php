@@ -4,8 +4,16 @@
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-3">
             <nav class="sf-breadcrumbs">
-                Home <span>›</span> {{ $subcategory->category?->category_name ?? 'Category' }} <span>›</span> {{ $subcategory->subcategory_name }}
-            </nav> 
+                <a href="{{ route('user.home') }}">Home</a>
+                <span>&rsaquo;</span>
+                @if ($subcategory->category)
+                    <a href="{{ route('storefront.category', $subcategory->category) }}">{{ $subcategory->category->category_name }}</a>
+                @else
+                    Category
+                @endif
+                <span>&rsaquo;</span>
+                {{ $subcategory->subcategory_name }}
+            </nav>
 
             <div class="sf-page-title">
                 <div>

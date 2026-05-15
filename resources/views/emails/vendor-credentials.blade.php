@@ -5,6 +5,7 @@
     <title>Vendor Panel Access</title>
 </head>
 <body>
+    @include('emails.partials.logo')
     <p>Hello {{ $vendor->vendor_name }},</p>
     <p>Your Express Bazar vendor panel account has been created.</p>
     <p>

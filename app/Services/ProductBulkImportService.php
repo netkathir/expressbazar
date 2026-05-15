@@ -192,15 +192,28 @@ class ProductBulkImportService
 
     private function normalizeRow(array $row, array $options): array
     {
+        $row = $this->normalizeAliases($row);
         $vendor = $options['vendor'] ?? null;
         $vendorId = $vendor ? (int) $vendor->id : $this->resolveVendorId($row);
         $categoryId = $this->resolveCategoryId($row);
         $subcategoryId = $this->resolveSubcategoryId($row, $categoryId);
         $taxId = $this->resolveTaxId($row, $vendor);
-        $inventoryMode = $vendor?->inventory_mode ?: (($row['inventory_mode'] ?? '') ?: 'internal');
-        $discountType = ($row['discount_type'] ?? '') ?: null;
-        $discountValue = ($row['discount_value'] ?? '') !== '' ? $row['discount_value'] : null;
-        $price = $row['price'] ?? null;
+        $inventoryMode = $vendor?->inventory_mode ?: ($this->normalizeEnum($row['inventory_mode'] ?? '', [
+            'internal' => 'internal',
+            'inhouse' => 'internal',
+            'in_house' => 'internal',
+            'epos' => 'epos',
+        ]) ?: 'internal');
+        $discountType = $this->normalizeEnum($row['discount_type'] ?? '', [
+            'percentage' => 'percentage',
+            'percent' => 'percentage',
+            '%' => 'percentage',
+            'fixed' => 'fixed',
+            'amount' => 'fixed',
+            'flat' => 'fixed',
+        ]) ?: null;
+        $discountValue = ($row['discount_value'] ?? '') !== '' ? $this->normalizeNumber($row['discount_value'] ?? null) : null;
+        $price = $this->normalizeNumber($row['price'] ?? null);
 
         $data = [
             'product_name' => trim((string) ($row['product_name'] ?? $row['name'] ?? '')),
@@ -216,9 +229,16 @@ class ProductBulkImportService
             'discount_end_date' => $this->normalizeDate($row['discount_end_date'] ?? null),
             'inventory_mode' => $inventoryMode,
             'unit' => ($row['unit'] ?? '') ?: null,
-            'stock_quantity' => ($row['stock_quantity'] ?? '') !== '' ? $row['stock_quantity'] : null,
-            'low_stock_threshold' => ($row['low_stock_threshold'] ?? '') !== '' ? $row['low_stock_threshold'] : null,
-            'status' => ($row['status'] ?? '') ?: 'active',
+            'stock_quantity' => ($row['stock_quantity'] ?? '') !== '' ? $this->normalizeInteger($row['stock_quantity']) : null,
+            'low_stock_threshold' => ($row['low_stock_threshold'] ?? '') !== '' ? $this->normalizeInteger($row['low_stock_threshold']) : null,
+            'status' => $this->normalizeEnum($row['status'] ?? '', [
+                'active' => 'active',
+                'enabled' => 'active',
+                'yes' => 'active',
+                'inactive' => 'inactive',
+                'disabled' => 'inactive',
+                'no' => 'inactive',
+            ]) ?: 'active',
             'created_by' => $options['created_by'] ?? null,
             'updated_by' => $options['updated_by'] ?? null,
         ];
@@ -361,6 +381,91 @@ class ProductBulkImportService
     private function normalizeHeader(string $header): string
     {
         return strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '_', $header), '_'));
+    }
+
+    private function normalizeAliases(array $row): array
+    {
+        $aliases = [
+            'name' => 'product_name',
+            'product' => 'product_name',
+            'category' => 'category_name',
+            'subcategory' => 'subcategory_name',
+            'sub_category' => 'subcategory_name',
+            'vendor' => 'vendor_name',
+            'seller' => 'vendor_name',
+            'tax' => 'tax_name',
+            'mrp' => 'price',
+            'selling_price' => 'price',
+            'amount' => 'price',
+            'discount' => 'discount_value',
+            'discount_amount' => 'discount_value',
+            'offer' => 'discount_value',
+            'offer_type' => 'discount_type',
+            'discount_percent' => 'discount_value',
+            'stock' => 'stock_quantity',
+            'quantity' => 'stock_quantity',
+            'low_stock' => 'low_stock_threshold',
+            'uom' => 'unit',
+        ];
+
+        foreach ($aliases as $from => $to) {
+            if (! array_key_exists($to, $row) && array_key_exists($from, $row)) {
+                $row[$to] = $row[$from];
+            }
+        }
+
+        $row['unit'] = $this->normalizeEnum($row['unit'] ?? '', [
+            'kg' => 'kg',
+            'kgs' => 'kg',
+            'kilogram' => 'kg',
+            'kilograms' => 'kg',
+            'nos' => 'nos',
+            'no' => 'nos',
+            'number' => 'nos',
+            'numbers' => 'nos',
+            'piece' => 'pieces',
+            'pieces' => 'pieces',
+            'pcs' => 'pieces',
+            'pc' => 'pieces',
+        ]) ?: null;
+
+        if (($row['discount_type'] ?? '') === '' && str_contains((string) ($row['discount_percent'] ?? ''), '%')) {
+            $row['discount_type'] = 'percentage';
+        }
+
+        return $row;
+    }
+
+    private function normalizeEnum(?string $value, array $map): ?string
+    {
+        $normalized = strtolower(trim((string) $value));
+        $normalized = preg_replace('/\s+/', '_', $normalized);
+
+        return $map[$normalized] ?? null;
+    }
+
+    private function normalizeNumber(mixed $value): ?string
+    {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return null;
+        }
+
+        $raw = str_replace(',', '', $raw);
+        $raw = preg_replace('/[^0-9.\-]/', '', $raw);
+
+        if ($raw === '' || $raw === '-' || ! is_numeric($raw)) {
+            return (string) $value;
+        }
+
+        return number_format((float) $raw, 2, '.', '');
+    }
+
+    private function normalizeInteger(mixed $value): ?int
+    {
+        $number = $this->normalizeNumber($value);
+
+        return is_numeric($number) ? max(0, (int) round((float) $number)) : null;
     }
 
     private function readSharedStrings(ZipArchive $zip): array

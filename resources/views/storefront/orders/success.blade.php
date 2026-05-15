@@ -5,7 +5,7 @@
     @php($paymentStatus = strtolower((string) ($latestPayment?->status ?? $order->payment_status)))
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
-            <nav class="sf-breadcrumbs">Home <span>&rsaquo;</span> Checkout <span>&rsaquo;</span> Success</nav>
+            <nav class="sf-breadcrumbs"><a href="{{ route('user.home') }}">Home</a> <span>&rsaquo;</span> <a href="{{ route('storefront.checkout') }}">Checkout</a> <span>&rsaquo;</span> Success</nav>
 
             <div class="sf-info-card text-center py-5">
                 <div class="mb-3">
