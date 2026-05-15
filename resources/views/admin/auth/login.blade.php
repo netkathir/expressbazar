@@ -20,7 +20,7 @@
             <div class="col-12 col-md-8 col-lg-5">
                 <div class="card shell-card p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="mb-3" style="max-width: 250px; width: 100%; height: auto; object-fit: contain;">
+                        <img src="{{ asset('branding/expressbazaar-logo.png') }}" alt="Express Bazar" class="mb-3" style="max-width: 250px; width: 100%; height: auto; object-fit: contain;">
                         <h1 class="mb-0" style="font-size: 13px;">Sign in to manage the ecommerce admin panel.</h1>
                     </div>
 

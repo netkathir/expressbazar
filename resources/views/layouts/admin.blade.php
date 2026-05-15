@@ -131,7 +131,7 @@
     <aside id="sidebar" class="sidebar">
         <div class="logo-area">
             <a href="{{ $isVendorPanel ? route('vendor.dashboard') : route('admin.dashboard') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
-                <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazar" class="admin-brand-logo">
+                <img src="{{ asset('branding/expressbazaar-logo.png') }}" alt="Express Bazar" class="admin-brand-logo">
             </a>
         </div>
 

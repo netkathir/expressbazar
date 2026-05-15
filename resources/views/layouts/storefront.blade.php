@@ -37,7 +37,7 @@
             <div class="container-fluid px-3 px-lg-4">
                 <div class="sf-searchbar">
                     <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
-                        <img src="{{ asset('branding/logo-trimmed.png') }}" alt="Express Bazar" class="sf-brand-logo">
+                        <img src="{{ asset('branding/expressbazaar-logo.png') }}" alt="Express Bazar" class="sf-brand-logo">
                     </a>
 
                     <div class="sf-header-controls">
@@ -151,7 +151,7 @@
             <div class="sf-footer-grid">
                 <div class="sf-footer-brand">
                     <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
-                        <img src="{{ asset('branding/expressbazaar-logo.jpg') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
+                        <img src="{{ asset('branding/expressbazaar-logo.png') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
                     </a>
                     <address class="sf-footer-address">
                         <span>AMAZE FARMS LIMITED,</span>
