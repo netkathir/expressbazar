@@ -368,6 +368,9 @@
                 'name' => data_get($vendor, 'vendor_name', data_get($vendor, 'name')),
             ];
         })->values();
+        $storefrontRouteUrl = fn (string $name, string $fallback) => \Illuminate\Support\Facades\Route::has($name)
+            ? route($name, [], false)
+            : url($fallback);
     @endphp
 
     <script>
@@ -378,11 +381,11 @@
             cartClearUrl: @json(route('storefront.cart.clear', [], false)),
             cartMergeUrl: @json(route('storefront.cart.merge', [], false)),
             homeUrl: @json(route('user.home', [], false)),
-            locationUrl: @json(route('storefront.location', [], false)),
-            locationAutocompleteUrl: @json(route('storefront.location.autocomplete', [], false)),
-            locationCitiesUrl: @json(route('storefront.location.cities', [], false)),
-            locationZonesUrl: @json(route('storefront.location.zones', [], false)),
-            vendorsByLocationUrl: @json(route('storefront.vendors-by-location', [], false)),
+            locationUrl: @json($storefrontRouteUrl('storefront.location', '/location')),
+            locationAutocompleteUrl: @json($storefrontRouteUrl('storefront.location.autocomplete', '/location/autocomplete')),
+            locationCitiesUrl: @json($storefrontRouteUrl('storefront.location.cities', '/location/cities')),
+            locationZonesUrl: @json($storefrontRouteUrl('storefront.location.zones', '/location/zones')),
+            vendorsByLocationUrl: @json($storefrontRouteUrl('storefront.vendors-by-location', '/vendors-by-location')),
             searchSuggestionsUrl: @json(route('storefront.search.suggestions', [], false)),
             notificationsUrl: @json($notificationsUrl),
             notificationReadUrlTemplate: @json($notificationReadUrlTemplate),
