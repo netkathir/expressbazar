@@ -12,7 +12,7 @@
             <div class="sf-detail-grid">
                 <div class="sf-info-card">
                     <h1 class="h3 fw-bold mb-3">Contact Us</h1>
-                    <form method="POST" action="{{ url('/contact-us') }}" class="row g-3" data-dirty-check>
+                    <form method="POST" action="{{ route('storefront.contact.submit') }}" class="row g-3" data-dirty-check>
                         @csrf
                         <div class="col-md-6">
                             <label class="form-label">Name</label>

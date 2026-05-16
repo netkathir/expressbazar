@@ -203,7 +203,7 @@
 
                 <div class="sf-footer-col">
                     <h6>Customer Service</h6>
-                    <a href="{{ url('/contact-us') }}">Contact Us</a>
+                    <a href="{{ route('storefront.contact') }}">Contact Us</a>
                     <a href="#">FAQs</a>
                     <a href="#">Shipping Policy</a>
                     <a href="{{ auth()->check() && auth()->user()->role === 'customer' ? route('storefront.orders.index') : route('storefront.login') }}">Track Your Order</a>
