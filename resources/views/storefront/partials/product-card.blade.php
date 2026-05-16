@@ -13,21 +13,30 @@
     'pincode' => $currentPincode,
     'vendor_id' => request('vendor_id'),
 ], fn ($value) => filled($value)))
+@php($safeRouteUrl = $safeRouteUrl ?? function (string $name, string $fallback, array $parameters = [], bool $absolute = true) {
+    if (\Illuminate\Support\Facades\Route::has($name)) {
+        return route($name, $parameters, $absolute);
+    }
+
+    return $absolute ? url($fallback) : (parse_url(url($fallback), PHP_URL_PATH) ?: $fallback);
+})
+@php($pincodeQueryString = http_build_query($pincodeQuery))
+@php($productFallbackUrl = '/products/'.$product->getRouteKey().($pincodeQueryString ? '?'.$pincodeQueryString : ''))
 
 <article class="sf-product-card">
     <div class="sf-product-media">
-        <a href="{{ route('storefront.product', array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-image">
+        <a href="{{ $safeRouteUrl('storefront.product', $productFallbackUrl, array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-image">
             <img src="{{ $image ? asset($image->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $product->product_name }}">
         </a>
 
-        <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart sf-card-add">
+        <form method="POST" action="{{ $safeRouteUrl('storefront.cart.add', '/cart/items/'.$product->getRouteKey(), ['product' => $product]) }}" class="js-add-to-cart sf-card-add">
             @csrf
             <button type="submit" class="btn btn-sm rounded-pill px-3">ADD</button>
         </form>
     </div>
 
     <div class="sf-product-body">
-        <a href="{{ route('storefront.product', array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-name">{{ $product->product_name }}</a>
+        <a href="{{ $safeRouteUrl('storefront.product', $productFallbackUrl, array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-name">{{ $product->product_name }}</a>
         <small class="text-secondary d-block">Sold by: {{ $product->vendor?->vendor_name ?? 'Vendor not available' }}</small>
         <div class="sf-product-meta">{{ $product->inventory?->unit ? $product->inventory->unit : '1 pc' }}</div>
         <div class="sf-product-price-row">

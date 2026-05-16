@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
+        $safeRouteUrl = function (string $name, string $fallback, array $parameters = [], bool $absolute = true) {
+            if (\Illuminate\Support\Facades\Route::has($name)) {
+                return route($name, $parameters, $absolute);
+            }
+
+            if ($absolute) {
+                return url($fallback);
+            }
+
+            $path = parse_url(url($fallback), PHP_URL_PATH) ?: $fallback;
+            $query = parse_url($fallback, PHP_URL_QUERY);
+
+            return $query ? "{$path}?{$query}" : $path;
+        };
         $isStorefrontHomeTitle = request()->routeIs('user.home')
             && ! request()->hasAny(['search', 'q', 'vendor_id', 'pincode', 'postcode']);
         $browserTitle = $isStorefrontHomeTitle
@@ -64,7 +78,7 @@
         <header class="sf-topbar sticky-top">
             <div class="container-fluid px-3 px-lg-4">
                 <div class="sf-searchbar">
-                    <a href="{{ route('user.home') }}" class="sf-logo text-decoration-none">
+                    <a href="{{ $safeRouteUrl('user.home', '/') }}" class="sf-logo text-decoration-none">
                         <img src="{{ asset('branding/expressbazaar-logo.png') }}" alt="Express Bazar" class="sf-brand-logo">
                     </a>
 
@@ -86,7 +100,7 @@
                             </ul>
                         </div>
 
-                        <form action="{{ route('user.home') }}" method="GET" class="sf-search-form js-search-form">
+                        <form action="{{ $safeRouteUrl('user.home', '/') }}" method="GET" class="sf-search-form js-search-form">
                             <i class="ti ti-search"></i>
                             <input type="search" id="searchInput" class="js-search-input" name="search" placeholder="Search for products, categories or brands" value="{{ request('search', request('q')) }}" autocomplete="off">
                             @if (request()->filled('vendor_id'))
@@ -105,13 +119,13 @@
                                         <span>Profile</span>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2">
-                                        <a href="{{ route('storefront.account') }}" class="dropdown-item rounded-2">
+                                        <a href="{{ $safeRouteUrl('storefront.account', '/account') }}" class="dropdown-item rounded-2">
                                             <i class="ti ti-user-circle me-2"></i>My Account
                                         </a>
-                                        <a href="{{ route('user.home') }}#top-offers" class="dropdown-item rounded-2">
+                                        <a href="{{ $safeRouteUrl('user.home', '/') }}#top-offers" class="dropdown-item rounded-2">
                                             <i class="ti ti-discount-2 me-2"></i>Offers
                                         </a>
-                                        <a href="{{ route('storefront.addresses.index') }}" class="dropdown-item rounded-2">
+                                        <a href="{{ $safeRouteUrl('storefront.addresses.index', '/account/addresses') }}" class="dropdown-item rounded-2">
                                             <i class="ti ti-map-pin me-2"></i>Address
                                         </a>
                                     </div>
@@ -138,7 +152,7 @@
                                 </a>
                             @endif
                         @else
-                            <a href="{{ route('storefront.login') }}" class="sf-action-link">
+                            <a href="{{ $safeRouteUrl('storefront.login', '/login') }}" class="sf-action-link">
                                 <i class="ti ti-user-circle"></i>
                                 <span>Login</span>
                             </a>
@@ -182,7 +196,7 @@
         <div class="container-fluid px-3 px-lg-4">
             <div class="sf-footer-grid">
                 <div class="sf-footer-brand">
-                    <a href="{{ route('user.home') }}" class="sf-footer-logo text-decoration-none">
+                    <a href="{{ $safeRouteUrl('user.home', '/') }}" class="sf-footer-logo text-decoration-none">
                         <img src="{{ asset('branding/expressbazaar-logo.png') }}" alt="Express Bazaar" class="sf-brand-logo sf-brand-logo-footer">
                     </a>
                     <address class="sf-footer-address">
@@ -203,18 +217,18 @@
 
                 <div class="sf-footer-col">
                     <h6>Customer Service</h6>
-                    <a href="{{ route('storefront.contact') }}">Contact Us</a>
+                    <a href="{{ $safeRouteUrl('storefront.contact', '/contact-us') }}">Contact Us</a>
                     <a href="#">FAQs</a>
                     <a href="#">Shipping Policy</a>
-                    <a href="{{ auth()->check() && auth()->user()->role === 'customer' ? route('storefront.orders.index') : route('storefront.login') }}">Track Your Order</a>
+                    <a href="{{ auth()->check() && auth()->user()->role === 'customer' ? $safeRouteUrl('storefront.orders.index', '/account/orders') : $safeRouteUrl('storefront.login', '/login') }}">Track Your Order</a>
                 </div>
 
                 <div class="sf-footer-col">
                     <h6>Categories</h6>
                     @foreach (($categories ?? collect())->take(5) as $category)
-                        <a href="{{ route('storefront.category', $category) }}">{{ $category->category_name }}</a>
+                        <a href="{{ $safeRouteUrl('storefront.category', '/categories/'.$category->getRouteKey(), ['category' => $category]) }}">{{ $category->category_name }}</a>
                     @endforeach
-                    <a href="{{ route('user.home') }}#featured-sections">View All Categories</a>
+                    <a href="{{ $safeRouteUrl('user.home', '/') }}#featured-sections">View All Categories</a>
                 </div>
 
                 <div class="sf-footer-col sf-footer-social-col">
@@ -258,7 +272,7 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form class="modal-body d-grid gap-3 js-location-form" action="{{ route('storefront.location') }}" method="POST">
+                <form class="modal-body d-grid gap-3 js-location-form" action="{{ $safeRouteUrl('storefront.location', '/location') }}" method="POST">
                     @csrf
                     <input type="hidden" name="force_clear" value="0">
                     <div class="alert alert-danger border-0 rounded-4 mb-0 d-none js-location-alert" role="alert"></div>
@@ -327,8 +341,8 @@
                 <div class="modal-body">
                     <p class="mb-3 text-secondary">Your cart will be kept while you continue to your account.</p>
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('storefront.login') }}" class="btn btn-danger rounded-pill px-4">Login</a>
-                        <a href="{{ route('storefront.register') }}" class="btn btn-outline-dark rounded-pill px-4">Register</a>
+                        <a href="{{ $safeRouteUrl('storefront.login', '/login') }}" class="btn btn-danger rounded-pill px-4">Login</a>
+                        <a href="{{ $safeRouteUrl('storefront.register', '/register') }}" class="btn btn-outline-dark rounded-pill px-4">Register</a>
                     </div>
                 </div>
             </div>
@@ -357,40 +371,50 @@
     </div>
 
     @php
-        $notificationsUrl = auth()->check() ? route('notifications.index', [], false) : null;
+        $notificationsUrl = auth()->check() ? $safeRouteUrl('notifications.index', '/notifications', [], false) : null;
         $notificationReadUrlTemplate = auth()->check()
-            ? route('notifications.read', ['id' => '__ID__'], false)
+            ? $safeRouteUrl('notifications.read', '/notifications/read/__ID__', ['id' => '__ID__'], false)
             : null;
-        $notificationReadAllUrl = auth()->check() ? route('notifications.read-all', [], false) : null;
+        $notificationReadAllUrl = auth()->check() ? $safeRouteUrl('notifications.read-all', '/notifications/read-all', [], false) : null;
+        $cartAddUrlTemplate = $safeRouteUrl('storefront.cart.add', '/cart/items/__ID__', ['product' => '__ID__'], false);
+        $cartUpdateUrlTemplate = $safeRouteUrl('storefront.cart.update', '/cart/items/__ID__', ['product' => '__ID__'], false);
+        $cartRemoveUrlTemplate = $safeRouteUrl('storefront.cart.remove', '/cart/items/__ID__', ['product' => '__ID__'], false);
+        $cartClearUrl = $safeRouteUrl('storefront.cart.clear', '/cart/clear', [], false);
+        $cartMergeUrl = $safeRouteUrl('storefront.cart.merge', '/cart/merge', [], false);
+        $homeUrl = $safeRouteUrl('user.home', '/', [], false);
+        $locationUrl = $safeRouteUrl('storefront.location', '/location', [], false);
+        $locationAutocompleteUrl = $safeRouteUrl('storefront.location.autocomplete', '/location/autocomplete', [], false);
+        $locationCitiesUrl = $safeRouteUrl('storefront.location.cities', '/location/cities', [], false);
+        $locationZonesUrl = $safeRouteUrl('storefront.location.zones', '/location/zones', [], false);
+        $vendorsByLocationUrl = $safeRouteUrl('storefront.vendors-by-location', '/vendors-by-location', [], false);
+        $searchSuggestionsUrl = $safeRouteUrl('storefront.search.suggestions', '/search-suggestions', [], false);
+        $logoutUrl = $safeRouteUrl('storefront.logout', '/logout', [], false);
         $initialVendorsForHeader = collect($vendors ?? [])->map(function ($vendor) {
             return [
                 'id' => data_get($vendor, 'id'),
                 'name' => data_get($vendor, 'vendor_name', data_get($vendor, 'name')),
             ];
         })->values();
-        $storefrontRouteUrl = fn (string $name, string $fallback) => \Illuminate\Support\Facades\Route::has($name)
-            ? route($name, [], false)
-            : url($fallback);
     @endphp
 
     <script>
         window.storefrontConfig = {
-            cartAddUrlTemplate: @json(route('storefront.cart.add', ['product' => '__ID__'], false)),
-            cartUpdateUrlTemplate: @json(route('storefront.cart.update', ['product' => '__ID__'], false)),
-            cartRemoveUrlTemplate: @json(route('storefront.cart.remove', ['product' => '__ID__'], false)),
-            cartClearUrl: @json(route('storefront.cart.clear', [], false)),
-            cartMergeUrl: @json(route('storefront.cart.merge', [], false)),
-            homeUrl: @json(route('user.home', [], false)),
-            locationUrl: @json($storefrontRouteUrl('storefront.location', '/location')),
-            locationAutocompleteUrl: @json($storefrontRouteUrl('storefront.location.autocomplete', '/location/autocomplete')),
-            locationCitiesUrl: @json($storefrontRouteUrl('storefront.location.cities', '/location/cities')),
-            locationZonesUrl: @json($storefrontRouteUrl('storefront.location.zones', '/location/zones')),
-            vendorsByLocationUrl: @json($storefrontRouteUrl('storefront.vendors-by-location', '/vendors-by-location')),
-            searchSuggestionsUrl: @json(route('storefront.search.suggestions', [], false)),
+            cartAddUrlTemplate: @json($cartAddUrlTemplate),
+            cartUpdateUrlTemplate: @json($cartUpdateUrlTemplate),
+            cartRemoveUrlTemplate: @json($cartRemoveUrlTemplate),
+            cartClearUrl: @json($cartClearUrl),
+            cartMergeUrl: @json($cartMergeUrl),
+            homeUrl: @json($homeUrl),
+            locationUrl: @json($locationUrl),
+            locationAutocompleteUrl: @json($locationAutocompleteUrl),
+            locationCitiesUrl: @json($locationCitiesUrl),
+            locationZonesUrl: @json($locationZonesUrl),
+            vendorsByLocationUrl: @json($vendorsByLocationUrl),
+            searchSuggestionsUrl: @json($searchSuggestionsUrl),
             notificationsUrl: @json($notificationsUrl),
             notificationReadUrlTemplate: @json($notificationReadUrlTemplate),
             notificationReadAllUrl: @json($notificationReadAllUrl),
-            logoutUrl: @json(route('storefront.logout', [], false)),
+            logoutUrl: @json($logoutUrl),
             uiMessages: @json(config('ui_messages')),
             initialLocation: @json($location ?? null),
             initialVendors: @json($initialVendorsForHeader),

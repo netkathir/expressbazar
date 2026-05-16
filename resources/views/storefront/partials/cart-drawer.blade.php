@@ -1,6 +1,13 @@
 @php
     $items = $cartItems ?? collect();
     $offerSavings = \App\Support\StoreOfferPricing::cartSavings($items);
+    $safeRouteUrl = $safeRouteUrl ?? function (string $name, string $fallback, array $parameters = [], bool $absolute = true) {
+        if (\Illuminate\Support\Facades\Route::has($name)) {
+            return route($name, $parameters, $absolute);
+        }
+
+        return $absolute ? url($fallback) : (parse_url(url($fallback), PHP_URL_PATH) ?: $fallback);
+    };
 @endphp
 <div class="sf-cart-panel">
     <div class="sf-cart-header">
@@ -36,7 +43,7 @@
                     <div class="small fw-semibold text-success">{{ \App\Support\StoreCurrency::format($item['subtotal'], 0) }}</div>
                 </div>
                 <div class="text-end">
-                    <form method="POST" action="{{ route('storefront.cart.remove', $item['product']) }}" class="js-cart-remove mb-2">
+                    <form method="POST" action="{{ $safeRouteUrl('storefront.cart.remove', '/cart/items/'.$item['product']->getRouteKey(), ['product' => $item['product']]) }}" class="js-cart-remove mb-2">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-sm btn-outline-danger">×</button>
@@ -73,6 +80,6 @@
                 <strong>{{ \App\Support\StoreCurrency::format($cartTotals['tax'], 0) }}</strong>
             </div>
         @endif
-        <a href="{{ route('storefront.cart') }}" class="btn btn-danger w-100 rounded-pill">Go to Cart</a>
+        <a href="{{ $safeRouteUrl('storefront.cart', '/cart') }}" class="btn btn-danger w-100 rounded-pill">Go to Cart</a>
     </div>
 </div>

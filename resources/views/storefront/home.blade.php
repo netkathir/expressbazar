@@ -12,6 +12,15 @@
         @php($showNoPincodeData = !empty($pincode ?? null) && !($hasPincodeProducts ?? true))
         @php($availableVendors = $vendors ?? collect())
         @php($topStatusMessage = null)
+        @php($safeRouteUrl = $safeRouteUrl ?? function (string $name, string $fallback, array $parameters = [], bool $absolute = true) {
+            if (\Illuminate\Support\Facades\Route::has($name)) {
+                return route($name, $parameters, $absolute);
+            }
+
+            return $absolute ? url($fallback) : (parse_url(url($fallback), PHP_URL_PATH) ?: $fallback);
+        })
+        @php($filterQueryString = http_build_query($filterQuery))
+        @php($homeFilterUrl = '/'.($filterQueryString ? '?'.$filterQueryString : ''))
         @if (!$isSearch && !empty($location ?? null) && $availableVendors->isEmpty())
             @php($topStatusMessage = config('ui_messages.no_vendors'))
         @elseif (!$isSearch && ($selectedVendor ?? null) && $selectedVendorProducts->isEmpty())
@@ -26,7 +35,7 @@
                         <h3>Search Results</h3>
                         <p class="text-secondary mb-0">Results for "{{ $search }}"</p>
                     </div>
-                    <a href="{{ route('user.home', $filterQuery) }}" class="btn btn-sm btn-light ms-2">Clear</a>
+                    <a href="{{ $safeRouteUrl('user.home', $homeFilterUrl, $filterQuery) }}" class="btn btn-sm btn-light ms-2">Clear</a>
                 </div>
                 <div class="sf-grid js-product-list" id="product-list">
                     @include('storefront.partials.product-grid', [
@@ -55,7 +64,7 @@
                 </button>
                 <div class="sf-chip-row">
                     @foreach ($categories as $category)
-                        <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
+                        <a href="{{ $safeRouteUrl('storefront.category', '/categories/'.$category->getRouteKey().($filterQueryString ? '?'.$filterQueryString : ''), array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
                             <span class="sf-chip-image">
                                 <img src="{{ $category->image_path ? asset($category->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
                             </span>
@@ -135,7 +144,7 @@
                             <p class="text-secondary mb-0">Discounted products picked from the live sample catalog.</p>
                         </div>
                         @if ($topOfferCategory)
-                            <a href="{{ route('storefront.category', array_merge(['category' => $topOfferCategory], $filterQuery)) }}">See all</a>
+                            <a href="{{ $safeRouteUrl('storefront.category', '/categories/'.$topOfferCategory->getRouteKey().($filterQueryString ? '?'.$filterQueryString : ''), array_merge(['category' => $topOfferCategory], $filterQuery)) }}">See all</a>
                         @endif
                     </div>
                     <div class="sf-rail-wrap">
@@ -187,7 +196,7 @@
                             <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'City level discovery' : 'Deliverable to your area' }}</p>
                         </div>
                         @if (!empty($section['subcategory'] ?? null))
-                            <a href="{{ route('storefront.subcategory', array_merge(['subcategory' => $section['subcategory']], $filterQuery)) }}">See all</a>
+                            <a href="{{ $safeRouteUrl('storefront.subcategory', '/subcategories/'.$section['subcategory']->getRouteKey().($filterQueryString ? '?'.$filterQueryString : ''), array_merge(['subcategory' => $section['subcategory']], $filterQuery)) }}">See all</a>
                         @endif
                     </div>
                     <div class="sf-rail-wrap mb-4">
@@ -281,7 +290,7 @@
                 </div>
                 <div class="sf-category-cloud">
                     @foreach ($categories as $category)
-                        <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}">{{ $category->category_name }}</a>
+                        <a href="{{ $safeRouteUrl('storefront.category', '/categories/'.$category->getRouteKey().($filterQueryString ? '?'.$filterQueryString : ''), array_merge(['category' => $category], $filterQuery)) }}">{{ $category->category_name }}</a>
                     @endforeach
                 </div>
             </div>
