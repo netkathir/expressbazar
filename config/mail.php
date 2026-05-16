@@ -117,7 +117,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'admin@netkathir.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Express Bazaar')),
     ],
 
 ];

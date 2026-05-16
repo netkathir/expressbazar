@@ -411,7 +411,7 @@ class CustomerAccountController extends Controller
             'status' => 'active',
         ]);
 
-        return redirect()->route('storefront.addresses.index')->with('success', 'Address saved successfully.');
+        return $this->redirectAfterAddressChange('Address saved successfully.');
     }
 
     public function editAddress(Request $request, CustomerAddress $address)
@@ -464,7 +464,7 @@ class CustomerAccountController extends Controller
             'is_default' => $request->boolean('is_default'),
         ]);
 
-        return redirect()->route('storefront.addresses.index')->with('success', 'Address updated successfully.');
+        return $this->redirectAfterAddressChange('Address updated successfully.');
     }
 
     public function destroyAddress(Request $request, CustomerAddress $address)
@@ -473,7 +473,12 @@ class CustomerAccountController extends Controller
 
         $address->delete();
 
-        return back()->with('success', 'Address removed.');
+        return $this->redirectAfterAddressChange('Address removed.');
+    }
+
+    private function redirectAfterAddressChange(string $message)
+    {
+        return redirect()->to(url('/account'))->with('success', $message);
     }
 
     private function generateTransactionId(): string

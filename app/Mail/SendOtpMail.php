@@ -25,7 +25,8 @@ class SendOtpMail extends Mailable
             'code' => $otp,
             'expires_in' => '5 minutes',
             'expiry_time' => '5',
-            'app_name' => config('app.name', 'Express Bazar'),
+            'app_name' => $this->brandName(),
+            'brand_name' => $this->brandName(),
         ], $templateData);
     }
 
@@ -37,10 +38,11 @@ class SendOtpMail extends Mailable
         if ($template) {
             $this->templateSubject = app(NotificationTemplateService::class)
                 ->render($template->subject ?: $template->template_name, $this->templateData);
-            $this->templateMessage = app(NotificationTemplateService::class)
-                ->render($template->message_body, $this->templateData);
+            $this->templateMessage = $this->hideDefaultLaravelBrand(
+                app(NotificationTemplateService::class)->render($template->message_body, $this->templateData)
+            );
 
-            return $this->from($fromAddress, config('mail.from.name', config('app.name', 'Express Bazar')))
+            return $this->from($fromAddress, config('mail.from.name', $this->brandName()))
                 ->subject($this->templateSubject)
                 ->withSymfonyMessage(fn ($message) => $this->addPriorityHeaders($message))
                 ->view('emails.generic-template')
@@ -54,6 +56,16 @@ class SendOtpMail extends Mailable
             ->subject('Your OTP Code')
             ->withSymfonyMessage(fn ($message) => $this->addPriorityHeaders($message))
             ->view('emails.otp');
+    }
+
+    private function brandName(): string
+    {
+        return 'Express Bazaar';
+    }
+
+    private function hideDefaultLaravelBrand(string $message): string
+    {
+        return preg_replace('/^\s*(?:<p[^>]*>\s*)?Laravel\s*(?:<\/p>)?\s*/i', '', $message) ?? $message;
     }
 
     private function senderAddress(): string
