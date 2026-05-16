@@ -4,7 +4,7 @@
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
             <nav class="sf-breadcrumbs">
-                <a href="{{ route('user.home') }}">Home</a>
+                <a href="{{ url('/') }}">Home</a>
                 <span>&rsaquo;</span>
                 Contact Us
             </nav>
@@ -12,7 +12,7 @@
             <div class="sf-detail-grid">
                 <div class="sf-info-card">
                     <h1 class="h3 fw-bold mb-3">Contact Us</h1>
-                    <form method="POST" action="{{ route('storefront.contact.submit') }}" class="row g-3" data-dirty-check>
+                    <form method="POST" action="{{ url('/contact-us') }}" class="row g-3" data-dirty-check>
                         @csrf
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
@@ -45,7 +45,7 @@
                     <dl class="sf-specs mb-0">
                         <dt>Email</dt><dd>support@expressbazaar.local</dd>
                         <dt>Address</dt><dd>73 Colby Street, Southampton, SO16 9RU, United Kingdom</dd>
-                        <dt>Orders</dt><dd><a href="{{ auth()->check() && auth()->user()->role === 'customer' ? route('storefront.orders.index') : route('storefront.login') }}">Track your order</a></dd>
+                        <dt>Orders</dt><dd><a href="{{ auth()->check() && auth()->user()->role === 'customer' ? url('/account/orders') : url('/login') }}">Track your order</a></dd>
                     </dl>
                 </div>
             </div>

@@ -217,7 +217,7 @@
 
                 <div class="sf-footer-col">
                     <h6>Customer Service</h6>
-                    <a href="{{ $safeRouteUrl('storefront.contact', '/contact-us') }}">Contact Us</a>
+                    <a href="{{ url('/contact-us') }}">Contact Us</a>
                     <a href="#">FAQs</a>
                     <a href="#">Shipping Policy</a>
                     <a href="{{ auth()->check() && auth()->user()->role === 'customer' ? $safeRouteUrl('storefront.orders.index', '/account/orders') : $safeRouteUrl('storefront.login', '/login') }}">Track Your Order</a>
