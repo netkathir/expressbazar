@@ -125,7 +125,7 @@
                                         <a href="{{ $safeRouteUrl('user.home', '/') }}#top-offers" class="dropdown-item rounded-2">
                                             <i class="ti ti-discount-2 me-2"></i>Offers
                                         </a>
-                                        <a href="{{ $safeRouteUrl('storefront.addresses.index', '/account/addresses') }}" class="dropdown-item rounded-2">
+                                        <a href="{{ $safeRouteUrl('storefront.addresses.manage', '/account/address-book') }}" class="dropdown-item rounded-2">
                                             <i class="ti ti-map-pin me-2"></i>Address
                                         </a>
                                     </div>

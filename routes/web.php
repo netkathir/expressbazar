@@ -70,6 +70,7 @@ Route::get('/account/orders/{order}/payment-cancelled', [CustomerAccountControll
 Route::get('/account/orders/{order}/status', [CustomerAccountController::class, 'orderStatus'])->middleware('auth')->name('storefront.orders.status');
 Route::post('/account/orders/{order}/cancel', [CustomerAccountController::class, 'cancelOrder'])->middleware('auth')->name('storefront.orders.cancel-order');
 Route::post('/account/orders/{order}/reorder', [CustomerAccountController::class, 'reorder'])->middleware('auth')->name('storefront.orders.reorder');
+Route::get('/account/address-book', [CustomerAccountController::class, 'addresses'])->middleware('auth')->name('storefront.addresses.manage');
 Route::get('/account/addresses', [CustomerAccountController::class, 'addresses'])->middleware('auth')->name('storefront.addresses.index');
 Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->middleware('auth')->name('storefront.addresses.store');
 Route::get('/account/addresses/{address}/edit', [CustomerAccountController::class, 'editAddress'])->middleware('auth')->name('storefront.addresses.edit');
