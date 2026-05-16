@@ -11,7 +11,7 @@
                                 <h3 class="mb-1">Edit Address</h3>
                                 <p class="text-secondary mb-0">Update this delivery address while keeping the rest of your account unchanged.</p>
                             </div>
-                            <a href="{{ url('/account/address-book') }}" class="btn btn-outline-dark rounded-pill btn-sm">Back to Addresses</a>
+                            <a href="{{ route('storefront.addresses.index') }}" class="btn btn-outline-dark rounded-pill btn-sm">Back to Addresses</a>
                         </div>
 
                         <form method="POST" action="{{ route('storefront.addresses.update', $address) }}" class="row g-3 sf-address-form">
@@ -74,7 +74,7 @@
                                 <label class="form-check-label" for="defaultAddress">Set as default address</label>
                             </div>
                             <div class="col-12 d-grid d-md-flex justify-content-md-end gap-2 pt-2">
-                                <a href="{{ url('/account/address-book') }}" class="btn btn-light rounded-pill px-4">Cancel</a>
+                                <a href="{{ route('storefront.addresses.index') }}" class="btn btn-light rounded-pill px-4">Cancel</a>
                                 <button class="btn btn-danger rounded-pill px-4">Save Address</button>
                             </div>
                         </form>

@@ -125,7 +125,7 @@
                                         <a href="{{ $safeRouteUrl('user.home', '/') }}#top-offers" class="dropdown-item rounded-2">
                                             <i class="ti ti-discount-2 me-2"></i>Offers
                                         </a>
-                                        <a href="{{ $safeRouteUrl('storefront.addresses.manage', '/account/address-book') }}" class="dropdown-item rounded-2">
+                                        <a href="{{ $safeRouteUrl('storefront.addresses.index', '/account/addresses') }}" class="dropdown-item rounded-2">
                                             <i class="ti ti-map-pin me-2"></i>Address
                                         </a>
                                     </div>
@@ -276,6 +276,21 @@
                     @csrf
                     <input type="hidden" name="force_clear" value="0">
                     <div class="alert alert-danger border-0 rounded-4 mb-0 d-none js-location-alert" role="alert"></div>
+                    <div class="location-autocomplete-wrapper">
+                        <label class="form-label" for="locationSearch">Search delivery location</label>
+                        <input
+                            type="text"
+                            id="locationSearch"
+                            class="form-control js-location-search"
+                            placeholder="Select delivery location"
+                            autocomplete="off"
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-expanded="false"
+                            aria-controls="locationSuggestionBox"
+                        >
+                        <div id="locationSuggestionBox" class="js-location-suggestion-box" role="listbox" hidden></div>
+                    </div>
                     <div>
                         <label class="form-label">Postcode / Zone code</label>
                         <input type="text" name="postcode" class="form-control" placeholder="Enter postcode to auto-detect zone">

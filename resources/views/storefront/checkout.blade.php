@@ -52,7 +52,7 @@
                                     View more addresses
                                 </button>
                             @endif
-                            <a href="{{ url('/account/address-book') }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
+                            <a href="{{ route('storefront.addresses.index') }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
                         </div>
 
                         <div class="sf-info-card">
