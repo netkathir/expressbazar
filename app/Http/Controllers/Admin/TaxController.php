@@ -103,7 +103,7 @@ class TaxController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::exists('region_zones', 'zone_name')->where('country_id', $request->input('country_id')),
+                Rule::exists('regions_zones', 'zone_name')->where('country_id', $request->input('country_id')),
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [

@@ -29,4 +29,9 @@ class City extends Model
     {
         return $this->hasMany(RegionZone::class);
     }
+
+    public function vendors()
+    {
+        return $this->hasMany(Vendor::class);
+    }
 }

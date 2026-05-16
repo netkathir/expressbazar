@@ -654,6 +654,170 @@ class StorefrontController extends Controller
         return back()->with('success', 'Location updated.');
     }
 
+    public function locationAutocomplete(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->validate([
+                'keyword' => ['nullable', 'string', 'max:80'],
+            ]);
+
+            $keyword = trim((string) ($data['keyword'] ?? ''));
+
+            if (mb_strlen($keyword) < 2) {
+                return response()->json(['suggestions' => []]);
+            }
+
+            $like = "%{$keyword}%";
+            $suggestions = collect();
+
+            City::query()
+                ->with('country')
+                ->where('status', 'active')
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+                ->whereHas('vendors', fn ($vendorQuery) => $vendorQuery->where('status', 'active'))
+                ->where(function ($query) use ($like) {
+                    $query->where('city_name', 'like', $like)
+                        ->orWhere('city_code', 'like', $like);
+                })
+                ->orderByRaw('CASE WHEN city_name LIKE ? THEN 0 ELSE 1 END', [$keyword.'%'])
+                ->orderBy('city_name')
+                ->limit(4)
+                ->get()
+                ->each(function (City $city) use ($suggestions) {
+                    $suggestions->push([
+                        'type' => 'city',
+                        'label' => $city->city_name,
+                        'meta' => $city->country?->country_name ?: 'City',
+                        'country_id' => (int) $city->country_id,
+                        'city_id' => (int) $city->id,
+                        'zone_id' => null,
+                        'postcode' => null,
+                    ]);
+                });
+
+            RegionZone::query()
+                ->with(['country', 'city'])
+                ->where('status', 'active')
+                ->where('delivery_available', true)
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+                ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+                ->where(function ($query) use ($like) {
+                    $query->where('zone_name', 'like', $like)
+                        ->orWhere('zone_code', 'like', $like);
+                })
+                ->orderByRaw('CASE WHEN zone_name LIKE ? THEN 0 ELSE 1 END', [$keyword.'%'])
+                ->orderBy('zone_name')
+                ->limit(4)
+                ->get()
+                ->each(function (RegionZone $zone) use ($suggestions) {
+                    $suggestions->push([
+                        'type' => 'zone',
+                        'label' => $zone->zone_code ? "{$zone->zone_name} - {$zone->zone_code}" : $zone->zone_name,
+                        'meta' => trim(($zone->city?->city_name ?: '').($zone->country?->country_name ? ', '.$zone->country->country_name : ''), ', '),
+                        'country_id' => (int) $zone->country_id,
+                        'city_id' => (int) $zone->city_id,
+                        'zone_id' => (int) $zone->id,
+                        'postcode' => null,
+                    ]);
+                });
+
+            Vendor::query()
+                ->with(['country', 'city', 'zone'])
+                ->where('status', 'active')
+                ->whereNotNull('pincode')
+                ->where('pincode', 'like', $like)
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+                ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+                ->orderByRaw('CASE WHEN pincode LIKE ? THEN 0 ELSE 1 END', [$keyword.'%'])
+                ->orderBy('pincode')
+                ->limit(5)
+                ->get()
+                ->unique(fn (Vendor $vendor) => $this->normalizedPostcode((string) $vendor->pincode))
+                ->each(function (Vendor $vendor) use ($suggestions) {
+                    $postcode = mb_strtoupper(trim((string) $vendor->pincode));
+                    $suggestions->push([
+                        'type' => 'pincode',
+                        'label' => $postcode,
+                        'meta' => trim(($vendor->city?->city_name ?: '').($vendor->country?->country_name ? ', '.$vendor->country->country_name : ''), ', '),
+                        'country_id' => (int) $vendor->country_id,
+                        'city_id' => (int) $vendor->city_id,
+                        'zone_id' => $vendor->region_zone_id ? (int) $vendor->region_zone_id : null,
+                        'postcode' => $postcode,
+                    ]);
+                });
+
+            Country::query()
+                ->where('status', 'active')
+                ->where('country_name', 'like', $like)
+                ->orderByRaw('CASE WHEN country_name LIKE ? THEN 0 ELSE 1 END', [$keyword.'%'])
+                ->orderBy('country_name')
+                ->limit(3)
+                ->get()
+                ->each(function (Country $country) use ($suggestions) {
+                    $city = City::query()
+                        ->where('country_id', $country->id)
+                        ->where('status', 'active')
+                        ->whereHas('vendors', fn ($vendorQuery) => $vendorQuery->where('status', 'active'))
+                        ->orderBy('city_name')
+                        ->first();
+
+                    if (! $city) {
+                        return;
+                    }
+
+                    $suggestions->push([
+                        'type' => 'country',
+                        'label' => $country->country_name,
+                        'meta' => 'Country',
+                        'country_id' => (int) $country->id,
+                        'city_id' => (int) $city->id,
+                        'zone_id' => null,
+                        'postcode' => null,
+                    ]);
+                });
+
+            Vendor::query()
+                ->with(['country', 'city', 'zone'])
+                ->where('status', 'active')
+                ->whereNotNull('address')
+                ->where('address', 'like', $like)
+                ->whereHas('country', fn ($countryQuery) => $countryQuery->where('status', 'active'))
+                ->whereHas('city', fn ($cityQuery) => $cityQuery->where('status', 'active'))
+                ->orderBy('vendor_name')
+                ->limit(3)
+                ->get()
+                ->each(function (Vendor $vendor) use ($suggestions) {
+                    $address = Str::limit(trim((string) $vendor->address), 48, '');
+                    $suggestions->push([
+                        'type' => 'area',
+                        'label' => $address,
+                        'meta' => trim(($vendor->city?->city_name ?: '').($vendor->pincode ? ' - '.$vendor->pincode : ''), ' -'),
+                        'country_id' => (int) $vendor->country_id,
+                        'city_id' => (int) $vendor->city_id,
+                        'zone_id' => $vendor->region_zone_id ? (int) $vendor->region_zone_id : null,
+                        'postcode' => $vendor->pincode ? mb_strtoupper(trim((string) $vendor->pincode)) : null,
+                    ]);
+                });
+
+            $deduped = $suggestions
+                ->filter(fn (array $item) => ! empty($item['label']) && ! empty($item['country_id']) && ! empty($item['city_id']))
+                ->unique(fn (array $item) => implode(':', [
+                    $item['type'],
+                    mb_strtolower((string) $item['label']),
+                    $item['country_id'],
+                    $item['city_id'],
+                    $item['zone_id'] ?? '',
+                    $item['postcode'] ?? '',
+                ]))
+                ->take(10)
+                ->values();
+
+            return response()->json(['suggestions' => $deduped]);
+        } catch (Throwable $exception) {
+            return $this->apiError($exception);
+        }
+    }
+
     public function cities(Request $request): JsonResponse
     {
         try {

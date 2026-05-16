@@ -90,6 +90,7 @@ Route::get('/search', [StorefrontController::class, 'search'])->name('storefront
 Route::get('/search-suggestions', [StorefrontController::class, 'searchSuggestions'])->name('storefront.search.suggestions');
 Route::get('/cart', [StorefrontController::class, 'cart'])->name('storefront.cart');
 Route::post('/location', [StorefrontController::class, 'setLocation'])->name('storefront.location');
+Route::get('/location/autocomplete', [StorefrontController::class, 'locationAutocomplete'])->name('storefront.location.autocomplete');
 Route::get('/location/cities', [StorefrontController::class, 'cities'])->name('storefront.location.cities');
 Route::get('/location/zones', [StorefrontController::class, 'zones'])->name('storefront.location.zones');
 Route::get('/vendors-by-location', [StorefrontController::class, 'vendorsByLocation'])->name('storefront.vendors-by-location');
