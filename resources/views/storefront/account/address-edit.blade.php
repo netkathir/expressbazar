@@ -18,21 +18,6 @@
                             @csrf
                             @method('PUT')
 
-                            <div class="col-12">
-                                <label class="form-label">Search location</label>
-                                <div class="location-autocomplete-wrapper">
-                                    <input
-                                        type="search"
-                                        class="form-control js-address-location-search"
-                                        placeholder="Search postcode, city, zone or area"
-                                        value="{{ old('address_line_1', $address->address_line_1) }}"
-                                        autocomplete="off"
-                                        role="combobox"
-                                        aria-expanded="false"
-                                    >
-                                    <div class="js-address-location-suggestion-box" role="listbox" hidden></div>
-                                </div>
-                            </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Label</label>
                                 <input type="text" name="label" class="form-control" placeholder="Home / Work" value="{{ old('label', $address->label) }}">
@@ -51,7 +36,20 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address line 1</label>
-                                <input type="text" name="address_line_1" class="form-control" value="{{ old('address_line_1', $address->address_line_1) }}" required>
+                                <div class="location-autocomplete-wrapper">
+                                    <input
+                                        type="text"
+                                        name="address_line_1"
+                                        class="form-control js-address-location-search"
+                                        placeholder="Start typing an address..."
+                                        value="{{ old('address_line_1', $address->address_line_1) }}"
+                                        autocomplete="off"
+                                        role="combobox"
+                                        aria-expanded="false"
+                                        required
+                                    >
+                                    <div class="js-address-location-suggestion-box" role="listbox" hidden></div>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address line 2</label>
