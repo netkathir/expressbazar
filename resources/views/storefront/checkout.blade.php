@@ -3,6 +3,9 @@
 @section('content')
     @php
         $offerSavings = \App\Support\StoreOfferPricing::cartSavings($cartItems);
+        $addressesUrl = \Illuminate\Support\Facades\Route::has('storefront.addresses.index')
+            ? route('storefront.addresses.index')
+            : url('/account/addresses');
     @endphp
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
@@ -52,7 +55,7 @@
                                     View more addresses
                                 </button>
                             @endif
-                            <a href="{{ route('storefront.addresses.index') }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
+                            <a href="{{ $addressesUrl }}" class="btn btn-outline-dark rounded-pill">Manage Addresses</a>
                         </div>
 
                         <div class="sf-info-card">

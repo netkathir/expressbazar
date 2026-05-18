@@ -49,11 +49,32 @@ class CustomerAccountController extends Controller
 
         abort_if(! $user || $user->role !== 'customer', 403);
 
+        $addressPrefill = $this->addressPrefill($request);
+        $prefillCountryId = $request->old('country_id', $addressPrefill['country_id'] ?? null);
+        $prefillCityId = $request->old('city_id', $addressPrefill['city_id'] ?? null);
+
         return view('storefront.account.addresses', [
             'title' => 'Contact Address',
             'user' => $user,
             'addresses' => $user->addresses()->with(['country', 'city', 'zone'])->latest()->get(),
             'countries' => Country::query()->where('status', 'active')->orderBy('country_name')->get(),
+            'addressPrefill' => $addressPrefill,
+            'prefillCities' => $prefillCountryId
+                ? City::query()
+                    ->where('country_id', $prefillCountryId)
+                    ->where('status', 'active')
+                    ->orderBy('city_name')
+                    ->get()
+                : collect(),
+            'prefillZones' => $prefillCityId
+                ? RegionZone::query()
+                    ->when($prefillCountryId, fn ($query) => $query->where('country_id', $prefillCountryId))
+                    ->where('city_id', $prefillCityId)
+                    ->where('status', 'active')
+                    ->where('delivery_available', true)
+                    ->orderBy('zone_name')
+                    ->get()
+                : collect(),
         ]);
     }
 
@@ -411,6 +432,8 @@ class CustomerAccountController extends Controller
             'status' => 'active',
         ]);
 
+        $request->session()->forget('storefront.address_prefill');
+
         return $this->redirectAfterAddressChange('Address saved successfully.');
     }
 
@@ -559,5 +582,12 @@ class CustomerAccountController extends Controller
         }
 
         return $data;
+    }
+
+    private function addressPrefill(Request $request): array
+    {
+        $prefill = $request->session()->get('storefront.address_prefill');
+
+        return is_array($prefill) ? $prefill : [];
     }
 }

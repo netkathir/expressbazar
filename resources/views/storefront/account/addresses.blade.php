@@ -1,6 +1,12 @@
 @extends('layouts.storefront')
 
 @section('content')
+    @php
+        $addressPrefill = $addressPrefill ?? [];
+        $prefillCountryId = old('country_id', $addressPrefill['country_id'] ?? '');
+        $prefillCityId = old('city_id', $addressPrefill['city_id'] ?? '');
+        $prefillZoneId = old('zone_id', $addressPrefill['zone_id'] ?? '');
+    @endphp
     <main class="sf-page">
         <section class="container-fluid px-3 px-lg-4 py-4">
             <nav class="sf-breadcrumbs">
@@ -62,11 +68,11 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Postcode</label>
-                                <input type="text" name="postcode" class="form-control" value="{{ old('postcode') }}" required>
+                                <input type="text" name="postcode" class="form-control" value="{{ old('postcode', $addressPrefill['postcode'] ?? '') }}" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address line 1</label>
-                                <input type="text" name="address_line_1" class="form-control" value="{{ old('address_line_1') }}" required>
+                                <input type="text" name="address_line_1" class="form-control" value="{{ old('address_line_1', $addressPrefill['address_line_1'] ?? '') }}" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address line 2</label>
@@ -77,7 +83,7 @@
                                 <select name="country_id" class="form-select js-country-select" required>
                                     <option value="">Choose country</option>
                                     @foreach ($countries as $country)
-                                        <option value="{{ $country->id }}" @selected((string) old('country_id') === (string) $country->id)>{{ $country->country_name }}</option>
+                                        <option value="{{ $country->id }}" @selected((string) $prefillCountryId === (string) $country->id)>{{ $country->country_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -85,12 +91,18 @@
                                 <label class="form-label">City</label>
                                 <select name="city_id" class="form-select js-city-select" required>
                                     <option value="">Choose city</option>
+                                    @foreach (($prefillCities ?? collect()) as $city)
+                                        <option value="{{ $city->id }}" @selected((string) $prefillCityId === (string) $city->id)>{{ $city->city_name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label">Zone</label>
                                 <select name="zone_id" class="form-select js-zone-select">
                                     <option value="">Optional exact zone</option>
+                                    @foreach (($prefillZones ?? collect()) as $zone)
+                                        <option value="{{ $zone->id }}" @selected((string) $prefillZoneId === (string) $zone->id)>{{ $zone->zone_name }}{{ $zone->zone_code ? ' ('.$zone->zone_code.')' : '' }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-12 form-check ms-3">

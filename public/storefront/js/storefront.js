@@ -30,6 +30,8 @@ let pendingAddressDeleteForm = null;
 let locationAutocompleteTimer = null;
 let locationAutocompleteItems = [];
 let activeLocationSuggestionIndex = -1;
+let googleLocationAutocomplete = null;
+let isGoogleLocationAutocompleteReady = false;
 window.storefrontAjaxFilters = true;
 
 function hidePageLoader() {
@@ -375,7 +377,11 @@ function showLocationModal() {
     locationModal?.show();
     window.setTimeout(() => {
         locationSearch?.focus();
-        showRecentLocations();
+        if (isGoogleLocationAutocompleteReady) {
+            hideLocationSuggestions();
+        } else {
+            showRecentLocations();
+        }
     }, 180);
 }
 
@@ -533,6 +539,11 @@ function renderLocationSuggestions(items, options = {}) {
 }
 
 function showRecentLocations() {
+    if (isGoogleLocationAutocompleteReady) {
+        hideLocationSuggestions();
+        return;
+    }
+
     if (!locationSearch || locationSearch.value.trim().length >= 2) {
         return;
     }
@@ -564,6 +575,12 @@ async function fetchLocationSuggestions(keyword) {
 async function saveLocationFormData(form, formData) {
     if (!form) {
         return;
+    }
+
+    const searchInput = form.querySelector('.js-location-search');
+    const typedAddress = searchInput?.value?.trim() || '';
+    if (typedAddress && !formData.get('address_line_1')) {
+        formData.set('address_line_1', typedAddress);
     }
 
     clearLocationAlert();
@@ -616,9 +633,78 @@ async function selectLocationSuggestion(item) {
     formData.set('city_id', item.city_id || '');
     formData.set('zone_id', item.zone_id || '');
     formData.set('postcode', item.postcode || '');
+    formData.set('address_line_1', item.label || '');
 
     await saveLocationFormData(locationForm, formData);
 }
+
+function googlePlaceComponent(place, type, useShortName = false) {
+    const component = place?.address_components?.find((entry) => entry.types?.includes(type));
+
+    return component ? (useShortName ? component.short_name : component.long_name) : '';
+}
+
+function googlePlacePostcode(place) {
+    const code = googlePlaceComponent(place, 'postal_code', true);
+    const suffix = googlePlaceComponent(place, 'postal_code_suffix', true);
+
+    return [code, suffix].filter(Boolean).join('-');
+}
+
+async function saveGooglePlaceLocation(place) {
+    if (!place || !locationForm || !locationSearch) {
+        return;
+    }
+
+    const address = place.formatted_address || place.name || locationSearch.value.trim();
+    const postcode = googlePlacePostcode(place);
+    const postcodeInput = locationForm.querySelector('input[name="postcode"]');
+    const addressInput = locationForm.querySelector('input[name="address_line_1"]');
+
+    locationSearch.value = address;
+    hideLocationSuggestions();
+    clearLocationAlert();
+
+    if (postcodeInput) {
+        postcodeInput.value = postcode;
+    }
+    if (addressInput) {
+        addressInput.value = address;
+    }
+
+    if (!place.geometry || !postcode) {
+        showLocationAlert('Please select an address with a postcode, or choose your country, city and zone manually.');
+        return;
+    }
+
+    const formData = new FormData(locationForm);
+    formData.set('force_clear', '0');
+    formData.set('postcode', postcode);
+    formData.set('address_line_1', address);
+
+    await saveLocationFormData(locationForm, formData);
+}
+
+window.initStorefrontLocationAutocomplete = function () {
+    if (!locationSearch || isGoogleLocationAutocompleteReady || !window.google?.maps?.places?.Autocomplete) {
+        return;
+    }
+
+    googleLocationAutocomplete = new google.maps.places.Autocomplete(locationSearch, {
+        types: ['address'],
+        fields: ['formatted_address', 'geometry', 'address_components', 'name'],
+    });
+
+    isGoogleLocationAutocompleteReady = true;
+    locationSearch.dataset.googleAutocomplete = 'true';
+    locationSearch.setAttribute('aria-haspopup', 'listbox');
+
+    googleLocationAutocomplete.addListener('place_changed', () => {
+        saveGooglePlaceLocation(googleLocationAutocomplete.getPlace()).catch((error) => {
+            showLocationAlert(error?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
+        });
+    });
+};
 
 function notificationMessage(notification) {
     return notification?.message || notification?.data?.message || notification?.data?.title || 'Notification';
@@ -1062,6 +1148,7 @@ function resetLocationForm(form = locationForm) {
     }
 
     const postcodeInput = form.querySelector('input[name="postcode"]');
+    const addressInput = form.querySelector('input[name="address_line_1"]');
     const searchInput = form.querySelector('.js-location-search');
     const forceClearInput = form.querySelector('input[name="force_clear"]');
     const formCountrySelect = form.querySelector('.js-country-select');
@@ -1070,6 +1157,9 @@ function resetLocationForm(form = locationForm) {
 
     if (postcodeInput) {
         postcodeInput.value = '';
+    }
+    if (addressInput) {
+        addressInput.value = '';
     }
     if (searchInput) {
         searchInput.value = '';
@@ -1361,6 +1451,12 @@ locationSearch?.addEventListener('focus', showRecentLocations);
 
 locationSearch?.addEventListener('input', () => {
     clearLocationAlert();
+
+    if (isGoogleLocationAutocompleteReady) {
+        hideLocationSuggestions();
+        return;
+    }
+
     const keyword = locationSearch.value.trim();
     window.clearTimeout(locationAutocompleteTimer);
 
@@ -1379,6 +1475,10 @@ locationSearch?.addEventListener('input', () => {
 });
 
 locationSearch?.addEventListener('keydown', (event) => {
+    if (isGoogleLocationAutocompleteReady) {
+        return;
+    }
+
     if (!locationSuggestionBox || locationSuggestionBox.hidden) {
         return;
     }

@@ -303,6 +303,26 @@ body.storefront-shell {
     padding: 12px 13px;
 }
 
+.pac-container {
+    z-index: 1080;
+    border: 1px solid var(--sf-border);
+    border-radius: 14px;
+    box-shadow: var(--sf-shadow);
+    font-family: var(--sf-font);
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.pac-item {
+    cursor: pointer;
+    padding: 9px 12px;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+    background: var(--sf-surface);
+}
+
 .sf-actions {
     display: flex;
     gap: 7px;

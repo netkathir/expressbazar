@@ -272,9 +272,13 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+                @php
+                    $selectedDeliveryAddress = session('storefront.address_prefill', []);
+                @endphp
                 <form class="modal-body d-grid gap-3 js-location-form" action="{{ $safeRouteUrl('storefront.location', '/location') }}" method="POST">
                     @csrf
                     <input type="hidden" name="force_clear" value="0">
+                    <input type="hidden" name="address_line_1" value="{{ $selectedDeliveryAddress['address_line_1'] ?? '' }}">
                     <div class="alert alert-danger border-0 rounded-4 mb-0 d-none js-location-alert" role="alert"></div>
                     <div class="location-autocomplete-wrapper">
                         <label class="form-label" for="locationSearch">Search delivery location</label>
@@ -283,6 +287,7 @@
                             id="locationSearch"
                             class="form-control js-location-search"
                             placeholder="Select delivery location"
+                            value="{{ $selectedDeliveryAddress['address_line_1'] ?? '' }}"
                             autocomplete="off"
                             role="combobox"
                             aria-autocomplete="list"
@@ -293,7 +298,7 @@
                     </div>
                     <div>
                         <label class="form-label">Postcode / Zone code</label>
-                        <input type="text" name="postcode" class="form-control" placeholder="Enter postcode to auto-detect zone">
+                        <input type="text" name="postcode" class="form-control" placeholder="Enter postcode to auto-detect zone" value="{{ $selectedDeliveryAddress['postcode'] ?? ($pincode ?? '') }}">
                     </div>
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
@@ -389,6 +394,7 @@
         $vendorsByLocationUrl = $safeRouteUrl('storefront.vendors-by-location', '/vendors-by-location', [], false);
         $searchSuggestionsUrl = $safeRouteUrl('storefront.search.suggestions', '/search-suggestions', [], false);
         $logoutUrl = $safeRouteUrl('storefront.logout', '/logout', [], false);
+        $googleMapsApiKey = config('services.google_maps.key');
         $initialVendorsForHeader = collect($vendors ?? [])->map(function ($vendor) {
             return [
                 'id' => data_get($vendor, 'id'),
@@ -426,10 +432,18 @@
             currentUserAvatar: @json(auth()->user()->avatar_path ?? null),
             csrfToken: @json(csrf_token()),
             storeCurrency: @json(\App\Support\StoreCurrency::jsConfig()),
+            googlePlacesEnabled: @json(filled($googleMapsApiKey)),
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('storefront/js/storefront.js') }}"></script>
+    @if (filled($googleMapsApiKey))
+        <script
+            src="https://maps.googleapis.com/maps/api/js?key={{ rawurlencode($googleMapsApiKey) }}&libraries=places&callback=initStorefrontLocationAutocomplete&loading=async"
+            async
+            defer
+        ></script>
+    @endif
     <script src="{{ asset('js/inline-validation.js') }}"></script>
     <script>
         document.addEventListener('click', (event) => {

@@ -567,6 +567,7 @@ class StorefrontController extends Controller
             'city_id' => ['nullable', 'required_without:postcode', Rule::exists('cities', 'id')->where('status', 'active')],
             'zone_id' => ['nullable', 'exists:regions_zones,id'],
             'postcode' => ['nullable', 'string', 'max:32'],
+            'address_line_1' => ['nullable', 'string', 'max:255'],
             'force_clear' => ['nullable'],
         ]);
 
@@ -591,6 +592,8 @@ class StorefrontController extends Controller
                 'city_id' => 'Selected city must belong to the selected country.',
             ]);
         }
+
+        $zone = null;
 
         if (! empty($data['zone_id'])) {
             $zone = RegionZone::query()
@@ -635,6 +638,13 @@ class StorefrontController extends Controller
         }
 
         session()->put('storefront.location', $newLocation);
+        session()->put('storefront.address_prefill', [
+            'address_line_1' => trim((string) ($data['address_line_1'] ?? '')) ?: trim(($zone?->zone_name ? $zone->zone_name.', ' : '').$city->city_name),
+            'postcode' => $data['resolved_pincode'] ?? $data['postcode'] ?? null,
+            'country_id' => (int) $data['country_id'],
+            'city_id' => (int) $data['city_id'],
+            'zone_id' => isset($data['zone_id']) ? (int) $data['zone_id'] : null,
+        ]);
         session()->forget('storefront.soft_location');
         if (! empty($data['resolved_pincode'])) {
             session()->put('user_pincode', $data['resolved_pincode']);
