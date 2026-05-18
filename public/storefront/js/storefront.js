@@ -1180,6 +1180,36 @@ function resetLocationForm(form = locationForm) {
     clearLocationAlert();
 }
 
+function setProductGalleryImage(button) {
+    const mainImage = document.querySelector('.js-gallery-main-image');
+    const imageUrl = button?.dataset.galleryImage;
+
+    if (!mainImage || !imageUrl) {
+        return;
+    }
+
+    mainImage.src = imageUrl;
+
+    document.querySelectorAll('.js-gallery-thumb').forEach((thumb) => {
+        const isActive = thumb === button;
+        thumb.classList.toggle('is-active', isActive);
+        thumb.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+}
+
+function moveProductGallery(direction = 1) {
+    const thumbs = [...document.querySelectorAll('.js-gallery-thumb')];
+
+    if (thumbs.length === 0) {
+        return;
+    }
+
+    const currentIndex = Math.max(0, thumbs.findIndex((thumb) => thumb.classList.contains('is-active')));
+    const nextIndex = (currentIndex + direction + thumbs.length) % thumbs.length;
+    setProductGalleryImage(thumbs[nextIndex]);
+    thumbs[nextIndex].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
 document.addEventListener('click', async (event) => {
     const locationClearButton = event.target.closest('.js-location-clear');
     if (locationClearButton) {
@@ -1275,6 +1305,45 @@ document.addEventListener('click', async (event) => {
     }
 
     const addForm = event.target.closest('.js-add-to-cart');
+    const productQuantityButton = event.target.closest('.js-product-qty');
+    if (productQuantityButton) {
+        event.preventDefault();
+        const quantityWrap = productQuantityButton.closest('.sf-product-quantity');
+        const quantityInput = quantityWrap?.querySelector('.js-product-qty-input');
+        if (quantityInput) {
+            const min = Number(quantityInput.min || 1);
+            const max = Number(quantityInput.max || 99);
+            const delta = Number(productQuantityButton.dataset.delta || 0);
+            const current = Number(quantityInput.value || min);
+            quantityInput.value = String(Math.min(max, Math.max(min, current + delta)));
+        }
+        return;
+    }
+
+    const galleryThumb = event.target.closest('.js-gallery-thumb');
+    if (galleryThumb) {
+        event.preventDefault();
+        setProductGalleryImage(galleryThumb);
+        return;
+    }
+
+    const galleryNav = event.target.closest('.js-gallery-nav');
+    if (galleryNav) {
+        event.preventDefault();
+        moveProductGallery(Number(galleryNav.dataset.direction || 1));
+        return;
+    }
+
+    if (addForm) {
+        const quantityInput = addForm.querySelector('.js-product-qty-input');
+        if (quantityInput) {
+            const min = Number(quantityInput.min || 1);
+            const max = Number(quantityInput.max || 99);
+            const value = Math.min(max, Math.max(min, Number(quantityInput.value || min)));
+            quantityInput.value = String(value);
+        }
+    }
+
     if (addForm) {
         event.preventDefault();
         const formData = new FormData(addForm);

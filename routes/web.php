@@ -75,6 +75,8 @@ Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddre
 Route::get('/account/addresses/{address}/edit', [CustomerAccountController::class, 'editAddress'])->middleware('auth')->name('storefront.addresses.edit');
 Route::put('/account/addresses/{address}', [CustomerAccountController::class, 'updateAddress'])->middleware('auth')->name('storefront.addresses.update');
 Route::delete('/account/addresses/{address}', [CustomerAccountController::class, 'destroyAddress'])->middleware('auth')->name('storefront.addresses.destroy');
+Route::post('/account/wishlist/{product}', [CustomerAccountController::class, 'storeWishlist'])->middleware('auth')->name('storefront.wishlist.store');
+Route::delete('/account/wishlist/{product}', [CustomerAccountController::class, 'destroyWishlist'])->middleware('auth')->name('storefront.wishlist.destroy');
 Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->middleware('auth')->name('storefront.orders.show');
 Route::post('/account/orders/{order}/retry-payment', [CustomerAccountController::class, 'retryPayment'])->middleware('auth')->name('storefront.orders.retry-payment');
 Route::get('/checkout', [StorefrontController::class, 'checkout'])->name('storefront.checkout');

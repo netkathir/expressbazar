@@ -94,9 +94,15 @@ class StorefrontController extends Controller
 
         abort_if(! $this->isStorefrontProductAvailable($product), 404);
 
+        $wishlistAvailable = Schema::hasTable('customer_wishlists');
+
         return view('storefront.product', $this->storefrontData($request, $product->product_name, [
             'product' => $product,
             'relatedProducts' => $this->relatedProducts($product),
+            'wishlistAvailable' => $wishlistAvailable,
+            'isWishlisted' => $wishlistAvailable && ($request->user()?->wishlists()
+                ->where('product_id', $product->id)
+                ->exists() ?? false),
         ]));
     }
 

@@ -66,4 +66,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order')->orderBy('id');
     }
+
+    public function wishlists()
+    {
+        return $this->hasMany(CustomerWishlist::class);
+    }
 }

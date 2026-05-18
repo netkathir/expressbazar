@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
+use App\Models\CustomerWishlist;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Services\InventoryService;
 use App\Services\OrderLifecycleService;
@@ -40,6 +42,13 @@ class CustomerAccountController extends Controller
                 ->latest('id')
                 ->limit(3)
                 ->get(),
+            'wishlistItems' => $this->wishlistTableExists()
+                ? $user->wishlists()
+                    ->with(['product.images', 'product.category', 'product.inventory', 'product.vendor'])
+                    ->latest()
+                    ->limit(8)
+                    ->get()
+                : collect(),
         ]);
     }
 
@@ -499,6 +508,42 @@ class CustomerAccountController extends Controller
         return $this->redirectAfterAddressChange('Address removed.');
     }
 
+    public function storeWishlist(Request $request, Product $product)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        if (! $this->wishlistTableExists()) {
+            return back();
+        }
+
+        CustomerWishlist::firstOrCreate([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+        ]);
+
+        return back()->with('success', 'Product added to wishlist.');
+    }
+
+    public function destroyWishlist(Request $request, Product $product)
+    {
+        $user = $request->user();
+
+        abort_if(! $user || $user->role !== 'customer', 403);
+
+        if (! $this->wishlistTableExists()) {
+            return back();
+        }
+
+        CustomerWishlist::query()
+            ->where('user_id', $user->id)
+            ->where('product_id', $product->id)
+            ->delete();
+
+        return back()->with('success', 'Product removed from wishlist.');
+    }
+
     private function redirectAfterAddressChange(string $message)
     {
         return redirect()->to(url('/account'))->with('success', $message);
@@ -589,5 +634,10 @@ class CustomerAccountController extends Controller
         $prefill = $request->session()->get('storefront.address_prefill');
 
         return is_array($prefill) ? $prefill : [];
+    }
+
+    private function wishlistTableExists(): bool
+    {
+        return Schema::hasTable('customer_wishlists');
     }
 }

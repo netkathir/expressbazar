@@ -12,6 +12,13 @@
                     ? rtrim(rtrim(number_format((float) $product->discount_value, 2), '0'), '.').'% off'
                     : \App\Support\StoreCurrency::format((float) $product->discount_value, 0).' off')
                 : null;
+            $productImages = $product->images->isNotEmpty()
+                ? $product->images
+                : collect([(object) ['image_path' => 'admin-theme/assets/images/product-1.png']]);
+            $firstImage = $productImages->first();
+            $stockLimit = $product->inventory?->inventory_mode === 'internal'
+                ? max(1, min(99, (int) $product->inventory?->stock_quantity))
+                : 99;
         @endphp
         <section class="container-fluid px-3 px-lg-4 py-3">
             <nav class="sf-breadcrumbs">
@@ -27,17 +34,64 @@
             </nav>
             <div class="sf-product-detail">
                 <div class="sf-gallery">
-                    <div class="sf-gallery-main">
-                        <img src="{{ $product->images->first() ? asset($product->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $product->product_name }}">
-                    </div>
-                    <div class="sf-gallery-thumbs">
-                        @foreach ($product->images as $image)
-                            <img src="{{ asset($image->image_path) }}" alt="{{ $product->product_name }}">
+                    <div class="sf-gallery-thumbs" aria-label="Product images">
+                        @foreach ($productImages as $index => $image)
+                            <button
+                                type="button"
+                                class="sf-gallery-thumb js-gallery-thumb {{ $loop->first ? 'is-active' : '' }}"
+                                data-gallery-image="{{ asset($image->image_path) }}"
+                                aria-label="View image {{ $index + 1 }} of {{ $productImages->count() }}"
+                                aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
+                            >
+                                <img src="{{ asset($image->image_path) }}" alt="{{ $product->product_name }} thumbnail {{ $index + 1 }}">
+                            </button>
                         @endforeach
+                    </div>
+                    <div class="sf-gallery-main">
+                        <button type="button" class="sf-gallery-nav sf-gallery-nav-prev js-gallery-nav" data-direction="-1" aria-label="Previous product image">
+                            <i class="ti ti-chevron-left"></i>
+                        </button>
+                        <img class="js-gallery-main-image" src="{{ asset($firstImage->image_path) }}" alt="{{ $product->product_name }}">
+                        <button type="button" class="sf-gallery-nav sf-gallery-nav-next js-gallery-nav" data-direction="1" aria-label="Next product image">
+                            <i class="ti ti-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="sf-product-summary">
-                    <h1 class="h2 fw-bold">{{ $product->product_name }}</h1>
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <h1 class="h2 fw-bold">{{ $product->product_name }}</h1>
+                        @if (!empty($wishlistAvailable))
+                            @auth
+                                @if (auth()->user()->role === 'customer')
+                                    <form method="POST" action="{{ $isWishlisted ? route('storefront.wishlist.destroy', $product) : route('storefront.wishlist.store', $product) }}">
+                                        @csrf
+                                        @if ($isWishlisted)
+                                            @method('DELETE')
+                                        @endif
+                                        <button type="submit" class="sf-wishlist-btn {{ $isWishlisted ? 'is-active' : '' }}" aria-label="{{ $isWishlisted ? 'Remove from wishlist' : 'Add to wishlist' }}">
+                                            <i class="ti {{ $isWishlisted ? 'ti-heart-filled' : 'ti-heart' }}"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            @else
+                                <a href="{{ route('storefront.login') }}" class="sf-wishlist-btn" aria-label="Login to add to wishlist">
+                                    <i class="ti ti-heart"></i>
+                                </a>
+                            @endauth
+                        @elseif (app()->environment('local'))
+                            @auth
+                                @if (auth()->user()->role === 'customer')
+                                    <button type="button" class="sf-wishlist-btn" disabled aria-label="Wishlist unavailable">
+                                        <i class="ti ti-heart"></i>
+                                    </button>
+                                @endif
+                            @else
+                                <a href="{{ route('storefront.login') }}" class="sf-wishlist-btn" aria-label="Login to add to wishlist">
+                                    <i class="ti ti-heart"></i>
+                                </a>
+                            @endauth
+                        @endif
+                    </div>
                     <div class="sf-rating-line mb-3">
                         <span class="sf-rating">4.3</span>
                         <span class="text-secondary small">Fast delivery ready</span>
@@ -63,8 +117,26 @@
                         <div class="sf-benefit">Quick add</div>
                     </div>
 
-                    <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart">
+                    <form method="POST" action="{{ route('storefront.cart.add', $product) }}" class="js-add-to-cart sf-product-actions">
                         @csrf
+                        <div class="sf-product-quantity" aria-label="Choose product quantity">
+                            <button type="button" class="sf-product-qty-btn js-product-qty" data-delta="-1" aria-label="Decrease quantity">
+                                <i class="ti ti-minus"></i>
+                            </button>
+                            <input
+                                type="number"
+                                name="quantity"
+                                class="sf-product-qty-input js-product-qty-input"
+                                value="1"
+                                min="1"
+                                max="{{ $stockLimit }}"
+                                inputmode="numeric"
+                                aria-label="Quantity"
+                            >
+                            <button type="button" class="sf-product-qty-btn js-product-qty" data-delta="1" aria-label="Increase quantity">
+                                <i class="ti ti-plus"></i>
+                            </button>
+                        </div>
                         <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4">Add to Cart</button>
                     </form>
                 </div>

@@ -137,6 +137,11 @@ class User extends Authenticatable
         return $this->hasMany(CustomerAddress::class, 'user_id');
     }
 
+    public function wishlists()
+    {
+        return $this->hasMany(CustomerWishlist::class, 'user_id');
+    }
+
     private static function abilityFromRoute(string $routeName, string $method): string
     {
         if (str_contains($routeName, '.toggle-status') || str_contains($routeName, '.read-all')) {

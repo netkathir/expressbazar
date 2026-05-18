@@ -28,6 +28,39 @@
                 </div>
                 <div class="col-12 col-xl-8">
                     <div class="sf-info-card mb-4">
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                            <h4 class="mb-0">Wishlist</h4>
+                            <a href="{{ route('user.home') }}" class="btn btn-outline-dark rounded-pill btn-sm">Browse products</a>
+                        </div>
+                        @if (($wishlistItems ?? collect())->isNotEmpty())
+                            <div class="sf-wishlist-grid">
+                                @foreach ($wishlistItems as $wishlistItem)
+                                    @php($wishlistProduct = $wishlistItem->product)
+                                    @continue(! $wishlistProduct)
+                                    @php($wishlistImage = $wishlistProduct->images->first())
+                                    <div class="sf-wishlist-card">
+                                        <a href="{{ route('storefront.product', $wishlistProduct) }}" class="sf-wishlist-image" aria-label="View {{ $wishlistProduct->product_name }}">
+                                            <img src="{{ $wishlistImage ? asset($wishlistImage->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $wishlistProduct->product_name }}">
+                                        </a>
+                                        <div class="sf-wishlist-copy">
+                                            <a href="{{ route('storefront.product', $wishlistProduct) }}" class="sf-wishlist-title">{{ $wishlistProduct->product_name }}</a>
+                                            <div class="small text-secondary">{{ $wishlistProduct->category?->category_name ?? 'Product' }}</div>
+                                            <div class="fw-semibold">{{ \App\Support\StoreCurrency::format((float) ($wishlistProduct->final_price ?: $wishlistProduct->price), 0) }}</div>
+                                        </div>
+                                        <form method="POST" action="{{ route('storefront.wishlist.destroy', $wishlistProduct) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Remove</button>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="sf-empty-state">No wishlist products yet.</div>
+                        @endif
+                    </div>
+
+                    <div class="sf-info-card mb-4">
                         <h4 class="mb-3">Recent orders</h4>
                         <div class="d-flex justify-content-end mb-3">
                             <a href="{{ route('storefront.orders.index') }}" class="btn btn-outline-dark rounded-pill btn-sm">View all orders</a>
