@@ -54,6 +54,21 @@
                         <h3 class="mb-3">Add Address</h3>
                         <form method="POST" action="{{ route('storefront.addresses.store') }}" class="row g-3 sf-address-form">
                             @csrf
+                            <div class="col-12">
+                                <label class="form-label">Search location</label>
+                                <div class="location-autocomplete-wrapper">
+                                    <input
+                                        type="search"
+                                        class="form-control js-address-location-search"
+                                        placeholder="Search postcode, city, zone or area"
+                                        value="{{ old('address_line_1', $addressPrefill['address_line_1'] ?? '') }}"
+                                        autocomplete="off"
+                                        role="combobox"
+                                        aria-expanded="false"
+                                    >
+                                    <div class="js-address-location-suggestion-box" role="listbox" hidden></div>
+                                </div>
+                            </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Label</label>
                                 <input type="text" name="label" class="form-control" placeholder="Home / Work" value="{{ old('label') }}">

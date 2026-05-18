@@ -49,24 +49,78 @@
         @if (!$isSearch)
             <section class="container-fluid px-3 px-lg-4 pt-0 sf-promo-showcase">
                 <div class="sf-promo-grid">
-                    <div class="sf-promo-card sf-promo-card-primary">
-                        <div class="sf-promo-copy">
-                            <h1>Your Daily<br>Essentials,<br><span>Delivered Fresh</span></h1>
-                            <p>Shop groceries, fruits, spices, and more with instant add-to-cart and fast delivery.</p>
-                            <div class="sf-promo-actions">
-                                <a href="#featured-sections" class="btn btn-dark rounded-pill px-4">Shop Now <i class="ti ti-arrow-right ms-1"></i></a>
-                                <button class="btn btn-outline-dark rounded-pill px-4 js-open-location" type="button">Set Location <i class="ti ti-map-pin ms-1"></i></button>
+                    <div class="sf-promo-card sf-promo-card-primary js-promo-slider" aria-label="Featured offers">
+                        <div class="sf-promo-slides">
+                            <div class="sf-promo-slide is-active" data-promo-slide>
+                                <div class="sf-promo-copy">
+                                    <span class="sf-promo-eyebrow">Daily Essentials</span>
+                                    <h1>Your Daily<br>Essentials,<br><span>Delivered Fresh</span></h1>
+                                    <p>Shop groceries, fruits, spices, and more with instant add-to-cart and fast delivery.</p>
+                                    <div class="sf-promo-actions">
+                                        <a href="#featured-sections" class="btn btn-dark rounded-pill px-4">Shop Now <i class="ti ti-arrow-right ms-1"></i></a>
+                                        <button class="btn btn-outline-dark rounded-pill px-4 js-open-location" type="button">Set Location <i class="ti ti-map-pin ms-1"></i></button>
+                                    </div>
+                                </div>
+                                <div class="sf-promo-visual" aria-hidden="true">
+                                    <div class="sf-promo-offer-frame">
+                                        <img src="{{ asset('sample-assets/banner/1560931223Oq6Ox.jpg') }}" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sf-promo-slide" data-promo-slide>
+                                <div class="sf-promo-copy">
+                                    <span class="sf-promo-eyebrow">Fresh Deals</span>
+                                    <h1>Fruits &amp;<br>Vegetables,<br><span>Big Savings</span></h1>
+                                    <p>Pick fresh produce for daily cooking with quick browsing and one-vendor checkout.</p>
+                                    <div class="sf-promo-actions">
+                                        <a href="#top-offers" class="btn btn-dark rounded-pill px-4">View Offers <i class="ti ti-arrow-right ms-1"></i></a>
+                                        <button class="btn btn-outline-dark rounded-pill px-4 js-open-location" type="button">Set Location <i class="ti ti-map-pin ms-1"></i></button>
+                                    </div>
+                                </div>
+                                <div class="sf-promo-visual" aria-hidden="true">
+                                    <div class="sf-promo-offer-frame">
+                                        <img src="{{ asset('sample-assets/banner/1562925151VT7ep.jpg') }}" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sf-promo-slide" data-promo-slide>
+                                <div class="sf-promo-copy">
+                                    <span class="sf-promo-eyebrow">Weekend Offer</span>
+                                    <h1>Stock Up<br>Pantry Picks,<br><span>Save More</span></h1>
+                                    <p>Find cooking essentials, snacks, and household favorites from nearby vendors.</p>
+                                    <div class="sf-promo-actions">
+                                        <a href="#featured-sections" class="btn btn-dark rounded-pill px-4">Shop Deals <i class="ti ti-arrow-right ms-1"></i></a>
+                                        <button class="btn btn-outline-dark rounded-pill px-4 js-open-location" type="button">Set Location <i class="ti ti-map-pin ms-1"></i></button>
+                                    </div>
+                                </div>
+                                <div class="sf-promo-visual" aria-hidden="true">
+                                    <div class="sf-promo-offer-frame">
+                                        <img src="{{ asset('sample-assets/banner/1562925306rlzPX.jpg') }}" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sf-promo-slide" data-promo-slide>
+                                <div class="sf-promo-copy">
+                                    <span class="sf-promo-eyebrow">Limited Discount</span>
+                                    <h1>Hot Offers<br>Near You,<br><span>Ready Fast</span></h1>
+                                    <p>Browse local offers by city, select your vendor, and keep checkout simple.</p>
+                                    <div class="sf-promo-actions">
+                                        <a href="#top-offers" class="btn btn-dark rounded-pill px-4">Explore Deals <i class="ti ti-arrow-right ms-1"></i></a>
+                                        <button class="btn btn-outline-dark rounded-pill px-4 js-open-location" type="button">Set Location <i class="ti ti-map-pin ms-1"></i></button>
+                                    </div>
+                                </div>
+                                <div class="sf-promo-visual" aria-hidden="true">
+                                    <div class="sf-promo-offer-frame">
+                                        <img src="{{ asset('sample-assets/banner/1563889380AxUAu.jpg') }}" alt="">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="sf-promo-visual" aria-hidden="true">
-                            <div class="sf-grocery-bag">
-                                <span class="sf-grocery-bag-handle"></span>
-                                <img class="sf-grocery-img sf-grocery-img-main" src="{{ asset('sample-assets/category/1561733592dgkGo.png') }}" alt="">
-                                <img class="sf-grocery-img sf-grocery-img-side" src="{{ asset('sample-assets/category/1561733849xc160.png') }}" alt="">
-                            </div>
-                        </div>
-                        <div class="sf-promo-dots" aria-hidden="true">
-                            <span class="is-active"></span><span></span><span></span><span></span>
+                        <div class="sf-promo-dots" role="tablist" aria-label="Choose featured offer">
+                            <button class="is-active" type="button" data-promo-dot aria-label="Show daily essentials offer"></button>
+                            <button type="button" data-promo-dot aria-label="Show fresh deals offer"></button>
+                            <button type="button" data-promo-dot aria-label="Show pantry offer"></button>
+                            <button type="button" data-promo-dot aria-label="Show local discount offer"></button>
                         </div>
                     </div>
 

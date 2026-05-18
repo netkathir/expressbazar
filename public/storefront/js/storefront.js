@@ -685,7 +685,7 @@ async function saveGooglePlaceLocation(place) {
     await saveLocationFormData(locationForm, formData);
 }
 
-window.initStorefrontLocationAutocomplete = function () {
+function initDeliveryLocationGoogleAutocomplete() {
     if (!locationSearch || isGoogleLocationAutocompleteReady || !window.google?.maps?.places?.Autocomplete) {
         return;
     }
@@ -704,7 +704,331 @@ window.initStorefrontLocationAutocomplete = function () {
             showLocationAlert(error?.message || uiMessage('api_error', 'Something went wrong. Please try again'));
         });
     });
+}
+
+window.initStorefrontLocationAutocomplete = function () {
+    initDeliveryLocationGoogleAutocomplete();
+    document.querySelectorAll('.sf-address-form').forEach((form) => {
+        if (typeof form.initGoogleAddressAutocomplete === 'function') {
+            form.initGoogleAddressAutocomplete();
+        }
+    });
 };
+
+function renderAddressLocationSuggestions(box, searchInput, items, activeIndex, options = {}) {
+    if (!box || !searchInput) {
+        return [];
+    }
+
+    const normalized = Array.isArray(items) ? items.filter((item) => item?.label) : [];
+
+    if (normalized.length === 0) {
+        const message = options.message || 'No locations found';
+        box.innerHTML = `<div class="autocomplete-empty">${escapeHtml(message)}</div>`;
+        box.hidden = false;
+        searchInput.setAttribute('aria-expanded', 'true');
+        searchInput.removeAttribute('aria-activedescendant');
+        return normalized;
+    }
+
+    const heading = options.heading
+        ? `<div class="autocomplete-heading">${escapeHtml(options.heading)}</div>`
+        : '';
+
+    box.innerHTML = `${heading}<div class="autocomplete-dropdown">${
+        normalized.map((item, index) => `
+            <button
+                type="button"
+                id="address-location-suggestion-${index}"
+                class="autocomplete-item${index === activeIndex ? ' is-active' : ''}"
+                role="option"
+                aria-selected="${index === activeIndex ? 'true' : 'false'}"
+                data-index="${index}"
+            >
+                <span class="autocomplete-main">${escapeHtml(item.label)}</span>
+                <span class="autocomplete-meta">
+                    <span>${escapeHtml(locationTypeLabel(item.type))}</span>
+                    ${item.meta ? `<span>${escapeHtml(item.meta)}</span>` : ''}
+                </span>
+            </button>
+        `).join('')
+    }</div>`;
+    box.hidden = false;
+    searchInput.setAttribute('aria-expanded', 'true');
+
+    if (activeIndex >= 0) {
+        searchInput.setAttribute('aria-activedescendant', `address-location-suggestion-${activeIndex}`);
+    } else {
+        searchInput.removeAttribute('aria-activedescendant');
+    }
+
+    return normalized;
+}
+
+function hideAddressLocationSuggestions(form) {
+    const box = form?.querySelector('.js-address-location-suggestion-box');
+    const searchInput = form?.querySelector('.js-address-location-search');
+
+    if (!box || !searchInput) {
+        return;
+    }
+
+    box.hidden = true;
+    box.innerHTML = '';
+    searchInput.setAttribute('aria-expanded', 'false');
+    searchInput.removeAttribute('aria-activedescendant');
+}
+
+function initAddressLocationAutocomplete(form) {
+    const searchInput = form.querySelector('.js-address-location-search');
+    const box = form.querySelector('.js-address-location-suggestion-box');
+    const countrySelect = form.querySelector('.js-country-select');
+    const citySelect = form.querySelector('.js-city-select');
+    const zoneSelect = form.querySelector('.js-zone-select');
+    const postcodeInput = form.querySelector('input[name="postcode"]');
+    const addressInput = form.querySelector('input[name="address_line_1"]');
+    let timer = null;
+    let items = [];
+    let activeIndex = -1;
+    let googleAddressAutocomplete = null;
+    let isGoogleAddressAutocompleteReady = false;
+
+    if (!searchInput || !box) {
+        return;
+    }
+
+    function setActiveAddressSuggestion(index) {
+        const buttons = [...box.querySelectorAll('.autocomplete-item')];
+        if (buttons.length === 0) {
+            activeIndex = -1;
+            searchInput.removeAttribute('aria-activedescendant');
+            return;
+        }
+
+        activeIndex = ((index % buttons.length) + buttons.length) % buttons.length;
+        buttons.forEach((button, buttonIndex) => {
+            const isActive = buttonIndex === activeIndex;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            if (isActive) {
+                searchInput.setAttribute('aria-activedescendant', button.id);
+            }
+        });
+    }
+
+    async function fetchAddressLocationSuggestions(keyword) {
+        if (!config.locationAutocompleteUrl) {
+            return [];
+        }
+
+        try {
+            const url = new URL(config.locationAutocompleteUrl, window.location.origin);
+            url.searchParams.set('keyword', keyword);
+            const payload = await fetchJson(url);
+            return payload.suggestions || [];
+        } catch (error) {
+            return null;
+        }
+    }
+
+    async function applyAddressLocationSuggestion(item, options = {}) {
+        if (!item) {
+            return;
+        }
+
+        if (!options.keepSearchValue) {
+            searchInput.value = item.label || '';
+        }
+        if (postcodeInput && item.postcode) {
+            postcodeInput.value = item.postcode;
+        }
+        if (addressInput && !options.keepAddressValue && (!addressInput.value.trim() || item.type === 'area')) {
+            addressInput.value = item.label || '';
+        }
+
+        if (countrySelect) {
+            countrySelect.value = item.country_id || '';
+        }
+        if (citySelect && item.country_id) {
+            await loadCities(item.country_id, item.city_id || null, citySelect);
+        } else if (citySelect && item.city_id) {
+            citySelect.value = item.city_id;
+        }
+        if (zoneSelect && item.city_id) {
+            await loadZones(item.city_id, item.zone_id || null, zoneSelect);
+        } else if (zoneSelect) {
+            zoneSelect.innerHTML = '<option value="">Optional exact zone</option>';
+        }
+
+        hideAddressLocationSuggestions(form);
+    }
+
+    async function selectAddressLocationSuggestion(item) {
+        await applyAddressLocationSuggestion(item);
+    }
+
+    async function resolveGooglePlaceAgainstStoreLocations(place, address, postcode) {
+        const city = googlePlaceComponent(place, 'locality')
+            || googlePlaceComponent(place, 'postal_town')
+            || googlePlaceComponent(place, 'administrative_area_level_2')
+            || googlePlaceComponent(place, 'administrative_area_level_1');
+        const keywords = [postcode, city, address]
+            .map((keyword) => String(keyword || '').trim())
+            .filter((keyword, index, list) => keyword.length >= 2 && list.indexOf(keyword) === index);
+
+        for (const keyword of keywords) {
+            const suggestions = await fetchAddressLocationSuggestions(keyword);
+            if (!Array.isArray(suggestions) || suggestions.length === 0) {
+                continue;
+            }
+
+            const normalizedPostcode = String(postcode || '').toLowerCase();
+            const normalizedCity = String(city || '').toLowerCase();
+            const match = suggestions.find((item) => normalizedPostcode && String(item.postcode || '').toLowerCase() === normalizedPostcode)
+                || suggestions.find((item) => normalizedCity && String(item.label || '').toLowerCase().includes(normalizedCity))
+                || suggestions[0];
+
+            await applyAddressLocationSuggestion(match, {
+                keepAddressValue: true,
+                keepSearchValue: true,
+            });
+            return;
+        }
+    }
+
+    async function applyGoogleAddressPlace(place) {
+        if (!place) {
+            return;
+        }
+
+        const address = place.formatted_address || place.name || searchInput.value.trim();
+        const postcode = googlePlacePostcode(place);
+
+        searchInput.value = address;
+        if (addressInput) {
+            addressInput.value = address;
+        }
+        if (postcodeInput) {
+            postcodeInput.value = postcode;
+        }
+
+        hideAddressLocationSuggestions(form);
+
+        if (!place.geometry) {
+            return;
+        }
+
+        await resolveGooglePlaceAgainstStoreLocations(place, address, postcode);
+    }
+
+    form.initGoogleAddressAutocomplete = function () {
+        if (isGoogleAddressAutocompleteReady || !window.google?.maps?.places?.Autocomplete) {
+            return;
+        }
+
+        googleAddressAutocomplete = new google.maps.places.Autocomplete(searchInput, {
+            types: ['address'],
+            fields: ['formatted_address', 'geometry', 'address_components', 'name'],
+        });
+
+        isGoogleAddressAutocompleteReady = true;
+        searchInput.dataset.googleAutocomplete = 'true';
+        searchInput.setAttribute('aria-haspopup', 'listbox');
+
+        googleAddressAutocomplete.addListener('place_changed', () => {
+            applyGoogleAddressPlace(googleAddressAutocomplete.getPlace()).catch(() => {});
+        });
+    };
+
+    form.initGoogleAddressAutocomplete();
+
+    searchInput.addEventListener('focus', () => {
+        if (isGoogleAddressAutocompleteReady) {
+            hideAddressLocationSuggestions(form);
+            return;
+        }
+
+        if (searchInput.value.trim().length < 2) {
+            renderAddressLocationSuggestions(box, searchInput, [], -1, { message: 'Search postcode, city, zone or area' });
+        }
+    });
+
+    searchInput.addEventListener('input', () => {
+        if (isGoogleAddressAutocompleteReady) {
+            hideAddressLocationSuggestions(form);
+            return;
+        }
+
+        const keyword = searchInput.value.trim();
+        window.clearTimeout(timer);
+
+        if (keyword.length < 2) {
+            items = renderAddressLocationSuggestions(box, searchInput, [], -1, { message: 'Search postcode, city, zone or area' });
+            activeIndex = -1;
+            return;
+        }
+
+        box.hidden = false;
+        box.innerHTML = '<div class="autocomplete-empty">Searching...</div>';
+        searchInput.setAttribute('aria-expanded', 'true');
+
+        timer = window.setTimeout(() => {
+            fetchAddressLocationSuggestions(keyword).then((suggestions) => {
+                if (Array.isArray(suggestions)) {
+                    items = renderAddressLocationSuggestions(box, searchInput, suggestions, -1);
+                } else {
+                    items = renderAddressLocationSuggestions(box, searchInput, [], -1, { message: 'Unable to fetch locations' });
+                }
+                activeIndex = -1;
+            });
+        }, 180);
+    });
+
+    searchInput.addEventListener('keydown', (event) => {
+        if (isGoogleAddressAutocompleteReady) {
+            return;
+        }
+
+        if (box.hidden) {
+            return;
+        }
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setActiveAddressSuggestion(activeIndex + 1);
+            return;
+        }
+
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setActiveAddressSuggestion(activeIndex - 1);
+            return;
+        }
+
+        if (event.key === 'Enter' && activeIndex >= 0) {
+            event.preventDefault();
+            selectAddressLocationSuggestion(items[activeIndex]);
+            return;
+        }
+
+        if (event.key === 'Escape') {
+            hideAddressLocationSuggestions(form);
+        }
+    });
+
+    box.addEventListener('mousedown', (event) => {
+        event.preventDefault();
+    });
+
+    box.addEventListener('click', (event) => {
+        const button = event.target.closest('.autocomplete-item');
+        if (!button) {
+            return;
+        }
+
+        selectAddressLocationSuggestion(items[Number(button.dataset.index || -1)]);
+    });
+}
 
 function notificationMessage(notification) {
     return notification?.message || notification?.data?.message || notification?.data?.title || 'Notification';
@@ -1628,11 +1952,74 @@ document.querySelectorAll('.js-country-select').forEach((select) => {
     });
 });
 
+document.querySelectorAll('.sf-address-form').forEach(initAddressLocationAutocomplete);
+
 document.querySelectorAll('.js-open-location').forEach((button) => {
     button.addEventListener('click', () => {
         syncLocationInputs(config.initialLocation);
         showLocationModal();
     });
+});
+
+document.querySelectorAll('.js-promo-slider').forEach((slider) => {
+    const slides = Array.from(slider.querySelectorAll('[data-promo-slide]'));
+    const dots = Array.from(slider.querySelectorAll('[data-promo-dot]'));
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains('is-active')));
+    let timer = null;
+
+    if (slides.length <= 1) {
+        return;
+    }
+
+    function setSlide(index) {
+        activeIndex = (index + slides.length) % slides.length;
+
+        slides.forEach((slide, slideIndex) => {
+            const isActive = slideIndex === activeIndex;
+            slide.classList.toggle('is-active', isActive);
+            slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        });
+
+        dots.forEach((dot, dotIndex) => {
+            const isActive = dotIndex === activeIndex;
+            dot.classList.toggle('is-active', isActive);
+            dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+    }
+
+    function stopSlider() {
+        if (timer) {
+            window.clearInterval(timer);
+            timer = null;
+        }
+    }
+
+    function startSlider() {
+        if (prefersReducedMotion || timer) {
+            return;
+        }
+
+        timer = window.setInterval(() => {
+            setSlide(activeIndex + 1);
+        }, 4500);
+    }
+
+    dots.forEach((dot, dotIndex) => {
+        dot.addEventListener('click', () => {
+            setSlide(dotIndex);
+            stopSlider();
+            startSlider();
+        });
+    });
+
+    slider.addEventListener('mouseenter', stopSlider);
+    slider.addEventListener('mouseleave', startSlider);
+    slider.addEventListener('focusin', stopSlider);
+    slider.addEventListener('focusout', startSlider);
+
+    setSlide(activeIndex);
+    startSlider();
 });
 
 document.querySelectorAll('.js-filter-input').forEach((input) => {
@@ -1720,6 +2107,7 @@ document.addEventListener('click', (event) => {
 
     if (!event.target.closest('.location-autocomplete-wrapper')) {
         hideLocationSuggestions();
+        document.querySelectorAll('.sf-address-form').forEach(hideAddressLocationSuggestions);
     }
 });
 
