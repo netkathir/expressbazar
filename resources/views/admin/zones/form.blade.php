@@ -16,7 +16,7 @@
                     @method('PUT')
                 @endif
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Country</label>
                     <select name="country_id" class="form-select" required data-country-select>
                         <option value="">Select country</option>
@@ -25,7 +25,13 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label">State</label>
+                    <select class="form-select" data-state-select data-selected-state="{{ old('state', $zone->city?->state) }}">
+                        <option value="">Select state</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">City</label>
                     <select name="city_id" class="form-select" required data-city-select data-selected-city="{{ old('city_id', $zone->city_id) }}">
                         <option value="">Select city</option>
@@ -34,7 +40,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Zone Name</label>
                     <input type="text" name="zone_name" value="{{ old('zone_name', $zone->zone_name) }}" class="form-control" required pattern="^(?=.*[A-Za-z0-9])[A-Za-z0-9 .'()\/-]+$">
                 </div>
@@ -73,11 +79,14 @@
             }
 
             const countrySelect = form.querySelector('[data-country-select]');
+            const stateSelect = form.querySelector('[data-state-select]');
             const citySelect = form.querySelector('[data-city-select]');
+            const selectedState = stateSelect?.dataset.selectedState || '';
             const selectedCity = citySelect?.dataset.selectedCity || '';
+            const states = @json($stateOptions);
             const cities = @json($cityOptions);
 
-            if (!countrySelect || !citySelect) {
+            if (!countrySelect || !stateSelect || !citySelect) {
                 return;
             }
 
@@ -88,7 +97,45 @@
                 citySelect.appendChild(option);
             }
 
-            function populateCities(countryId, cityId = '') {
+            function appendStatePlaceholder(text) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = text;
+                stateSelect.appendChild(option);
+            }
+
+            function populateStates(countryId, state = '') {
+                stateSelect.innerHTML = '';
+
+                if (!countryId) {
+                    appendStatePlaceholder('Select country first');
+                    stateSelect.value = '';
+                    stateSelect.disabled = true;
+                    return '';
+                }
+
+                const filteredStates = states.filter(function (item) {
+                    return item.country_id === countryId;
+                });
+
+                appendStatePlaceholder(filteredStates.length ? 'Select state' : 'No states available');
+
+                filteredStates.forEach(function (item) {
+                    const option = document.createElement('option');
+                    option.value = item.state;
+                    option.textContent = item.state;
+                    stateSelect.appendChild(option);
+                });
+
+                stateSelect.disabled = filteredStates.length === 0;
+                stateSelect.value = filteredStates.some(function (item) {
+                    return item.state === state;
+                }) ? state : '';
+
+                return stateSelect.value;
+            }
+
+            function populateCities(countryId, state = '', cityId = '') {
                 citySelect.innerHTML = '';
 
                 if (!countryId) {
@@ -99,7 +146,7 @@
                 }
 
                 const filteredCities = cities.filter(function (city) {
-                    return city.country_id === countryId;
+                    return city.country_id === countryId && (!state || city.state === state);
                 });
 
                 appendPlaceholder(filteredCities.length ? 'Select city' : 'No cities available');
@@ -117,10 +164,16 @@
                 }) ? cityId : '';
             }
 
-            populateCities(countrySelect.value, selectedCity);
+            const resolvedState = populateStates(countrySelect.value, selectedState);
+            populateCities(countrySelect.value, resolvedState, selectedCity);
 
             countrySelect.addEventListener('change', function () {
+                populateStates(countrySelect.value);
                 populateCities(countrySelect.value);
+            });
+
+            stateSelect.addEventListener('change', function () {
+                populateCities(countrySelect.value, stateSelect.value);
             });
         })();
     </script>

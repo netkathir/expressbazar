@@ -16,9 +16,11 @@
                 class="row g-3"
                 id="vendorForm"
                 data-dirty-check
+                data-state-url="{{ route('admin.vendors.states') }}"
                 data-city-url="{{ route('admin.vendors.cities') }}"
                 data-zone-url="{{ route('admin.vendors.zones') }}"
                 data-selected-country="{{ old('country_id', $vendor->country_id) }}"
+                data-selected-state="{{ old('state', $vendor->city?->state) }}"
                 data-selected-city="{{ old('city_id', $vendor->city_id) }}"
                 data-selected-zone="{{ old('region_zone_id', $vendor->region_zone_id) }}"
             >
@@ -121,6 +123,13 @@
                     </div>
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">State</label>
+                    <div class="select-field-placeholder-wrap">
+                        <select name="state" class="form-select" id="stateId" data-placeholder-target="state"></select>
+                        <span class="select-field-placeholder" data-select-placeholder>Select state</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">City <span class="text-danger">*</span></label>
                     <div class="select-field-placeholder-wrap">
                         <select name="city_id" class="form-select" required id="cityId" data-placeholder-target="city"></select>
@@ -166,16 +175,19 @@
                     (function () {
                         const form = document.getElementById('vendorForm');
                         const countrySelect = document.getElementById('countryId');
+                        const stateSelect = document.getElementById('stateId');
                         const citySelect = document.getElementById('cityId');
                         const zoneSelect = document.getElementById('zoneId');
 
-                        if (!form || !countrySelect || !citySelect || !zoneSelect) {
+                        if (!form || !countrySelect || !stateSelect || !citySelect || !zoneSelect) {
                             return;
                         }
 
+                        const stateUrl = form.dataset.stateUrl;
                         const cityUrl = form.dataset.cityUrl;
                         const zoneUrl = form.dataset.zoneUrl;
                         const selectedCountry = form.dataset.selectedCountry || '';
+                        const selectedState = form.dataset.selectedState || '';
                         const selectedCity = form.dataset.selectedCity || '';
                         const selectedZone = form.dataset.selectedZone || '';
 
@@ -206,7 +218,49 @@
                             }
                         };
 
-                        async function loadCities(countryId, cityId = '') {
+                        const hasStateChoices = () => Array.from(stateSelect.options).some((option) => option.value !== '');
+
+                        async function loadStates(countryId, state = '') {
+                            stateSelect.innerHTML = '';
+                            syncPlaceholder(stateSelect);
+
+                            if (!countryId) {
+                                return '';
+                            }
+
+                            const response = await fetch(`${stateUrl}?country_id=${encodeURIComponent(countryId)}`, {
+                                headers: { 'Accept': 'application/json' },
+                            });
+
+                            if (!response.ok) {
+                                return '';
+                            }
+
+                            const payload = await response.json();
+                            const states = payload.data || [];
+
+                            if (states.length !== 1) {
+                                stateSelect.appendChild(createPlaceholderOption('Select state'));
+                            }
+
+                            states.forEach((item) => {
+                                stateSelect.appendChild(createOption(item.state, item.state, item.state === state));
+                            });
+
+                            const resolvedState = state || (states.length === 1 ? states[0].state : '');
+                            if (resolvedState) {
+                                stateSelect.value = resolvedState;
+                            }
+
+                            if (!resolvedState && states.length > 1) {
+                                stateSelect.value = '';
+                            }
+
+                            syncPlaceholder(stateSelect);
+                            return resolvedState;
+                        }
+
+                        async function loadCities(countryId, state = '', cityId = '') {
                             citySelect.innerHTML = '';
                             zoneSelect.innerHTML = '';
                             syncPlaceholder(citySelect);
@@ -216,7 +270,7 @@
                                 return '';
                             }
 
-                            const response = await fetch(`${cityUrl}?country_id=${encodeURIComponent(countryId)}`, {
+                            const response = await fetch(`${cityUrl}?country_id=${encodeURIComponent(countryId)}&state=${encodeURIComponent(state)}`, {
                                 headers: { 'Accept': 'application/json' },
                             });
 
@@ -289,12 +343,29 @@
 
                         countrySelect.addEventListener('change', async () => {
                             const countryId = countrySelect.value;
+                            stateSelect.value = '';
                             citySelect.value = '';
                             zoneSelect.value = '';
                             syncPlaceholder(countrySelect);
+                            syncPlaceholder(stateSelect);
                             syncPlaceholder(citySelect);
                             syncPlaceholder(zoneSelect);
-                            const selectedCityId = await loadCities(countryId);
+                            const resolvedState = await loadStates(countryId);
+                            const selectedCityId = (!resolvedState && hasStateChoices()) ? '' : await loadCities(countryId, resolvedState);
+                            if (selectedCityId) {
+                                await loadZones(countryId, selectedCityId);
+                            }
+                        });
+
+                        stateSelect.addEventListener('change', async () => {
+                            const countryId = countrySelect.value;
+                            const state = stateSelect.value;
+                            citySelect.value = '';
+                            zoneSelect.value = '';
+                            syncPlaceholder(stateSelect);
+                            syncPlaceholder(citySelect);
+                            syncPlaceholder(zoneSelect);
+                            const selectedCityId = (!state && hasStateChoices()) ? '' : await loadCities(countryId, state);
                             if (selectedCityId) {
                                 await loadZones(countryId, selectedCityId);
                             }
@@ -323,13 +394,17 @@
                             syncPlaceholder(countrySelect);
 
                             if (initialCountry) {
-                                const initialCity = await loadCities(initialCountry, selectedCity);
+                                const initialState = await loadStates(initialCountry, selectedState);
+                                const initialCity = (!initialState && hasStateChoices()) ? '' : await loadCities(initialCountry, initialState, selectedCity);
                                 await loadZones(initialCountry, initialCity, selectedZone);
+                                syncPlaceholder(stateSelect);
                                 syncPlaceholder(citySelect);
                                 syncPlaceholder(zoneSelect);
                             } else {
+                                stateSelect.innerHTML = '';
                                 citySelect.innerHTML = '';
                                 zoneSelect.innerHTML = '';
+                                syncPlaceholder(stateSelect);
                                 syncPlaceholder(citySelect);
                                 syncPlaceholder(zoneSelect);
                             }

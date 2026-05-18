@@ -18,6 +18,7 @@ class RegionZoneController extends Controller
         $zones = RegionZone::query()
             ->with(['country', 'city'])
             ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+            ->when($request->filled('state'), fn ($query) => $query->whereHas('city', fn ($cityQuery) => $cityQuery->where('state', $request->string('state'))))
             ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
@@ -38,6 +39,8 @@ class RegionZoneController extends Controller
             'zones' => $zones,
             'countries' => Country::orderBy('country_name')->get(),
             'cities' => City::orderBy('city_name')->get(),
+            'stateOptions' => $this->stateOptions(),
+            'cityOptions' => $this->cityOptions(City::orderBy('city_name')->get()),
         ]);
     }
 
@@ -51,6 +54,7 @@ class RegionZoneController extends Controller
             'zone' => new RegionZone(),
             'countries' => Country::orderBy('country_name')->get(),
             'cities' => $cities,
+            'stateOptions' => $this->stateOptions(),
             'cityOptions' => $this->cityOptions($cities),
             'mode' => 'create',
         ]);
@@ -86,6 +90,7 @@ class RegionZoneController extends Controller
             'zone' => $zone,
             'countries' => Country::orderBy('country_name')->get(),
             'cities' => $cities,
+            'stateOptions' => $this->stateOptions(),
             'cityOptions' => $this->cityOptions($cities),
             'mode' => 'edit',
         ]);
@@ -160,7 +165,24 @@ class RegionZoneController extends Controller
         return $cities->map(fn (City $city) => [
             'id' => (string) $city->id,
             'country_id' => (string) $city->country_id,
+            'state' => (string) $city->state,
             'city_name' => $city->city_name,
         ])->values()->all();
+    }
+
+    private function stateOptions(): array
+    {
+        return City::query()
+            ->whereNotNull('state')
+            ->where('state', '!=', '')
+            ->orderBy('state')
+            ->get(['country_id', 'state'])
+            ->map(fn (City $city) => [
+                'country_id' => (string) $city->country_id,
+                'state' => $city->state,
+            ])
+            ->unique(fn (array $state) => $state['country_id'].'|'.mb_strtolower($state['state']))
+            ->values()
+            ->all();
     }
 }

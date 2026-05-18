@@ -17,6 +17,8 @@ class CityController extends Controller
             ->with('country')
             ->withCount('zones')
             ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+            ->when($request->filled('state'), fn ($query) => $query->where('state', $request->string('state')))
+            ->when($request->filled('city_id'), fn ($query) => $query->whereKey($request->integer('city_id')))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->string('search'));
                 $query->where(function ($subQuery) use ($search) {
@@ -35,6 +37,8 @@ class CityController extends Controller
             'activeMenu' => 'cities',
             'cities' => $cities,
             'countries' => Country::orderBy('country_name')->get(),
+            'stateOptions' => $this->stateOptions(),
+            'cityOptions' => $this->cityOptions(),
         ]);
     }
 
@@ -45,6 +49,8 @@ class CityController extends Controller
             'activeMenu' => 'cities',
             'city' => new City(),
             'countries' => Country::orderBy('country_name')->get(),
+            'stateOptions' => $this->stateOptions(),
+            'cityOptions' => $this->cityOptions(),
             'mode' => 'create',
         ]);
     }
@@ -56,12 +62,11 @@ class CityController extends Controller
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
 
-        $exists = City::where('country_id', $data['country_id'])
-            ->whereRaw('LOWER(city_name) = ?', [strtolower($data['city_name'])])
+        $exists = $this->cityDuplicateQuery($data)
             ->exists();
 
         if ($exists) {
-            return back()->withErrors(['city_name' => 'City must be unique within the same country.'])->withInput();
+            return back()->withErrors(['city_name' => 'City must be unique within the same country and state.'])->withInput();
         }
 
         City::create($data);
@@ -76,6 +81,8 @@ class CityController extends Controller
             'activeMenu' => 'cities',
             'city' => $city,
             'countries' => Country::orderBy('country_name')->get(),
+            'stateOptions' => $this->stateOptions(),
+            'cityOptions' => $this->cityOptions(),
             'mode' => 'edit',
         ]);
     }
@@ -84,13 +91,12 @@ class CityController extends Controller
     {
         $data = $this->validateCity($request);
 
-        $duplicate = City::where('country_id', $data['country_id'])
-            ->whereRaw('LOWER(city_name) = ?', [strtolower($data['city_name'])])
+        $duplicate = $this->cityDuplicateQuery($data)
             ->where('id', '!=', $city->id)
             ->exists();
 
         if ($duplicate) {
-            return back()->withErrors(['city_name' => 'City must be unique within the same country.'])->withInput();
+            return back()->withErrors(['city_name' => 'City must be unique within the same country and state.'])->withInput();
         }
 
         $data['updated_by'] = $request->user()?->id;
@@ -130,5 +136,52 @@ class CityController extends Controller
             'city_name.regex' => 'City name may contain only letters, spaces, apostrophes, dots, parentheses, and hyphens.',
             'city_code.regex' => 'City code may contain only letters, numbers, and hyphens.',
         ]);
+    }
+
+    private function cityDuplicateQuery(array $data)
+    {
+        $state = (string) ($data['state'] ?? '');
+
+        return City::query()
+            ->where('country_id', $data['country_id'])
+            ->when(
+                $state !== '',
+                fn ($query) => $query->whereRaw('LOWER(state) = ?', [mb_strtolower($state)]),
+                fn ($query) => $query->where(function ($stateQuery) {
+                    $stateQuery->whereNull('state')->orWhere('state', '');
+                })
+            )
+            ->whereRaw('LOWER(city_name) = ?', [mb_strtolower($data['city_name'])]);
+    }
+
+    private function stateOptions(): array
+    {
+        return City::query()
+            ->whereNotNull('state')
+            ->where('state', '!=', '')
+            ->orderBy('state')
+            ->get(['country_id', 'state'])
+            ->map(fn (City $city) => [
+                'country_id' => (string) $city->country_id,
+                'state' => $city->state,
+            ])
+            ->unique(fn (array $state) => $state['country_id'].'|'.mb_strtolower($state['state']))
+            ->values()
+            ->all();
+    }
+
+    private function cityOptions(): array
+    {
+        return City::query()
+            ->orderBy('city_name')
+            ->get(['id', 'country_id', 'state', 'city_name'])
+            ->map(fn (City $city) => [
+                'id' => (string) $city->id,
+                'country_id' => (string) $city->country_id,
+                'state' => (string) $city->state,
+                'city_name' => $city->city_name,
+            ])
+            ->values()
+            ->all();
     }
 }

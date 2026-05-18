@@ -351,6 +351,59 @@ textarea:-ms-input-placeholder {
     opacity: 1;
 }
 
+/* Show the category header beside the home category rail without changing rail scrolling. */
+.storefront-shell .sf-category-showcase {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(14px, 1.4vw, 24px);
+    margin-bottom: clamp(16px, 1.8vw, 28px);
+}
+
+.storefront-shell .sf-category-showcase .sf-category-strip-header {
+    display: flex !important;
+    flex: 0 0 clamp(150px, 13vw, 220px);
+    min-width: 0;
+    margin: 0;
+    padding-top: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.storefront-shell .sf-category-showcase .sf-category-strip-header h2 {
+    margin: 0;
+    font-size: clamp(1rem, .45vw + .95rem, 1.22rem);
+    line-height: 1.18;
+}
+
+.storefront-shell .sf-category-showcase .sf-category-strip-header p {
+    margin: 0;
+    font-size: .78rem;
+    line-height: 1.35;
+}
+
+.storefront-shell .sf-category-showcase .sf-category-strip-header a {
+    font-size: .78rem;
+    line-height: 1.2;
+}
+
+.storefront-shell .sf-category-showcase .sf-category-rail-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+    .storefront-shell .sf-category-showcase {
+        display: block;
+    }
+
+    .storefront-shell .sf-category-showcase .sf-category-strip-header {
+        margin-bottom: 10px;
+        padding-top: 0;
+    }
+}
+
 /* Compact the marked storefront header controls and category strip. */
 .storefront-shell {
     --sf-header-control-height: 38px;

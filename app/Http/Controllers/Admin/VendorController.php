@@ -35,6 +35,9 @@ class VendorController extends Controller
                 });
                 $this->prioritizePrefixSearch($query, ['vendor_name', 'email', 'phone'], $search);
             })
+            ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+            ->when($request->filled('state'), fn ($query) => $query->whereHas('city', fn ($cityQuery) => $cityQuery->where('state', $request->string('state'))))
+            ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
             ->when($request->filled('inventory_mode'), fn ($query) => $query->where('inventory_mode', $request->string('inventory_mode')))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest()
@@ -45,6 +48,9 @@ class VendorController extends Controller
             'title' => 'Vendor Master',
             'activeMenu' => 'vendors',
             'vendors' => $vendors,
+            'countries' => Country::orderBy('country_name')->get(),
+            'stateOptions' => $this->stateOptions(false),
+            'cityOptions' => $this->cityOptions(false),
         ]);
     }
 
@@ -139,16 +145,29 @@ class VendorController extends Controller
     {
         $data = $request->validate([
             'country_id' => ['required', 'exists:countries,id'],
+            'state' => ['nullable', 'string', 'max:255'],
         ]);
 
         $cities = City::query()
             ->where('country_id', $data['country_id'])
+            ->when(($data['state'] ?? '') !== '', fn ($query) => $query->where('state', $data['state']))
             ->where('status', 'active')
             ->orderBy('city_name')
-            ->get(['id', 'city_name']);
+            ->get(['id', 'city_name', 'state']);
 
         return response()->json([
             'data' => $cities,
+        ]);
+    }
+
+    public function states(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'country_id' => ['required', 'exists:countries,id'],
+        ]);
+
+        return response()->json([
+            'data' => $this->stateOptions(true, (int) $data['country_id']),
         ]);
     }
 
@@ -310,5 +329,39 @@ class VendorController extends Controller
         }
 
         return $message;
+    }
+
+    private function stateOptions(bool $activeOnly = true, ?int $countryId = null): array
+    {
+        return City::query()
+            ->when($activeOnly, fn ($query) => $query->where('status', 'active'))
+            ->when($countryId, fn ($query) => $query->where('country_id', $countryId))
+            ->whereNotNull('state')
+            ->where('state', '!=', '')
+            ->orderBy('state')
+            ->get(['country_id', 'state'])
+            ->map(fn (City $city) => [
+                'country_id' => (string) $city->country_id,
+                'state' => $city->state,
+            ])
+            ->unique(fn (array $state) => $state['country_id'].'|'.mb_strtolower($state['state']))
+            ->values()
+            ->all();
+    }
+
+    private function cityOptions(bool $activeOnly = true): array
+    {
+        return City::query()
+            ->when($activeOnly, fn ($query) => $query->where('status', 'active'))
+            ->orderBy('city_name')
+            ->get(['id', 'country_id', 'state', 'city_name'])
+            ->map(fn (City $city) => [
+                'id' => (string) $city->id,
+                'country_id' => (string) $city->country_id,
+                'state' => (string) $city->state,
+                'city_name' => $city->city_name,
+            ])
+            ->values()
+            ->all();
     }
 }

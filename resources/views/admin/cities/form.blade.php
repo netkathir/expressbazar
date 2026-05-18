@@ -18,7 +18,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Country</label>
-                    <select name="country_id" class="form-select" required>
+                    <select name="country_id" class="form-select" required data-country-select>
                         <option value="">Select country</option>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected((string) old('country_id', $city->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
@@ -27,11 +27,19 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">State / Province</label>
-                    <input type="text" name="state" value="{{ old('state', $city->state) }}" class="form-control" pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$">
+                    <select class="form-select" data-state-select data-selected-state="{{ old('state', $city->state) }}">
+                        <option value="">Select state</option>
+                    </select>
+                    <input type="text" value="{{ old('state', $city->state) }}" class="form-control mt-2 d-none" pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$" placeholder="Enter state / province" data-state-custom>
+                    <input type="hidden" name="state" value="{{ old('state', $city->state) }}" data-state-value>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">City Name</label>
-                    <input type="text" name="city_name" value="{{ old('city_name', $city->city_name) }}" class="form-control" required pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$">
+                    <select class="form-select" required data-city-select data-selected-city="{{ old('city_name', $city->city_name) }}">
+                        <option value="">Select city</option>
+                    </select>
+                    <input type="text" value="{{ old('city_name', $city->city_name) }}" class="form-control mt-2 d-none" required pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$" placeholder="Enter city name" data-city-custom>
+                    <input type="hidden" name="city_name" value="{{ old('city_name', $city->city_name) }}" data-city-value>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">City Code</label>
@@ -51,3 +59,116 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const countrySelect = document.querySelector('[data-country-select]');
+            const stateSelect = document.querySelector('[data-state-select]');
+            const stateCustom = document.querySelector('[data-state-custom]');
+            const stateValue = document.querySelector('[data-state-value]');
+            const citySelect = document.querySelector('[data-city-select]');
+            const cityCustom = document.querySelector('[data-city-custom]');
+            const cityValue = document.querySelector('[data-city-value]');
+            const states = @json($stateOptions);
+            const cities = @json($cityOptions);
+            const customValue = '__custom__';
+
+            if (!countrySelect || !stateSelect || !stateCustom || !stateValue || !citySelect || !cityCustom || !cityValue) {
+                return;
+            }
+
+            function addOption(select, value, label) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                select.appendChild(option);
+            }
+
+            function optionExists(select, value) {
+                return Array.from(select.options).some((option) => option.value === value);
+            }
+
+            function setCustomInput(input, visible, required) {
+                input.classList.toggle('d-none', !visible);
+                input.required = required;
+            }
+
+            function syncStateValue() {
+                if (stateSelect.value === customValue) {
+                    stateValue.value = stateCustom.value;
+                    setCustomInput(stateCustom, true, false);
+                    return;
+                }
+
+                stateValue.value = stateSelect.value;
+                stateCustom.value = stateSelect.value;
+                setCustomInput(stateCustom, false, false);
+            }
+
+            function syncCityValue() {
+                if (citySelect.value === customValue) {
+                    cityValue.value = cityCustom.value;
+                    setCustomInput(cityCustom, true, true);
+                    return;
+                }
+
+                cityValue.value = citySelect.value;
+                cityCustom.value = citySelect.value;
+                setCustomInput(cityCustom, false, false);
+            }
+
+            function populateStates(selectedState = '') {
+                stateSelect.innerHTML = '';
+                addOption(stateSelect, '', 'Select state');
+
+                states
+                    .filter((item) => !countrySelect.value || item.country_id === countrySelect.value)
+                    .forEach((item) => addOption(stateSelect, item.state, item.state));
+
+                addOption(stateSelect, customValue, 'Add new state');
+
+                stateSelect.value = optionExists(stateSelect, selectedState) ? selectedState : (selectedState ? customValue : '');
+                stateCustom.value = selectedState || '';
+                syncStateValue();
+            }
+
+            function populateCities(selectedCity = '') {
+                const selectedState = stateValue.value;
+                citySelect.innerHTML = '';
+                addOption(citySelect, '', 'Select city');
+
+                cities
+                    .filter((city) => (!countrySelect.value || city.country_id === countrySelect.value) && (!selectedState || city.state === selectedState))
+                    .forEach((city) => addOption(citySelect, city.city_name, city.city_name));
+
+                addOption(citySelect, customValue, 'Add new city');
+
+                citySelect.value = optionExists(citySelect, selectedCity) ? selectedCity : (selectedCity ? customValue : '');
+                cityCustom.value = selectedCity || '';
+                syncCityValue();
+            }
+
+            populateStates(stateSelect.dataset.selectedState || '');
+            populateCities(citySelect.dataset.selectedCity || '');
+
+            countrySelect.addEventListener('change', function () {
+                populateStates();
+                populateCities();
+            });
+
+            stateSelect.addEventListener('change', function () {
+                syncStateValue();
+                populateCities();
+            });
+
+            stateCustom.addEventListener('input', function () {
+                syncStateValue();
+                populateCities(cityValue.value);
+            });
+
+            citySelect.addEventListener('change', syncCityValue);
+            cityCustom.addEventListener('input', syncCityValue);
+        })();
+    </script>
+@endpush

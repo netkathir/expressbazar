@@ -496,7 +496,7 @@ class CustomerAccountController extends Controller
             'is_default' => $request->boolean('is_default'),
         ]);
 
-        return $this->redirectAfterAddressChange('Address updated successfully.');
+        return $this->redirectAfterAddressChange('Address updated successfully.', $address);
     }
 
     public function destroyAddress(Request $request, CustomerAddress $address)
@@ -544,9 +544,13 @@ class CustomerAccountController extends Controller
         return back()->with('success', 'Product removed from wishlist.');
     }
 
-    private function redirectAfterAddressChange(string $message)
+    private function redirectAfterAddressChange(string $message, ?CustomerAddress $address = null)
     {
-        return redirect()->to(url('/account'))->with('success', $message);
+        if ($address) {
+            return redirect()->route('storefront.addresses.edit', $address)->with('success', $message);
+        }
+
+        return redirect()->route('storefront.addresses.index')->with('success', $message);
     }
 
     private function generateTransactionId(): string
