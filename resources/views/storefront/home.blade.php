@@ -45,6 +45,61 @@
                 </div>
             </section>
         @endif
+
+        @if (!$isSearch)
+            <section class="container-fluid px-3 px-lg-4 pt-0 sf-promo-showcase">
+                <div class="sf-promo-grid">
+                    <div class="sf-promo-card sf-promo-card-primary">
+                        <div class="sf-promo-copy">
+                            <h1>Your Daily<br>Essentials,<br><span>Delivered Fresh</span></h1>
+                            <p>Shop groceries, fruits, spices, and more with instant add-to-cart and fast delivery.</p>
+                            <div class="sf-promo-actions">
+                                <a href="#featured-sections" class="btn btn-dark rounded-pill px-4">Shop Now <i class="ti ti-arrow-right ms-1"></i></a>
+                                <button class="btn btn-outline-dark rounded-pill px-4 js-open-location" type="button">Set Location <i class="ti ti-map-pin ms-1"></i></button>
+                            </div>
+                        </div>
+                        <div class="sf-promo-visual" aria-hidden="true">
+                            <div class="sf-grocery-bag">
+                                <span class="sf-grocery-bag-handle"></span>
+                                <img class="sf-grocery-img sf-grocery-img-main" src="{{ asset('sample-assets/category/1561733592dgkGo.png') }}" alt="">
+                                <img class="sf-grocery-img sf-grocery-img-side" src="{{ asset('sample-assets/category/1561733849xc160.png') }}" alt="">
+                            </div>
+                        </div>
+                        <div class="sf-promo-dots" aria-hidden="true">
+                            <span class="is-active"></span><span></span><span></span><span></span>
+                        </div>
+                    </div>
+
+                    <div class="sf-promo-card sf-promo-card-deal">
+                        <div class="sf-promo-copy">
+                            <span class="sf-promo-kicker">Best Deals For You</span>
+                            <h2>Fresh essentials,<br>big savings!</h2>
+                            <div class="sf-promo-benefits">
+                                <span><i class="ti ti-map-pin"></i>City Level<br>Browsing</span>
+                                <span><i class="ti ti-map-check"></i>Zone Level<br>Checkout</span>
+                                <span><i class="ti ti-basket"></i>One Vendor<br>Cart</span>
+                            </div>
+                            <a href="#top-offers" class="btn btn-warning rounded-pill px-4">Explore Deals <i class="ti ti-arrow-right ms-1"></i></a>
+                        </div>
+                        <div class="sf-deal-basket" aria-hidden="true">
+                            <div class="sf-deal-product-card">
+                                <img src="{{ asset('sample-assets/item/1560860289I4Gx1.jpg') }}" alt="">
+                            </div>
+                            <strong>UP TO<br>30%<br>OFF</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sf-service-strip">
+                    <div><i class="ti ti-leaf"></i><strong>Fresh &amp; Quality</strong><span>100% quality assured</span></div>
+                    <div><i class="ti ti-category"></i><strong>Wide Range</strong><span>1000+ products</span></div>
+                    <div><i class="ti ti-truck-delivery"></i><strong>Fast Delivery</strong><span>Quick &amp; reliable</span></div>
+                    <div><i class="ti ti-shield-check"></i><strong>Secure Payments</strong><span>100% secure checkout</span></div>
+                    <div><i class="ti ti-refresh"></i><strong>Easy Returns</strong><span>Hassle-free returns</span></div>
+                </div>
+            </section>
+        @endif
+
         <section class="container-fluid px-3 px-lg-4 pt-0 sf-category-showcase">
             <div class="sf-category-strip-header">
                 <div>
@@ -102,32 +157,6 @@
                     </button>
                 </div>
             </section>
-        @endif
-
-        @if (!$isSearch)
-        <section class="container-fluid px-3 px-lg-4 mt-3">
-            <div class="sf-hero-grid">
-                <div class="sf-hero-card sf-hero-card-soft">
-                    <span class="sf-kicker">All new Express Bazaar experience</span>
-                    <h1>Quick grocery shopping with instant add-to-cart flow.</h1>
-                    <p>Browse by city now, then lock the exact delivery location only when you need checkout validation.</p>
-                    <div class="d-flex flex-wrap gap-2 mt-4">
-                        <button class="btn btn-dark rounded-pill px-4 js-open-location" type="button">Set location</button>
-                        <a href="#featured-sections" class="btn btn-outline-dark rounded-pill px-4">Shop now</a>
-                    </div>
-                </div>
-                <div class="sf-hero-card sf-hero-card-dark">
-                    <span class="sf-kicker text-white-50">Fast delivery</span>
-                    <h2>Fresh essentials, daily deals and trending products.</h2>
-                    <p>Product discovery stays open, while the cart stays locked to one vendor at a time.</p>
-                    <div class="sf-hero-pills">
-                        <span>City level browsing</span>
-                        <span>Zone level checkout</span>
-                        <span>One vendor cart</span>
-                    </div>
-                </div>
-            </div>
-        </section>
         @endif
 
         @if (!$isSearch && $showNoPincodeData)

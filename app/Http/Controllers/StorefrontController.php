@@ -18,7 +18,9 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\RegionZone;
 use App\Models\Subcategory;
+use App\Models\SystemConfig;
 use App\Models\Vendor;
+use App\Mail\GenericTemplateMail;
 use App\Services\InventoryService;
 use App\Services\OrderLifecycleService;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +28,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -226,6 +229,8 @@ class StorefrontController extends Controller
             'ip' => $request->ip(),
         ]);
 
+        $this->sendContactInquiryEmails($data, $contactInquiry, $request->ip());
+
         return back()->with('success', 'Thank you for contacting us. We will get back to you soon.');
     }
 
@@ -290,24 +295,21 @@ class StorefrontController extends Controller
             ->with(['country', 'city', 'zone'])
             ->findOrFail($data['address_id']);
 
-        if (! $address->zone_id || ! $address->zone || $address->zone->status !== 'active' || ! $address->zone->delivery_available) {
+        $vendorId = $this->cartVendorId();
+        if (! $vendorId) {
+            return redirect()->route('storefront.cart')->with('error', 'Please add items to your cart first.');
+        }
+
+        $checkoutLocation = $this->checkoutLocationForAddress($address, $vendorId);
+
+        if (! $checkoutLocation) {
             throw ValidationException::withMessages([
                 'address_id' => 'Delivery is not available in your area.',
             ]);
         }
 
-        $deliveryCharge = $this->deliveryChargeForZone($address->zone_id) ?? 0.0;
-
-        $location = [
-            'country_id' => (int) $address->country_id,
-            'city_id' => (int) $address->city_id,
-            'zone_id' => (int) $address->zone_id,
-        ];
-
-        $vendorId = $this->cartVendorId();
-        if (! $vendorId) {
-            return redirect()->route('storefront.cart')->with('error', 'Please add items to your cart first.');
-        }
+        $deliveryCharge = $checkoutLocation['delivery_charge'];
+        $location = $checkoutLocation['location'];
 
         $orderItems = [];
         $itemTotal = 0.0;
@@ -1801,6 +1803,138 @@ class StorefrontController extends Controller
         }
 
         return (float) $config->delivery_charge;
+    }
+
+    private function sendContactInquiryEmails(array $data, ?ContactInquiry $contactInquiry, ?string $ipAddress): void
+    {
+        $inquiryReference = $contactInquiry?->id ? '#'.$contactInquiry->id : 'new submission';
+        $receiverEmail = $this->contactReceiverEmail();
+
+        $senderMessage = implode("\n", [
+            'Hi '.$data['name'].',',
+            '',
+            'Thank you for contacting '.config('app.name', 'Express Bazaar').'. We have received your message and our team will get back to you soon.',
+            '',
+            'Reference: '.$inquiryReference,
+            'Subject: '.$data['subject'],
+            '',
+            'Your message:',
+            $data['message'],
+        ]);
+
+        $receiverMessage = implode("\n", array_filter([
+            'A new contact inquiry was submitted from the storefront.',
+            '',
+            'Reference: '.$inquiryReference,
+            'Name: '.$data['name'],
+            'Email: '.$data['email'],
+            ! empty($data['phone']) ? 'Phone: '.$data['phone'] : null,
+            'Subject: '.$data['subject'],
+            'IP Address: '.($ipAddress ?: '-'),
+            '',
+            'Message:',
+            $data['message'],
+        ], fn ($line) => $line !== null));
+
+        try {
+            Mail::to($data['email'])->send(new GenericTemplateMail(
+                'We received your message - '.config('app.name', 'Express Bazaar'),
+                $senderMessage
+            ));
+        } catch (Throwable $exception) {
+            Log::error('Contact inquiry sender email failed.', [
+                'contact_inquiry_id' => $contactInquiry?->id,
+                'email' => $data['email'],
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        if (! $receiverEmail) {
+            Log::warning('Contact inquiry receiver email skipped because no valid receiver address is configured.', [
+                'contact_inquiry_id' => $contactInquiry?->id,
+            ]);
+
+            return;
+        }
+
+        try {
+            Mail::to($receiverEmail)->send(new GenericTemplateMail(
+                'New contact inquiry: '.$data['subject'],
+                $receiverMessage
+            ));
+        } catch (Throwable $exception) {
+            Log::error('Contact inquiry receiver email failed.', [
+                'contact_inquiry_id' => $contactInquiry?->id,
+                'email' => $receiverEmail,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function contactReceiverEmail(): ?string
+    {
+        $supportEmail = null;
+
+        if (Schema::hasTable('system_config')) {
+            $supportEmail = SystemConfig::query()
+                ->where('config_key', 'support_email')
+                ->value('config_value');
+        }
+
+        $email = $supportEmail ?: config('mail.from.address');
+
+        return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+    }
+
+    private function checkoutLocationForAddress(CustomerAddress $address, int $vendorId): ?array
+    {
+        if ($address->zone_id) {
+            $zone = $address->zone ?: RegionZone::find($address->zone_id);
+
+            if (! $zone || $zone->status !== 'active' || ! $zone->delivery_available) {
+                return null;
+            }
+
+            return [
+                'delivery_charge' => $this->deliveryChargeForZone($address->zone_id) ?? 0.0,
+                'location' => [
+                    'country_id' => (int) $address->country_id,
+                    'city_id' => (int) $address->city_id,
+                    'zone_id' => (int) $address->zone_id,
+                ],
+            ];
+        }
+
+        $postcode = $this->normalizedPostcode((string) $address->postcode);
+
+        if ($postcode === '') {
+            return null;
+        }
+
+        $resolvedLocation = $this->resolvePostcodeLocation($postcode);
+
+        if (! $resolvedLocation) {
+            return null;
+        }
+
+        if ((int) $resolvedLocation['country_id'] !== (int) $address->country_id || (int) $resolvedLocation['city_id'] !== (int) $address->city_id) {
+            return null;
+        }
+
+        if (! $this->vendorIdsForPincode($postcode)->contains($vendorId)) {
+            return null;
+        }
+
+        return [
+            'delivery_charge' => ! empty($resolvedLocation['zone_id'])
+                ? $this->deliveryChargeForZone((int) $resolvedLocation['zone_id']) ?? 0.0
+                : 0.0,
+            'location' => [
+                'country_id' => (int) $resolvedLocation['country_id'],
+                'city_id' => (int) $resolvedLocation['city_id'],
+                'zone_id' => ! empty($resolvedLocation['zone_id']) ? (int) $resolvedLocation['zone_id'] : null,
+            ],
+        ];
     }
 
     private function generateOrderNumber(): string
