@@ -153,6 +153,151 @@ textarea:-ms-input-placeholder {
     line-height: 1.35;
 }
 
+.storefront-shell .sf-promo-nav {
+    display: none;
+}
+
+@media (max-width: 575.98px) {
+    .storefront-shell .sf-promo-showcase {
+        margin-top: 4px;
+        margin-bottom: 10px;
+    }
+
+    .storefront-shell .sf-promo-grid {
+        gap: 10px;
+    }
+
+    .storefront-shell .sf-promo-card {
+        border-radius: 14px;
+    }
+
+    .storefront-shell .sf-promo-card-primary {
+        touch-action: pan-y;
+    }
+
+    .storefront-shell .sf-promo-copy {
+        padding: 16px;
+    }
+
+    .storefront-shell .sf-promo-eyebrow,
+    .storefront-shell .sf-promo-kicker {
+        margin-bottom: 6px;
+        font-size: .64rem;
+    }
+
+    .storefront-shell .sf-promo-card h1 {
+        font-size: 1.55rem;
+    }
+
+    .storefront-shell .sf-promo-card h2 {
+        font-size: 1.38rem;
+    }
+
+    .storefront-shell .sf-promo-card p {
+        margin-top: 8px;
+        font-size: .82rem;
+    }
+
+    .storefront-shell .sf-promo-actions {
+        margin-top: 12px;
+    }
+
+    .storefront-shell .sf-promo-actions .btn,
+    .storefront-shell .sf-promo-card-deal .btn {
+        min-height: 36px;
+        padding-block: 7px;
+        font-size: .84rem;
+    }
+
+    .storefront-shell .sf-promo-visual,
+    .storefront-shell .sf-deal-basket {
+        padding: 0 16px 18px;
+    }
+
+    .storefront-shell .sf-promo-offer-frame {
+        width: min(100%, 240px);
+        border-radius: 14px;
+    }
+
+    .storefront-shell .sf-promo-dots {
+        left: 50%;
+        bottom: 10px;
+        transform: translateX(-50%);
+    }
+
+    .storefront-shell .sf-promo-nav {
+        position: absolute;
+        top: 50%;
+        z-index: 4;
+        display: inline-flex;
+        width: 34px;
+        height: 34px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(4, 120, 87, .16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .92);
+        color: #047857;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .14);
+        transform: translateY(-50%);
+    }
+
+    .storefront-shell .sf-promo-nav-prev {
+        left: 10px;
+    }
+
+    .storefront-shell .sf-promo-nav-next {
+        right: 10px;
+    }
+
+    .storefront-shell .sf-deal-product-card {
+        width: min(100%, 190px);
+        padding: 10px;
+        border-radius: 14px;
+    }
+
+    .storefront-shell .sf-deal-basket strong {
+        width: 48px;
+        height: 48px;
+        top: 4px;
+        right: 18px;
+        font-size: .54rem;
+    }
+
+    .storefront-shell .sf-promo-benefits {
+        margin: 10px 0;
+        gap: 6px;
+    }
+
+    .storefront-shell .sf-promo-benefits i {
+        width: 26px;
+        height: 26px;
+        margin-bottom: 4px;
+    }
+
+    .storefront-shell .sf-banner-grid {
+        gap: 10px;
+    }
+
+    .storefront-shell .sf-banner-card {
+        min-height: 118px;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .storefront-shell .sf-banner-copy h2 {
+        margin-top: 5px;
+        margin-bottom: 4px;
+        font-size: .92rem;
+    }
+
+    .storefront-shell .sf-banner-copy p {
+        margin-top: 4px;
+        font-size: .78rem;
+        line-height: 1.25;
+    }
+}
+
 /* Keep auth logos even across customer login, create account, and admin login. */
 .storefront-shell .login-logo,
 .admin-shell .auth-panel-logo {
@@ -457,7 +602,14 @@ textarea:-ms-input-placeholder {
 }
 
 .storefront-shell .sf-category-rail-wrap .sf-chip-image {
-    background: var(--sf-surface);
+    background:
+        radial-gradient(circle at 24% 20%, rgba(255, 170, 35, .34), transparent 36%),
+        radial-gradient(circle at 78% 82%, rgba(255, 116, 24, .22), transparent 40%),
+        linear-gradient(145deg, #fff8e8 0%, #ffe7c8 100%);
+    border-color: rgba(255, 132, 24, .22);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .75),
+        0 10px 24px rgba(255, 132, 24, .12);
 }
 
 @media (min-width: 992px) {

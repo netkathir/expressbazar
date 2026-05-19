@@ -28,7 +28,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2 d-none" aria-hidden="true">
                     <label class="form-label">State</label>
                     <select name="state" class="form-select" data-state-filter data-selected-state="{{ request('state') }}">
                         <option value="">All</option>
@@ -63,7 +63,6 @@
                     <tr>
                         <th>City Name</th>
                         <th>Country</th>
-                        <th>State</th>
                         <th>Code</th>
                         <th>Status</th>
                         <th>Zones</th>
@@ -75,7 +74,6 @@
                         <tr>
                             <td class="fw-semibold">{{ $city->city_name }}</td>
                             <td>{{ $city->country?->country_name }}</td>
-                            <td>{{ $city->state ?: '-' }}</td>
                             <td>{{ $city->city_code ?: '-' }}</td>
                             <td><span class="badge text-bg-{{ $city->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($city->status) }}</span></td>
                             <td>{{ $city->zones_count }}</td>
@@ -98,7 +96,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-secondary py-5">No cities found.</td>
+                            <td colspan="6" class="text-center text-secondary py-5">No cities found.</td>
                         </tr>
                     @endforelse
                 </tbody>

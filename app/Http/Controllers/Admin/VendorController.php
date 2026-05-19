@@ -183,7 +183,7 @@ class VendorController extends Controller
             ->where('city_id', $data['city_id'])
             ->where('status', 'active')
             ->orderBy('zone_name')
-            ->get(['id', 'zone_name']);
+            ->get(['id', 'zone_name', 'zone_code']);
 
         return response()->json([
             'data' => $zones,

@@ -1964,9 +1964,13 @@ document.querySelectorAll('.js-open-location').forEach((button) => {
 document.querySelectorAll('.js-promo-slider').forEach((slider) => {
     const slides = Array.from(slider.querySelectorAll('[data-promo-slide]'));
     const dots = Array.from(slider.querySelectorAll('[data-promo-dot]'));
+    const prevButton = slider.querySelector('[data-promo-prev]');
+    const nextButton = slider.querySelector('[data-promo-next]');
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains('is-active')));
     let timer = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
 
     if (slides.length <= 1) {
         return;
@@ -2012,6 +2016,49 @@ document.querySelectorAll('.js-promo-slider').forEach((slider) => {
             startSlider();
         });
     });
+
+    function goToSlide(index) {
+        setSlide(index);
+        stopSlider();
+        startSlider();
+    }
+
+    prevButton?.addEventListener('click', () => {
+        goToSlide(activeIndex - 1);
+    });
+
+    nextButton?.addEventListener('click', () => {
+        goToSlide(activeIndex + 1);
+    });
+
+    slider.addEventListener('touchstart', (event) => {
+        const touch = event.touches[0];
+        if (!touch) {
+            return;
+        }
+
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        stopSlider();
+    }, { passive: true });
+
+    slider.addEventListener('touchend', (event) => {
+        const touch = event.changedTouches[0];
+        if (!touch) {
+            startSlider();
+            return;
+        }
+
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        const isHorizontalSwipe = Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4;
+
+        if (isHorizontalSwipe) {
+            setSlide(activeIndex + (deltaX < 0 ? 1 : -1));
+        }
+
+        startSlider();
+    }, { passive: true });
 
     slider.addEventListener('mouseenter', stopSlider);
     slider.addEventListener('mouseleave', startSlider);

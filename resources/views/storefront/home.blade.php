@@ -155,6 +155,12 @@
                             <button type="button" data-promo-dot aria-label="Show pantry offer"></button>
                             <button type="button" data-promo-dot aria-label="Show local discount offer"></button>
                         </div>
+                        <button type="button" class="sf-promo-nav sf-promo-nav-prev" data-promo-prev aria-label="Previous offer">
+                            <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="sf-promo-nav sf-promo-nav-next" data-promo-next aria-label="Next offer">
+                            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                        </button>
                     </div>
 
                     <div class="sf-promo-card sf-promo-card-deal">

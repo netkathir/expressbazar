@@ -138,6 +138,23 @@ const openBackConfirm = (link, message) => {
     return true;
 };
 
+const isNavigableAdminLink = (link) => {
+    if (!link || !link.href || link.target === '_blank' || link.hasAttribute('download')) {
+        return false;
+    }
+
+    if (link.dataset.bsToggle || link.getAttribute('role') === 'button') {
+        return false;
+    }
+
+    const url = new URL(link.href, window.location.href);
+    if (url.origin !== window.location.origin) {
+        return false;
+    }
+
+    return !(url.pathname === window.location.pathname && url.search === window.location.search && url.hash);
+};
+
 if (backConfirmButtonEl) {
     backConfirmButtonEl.addEventListener('click', () => {
         if (!pendingBackLink) {
@@ -185,6 +202,36 @@ document.querySelectorAll('form[data-dirty-check]').forEach((form) => {
         isDirty = true;
     };
 
+    const confirmNavigation = (event, link, forceConfirm = false) => {
+        if (isSubmitting || link.dataset.dirtyConfirmed === 'true') {
+            return;
+        }
+
+        if (!forceConfirm && !isDirty) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        const message = isDirty
+            ? 'You have unsaved changes. Are you sure you want to leave without saving?'
+            : 'Are you sure you want to go back without editing?';
+
+        if (openBackConfirm(link, message)) {
+            return;
+        }
+
+        if (!window.confirm(message)) {
+            return;
+        }
+
+        window.__adminBypassBeforeUnload = true;
+        link.dataset.dirtyConfirmed = 'true';
+        window.location.href = link.href;
+    };
+
     form.addEventListener('input', markDirty);
     form.addEventListener('change', markDirty);
     form.addEventListener('submit', () => {
@@ -193,38 +240,18 @@ document.querySelectorAll('form[data-dirty-check]').forEach((form) => {
 
     document.querySelectorAll('[data-dirty-back]').forEach((link) => {
         link.addEventListener('click', (event) => {
-            if (isSubmitting) {
-                return;
-            }
-
-            event.preventDefault();
-
-            const message = isDirty
-                ? 'You have unsaved changes. Are you sure you want to go back without saving?'
-                : 'Are you sure you want to go back without editing?';
-
-            if (openBackConfirm(link, message)) {
-                return;
-            }
-
-            if (!window.confirm(message)) {
-                return;
-            }
-
-            window.location.href = link.href;
+            confirmNavigation(event, link, true);
         });
     });
 
-    if (form.dataset.skipBeforeunload === undefined) {
-        window.addEventListener('beforeunload', (event) => {
-            if (!isDirty || isSubmitting || window.__adminBypassBeforeUnload) {
-                return;
-            }
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!isNavigableAdminLink(link)) {
+            return;
+        }
 
-            event.preventDefault();
-            event.returnValue = '';
-        });
-    }
+        confirmNavigation(event, link);
+    }, true);
 });
 
 document.querySelectorAll('.alert.alert-success:not(.admin-flash-message), .alert.alert-danger:not(.admin-flash-message)').forEach((alert) => {

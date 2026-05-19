@@ -172,7 +172,7 @@ return [
                 'Choose a country and add city details.',
                 'Save and make the city available to zones, vendors and customers.',
             ],
-            'fields' => ['Country', 'State / Province', 'City Name', 'City Code', 'Status'],
+            'fields' => ['Country', 'City Name', 'City Code', 'Status'],
             'rules' => ['Country selection is mandatory.', 'City must be unique within a country.'],
             'database' => ['cities'],
             'impact' => ['Used by region / zone creation and vendor mapping.'],

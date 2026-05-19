@@ -109,7 +109,10 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label">Address</label>
-                    <textarea name="address" class="form-control" rows="3">{{ old('address', $vendor->address) }}</textarea>
+                    <input type="text" name="address" value="{{ old('address', $vendor->address) }}" class="form-control" id="vendorAddress" autocomplete="off">
+                    @if (config('services.google_maps.key'))
+                        <div class="form-text">Start typing and choose an address to auto-fill location fields.</div>
+                    @endif
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Country <span class="text-danger">*</span></label>
@@ -186,6 +189,8 @@
                         const stateUrl = form.dataset.stateUrl;
                         const cityUrl = form.dataset.cityUrl;
                         const zoneUrl = form.dataset.zoneUrl;
+                        const addressInput = document.getElementById('vendorAddress');
+                        const pincodeInput = form.querySelector('[name="pincode"]');
                         const selectedCountry = form.dataset.selectedCountry || '';
                         const selectedState = form.dataset.selectedState || '';
                         const selectedCity = form.dataset.selectedCity || '';
@@ -214,11 +219,19 @@
                         const syncPlaceholder = (select) => {
                             const placeholder = select.closest('.select-field-placeholder-wrap')?.querySelector('[data-select-placeholder]');
                             if (placeholder) {
-                                placeholder.hidden = Boolean(select.value);
+                                const selectedText = select.selectedOptions[0]?.textContent?.trim() || '';
+                                placeholder.hidden = Boolean(select.value || selectedText);
                             }
                         };
 
-                        const hasStateChoices = () => Array.from(stateSelect.options).some((option) => option.value !== '');
+                        const syncFieldState = (control) => {
+                            if (!control) {
+                                return;
+                            }
+
+                            syncPlaceholder(control);
+                            control.dispatchEvent(new Event('input', { bubbles: true }));
+                        };
 
                         async function loadStates(countryId, state = '') {
                             stateSelect.innerHTML = '';
@@ -256,8 +269,8 @@
                                 stateSelect.value = '';
                             }
 
-                            syncPlaceholder(stateSelect);
-                            return resolvedState;
+                            syncFieldState(stateSelect);
+                            return stateSelect.value || '';
                         }
 
                         async function loadCities(countryId, state = '', cityId = '') {
@@ -298,8 +311,8 @@
                                 citySelect.value = '';
                             }
 
-                            syncPlaceholder(citySelect);
-                            return resolvedCityId;
+                            syncFieldState(citySelect);
+                            return citySelect.value || '';
                         }
 
                         async function loadZones(countryId, cityId, zoneId = '') {
@@ -326,7 +339,9 @@
                             }
 
                             zones.forEach((item) => {
-                                zoneSelect.appendChild(createOption(String(item.id), item.zone_name, String(item.id) === String(zoneId)));
+                                const option = createOption(String(item.id), item.zone_name, String(item.id) === String(zoneId));
+                                option.dataset.zoneCode = item.zone_code || '';
+                                zoneSelect.appendChild(option);
                             });
 
                             const resolvedZoneId = zoneId || (zones.length === 1 ? String(zones[0].id) : '');
@@ -338,8 +353,124 @@
                                 zoneSelect.value = '';
                             }
 
-                            syncPlaceholder(zoneSelect);
+                            syncFieldState(zoneSelect);
                         }
+
+                        const normalizeText = (value) => String(value || '')
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, ' ')
+                            .trim();
+
+                        const findOptionByText = (select, candidates) => {
+                            const normalizedCandidates = candidates.map(normalizeText).filter(Boolean);
+
+                            if (normalizedCandidates.length === 0) {
+                                return null;
+                            }
+
+                            return Array.from(select.options).find((option) => {
+                                const text = normalizeText(option.textContent);
+                                return normalizedCandidates.some((candidate) => {
+                                    if (candidate.length <= 3) {
+                                        return text === candidate;
+                                    }
+
+                                    return text === candidate || text.includes(candidate) || candidate.includes(text);
+                                });
+                            }) || null;
+                        };
+
+                        const getAddressPart = (components, type, property = 'long_name') => {
+                            const component = components.find((item) => item.types.includes(type));
+                            return component ? component[property] : '';
+                        };
+
+                        const selectZoneFromPostcode = async (countryId, cityId, postcode = '') => {
+                            await loadZones(countryId, cityId);
+
+                            const postcodePrefix = postcode.trim().split(/\s+/)[0]?.toUpperCase() || '';
+                            if (!postcodePrefix) {
+                                return;
+                            }
+
+                            const zoneOption = Array.from(zoneSelect.options).find((option) => {
+                                const text = option.textContent.toUpperCase();
+                                const code = (option.dataset.zoneCode || '').toUpperCase();
+                                return option.value && (text.includes(postcodePrefix) || code === postcodePrefix || postcodePrefix.startsWith(code));
+                            });
+
+                            if (zoneOption) {
+                                zoneSelect.value = zoneOption.value;
+                                syncFieldState(zoneSelect);
+                            }
+                        };
+
+                        const applyPlaceToVendorLocation = async (place) => {
+                            if (!place || !place.geometry) {
+                                return;
+                            }
+
+                            const components = place.address_components || [];
+                            const formattedAddress = place.formatted_address || addressInput?.value || '';
+                            const countryName = getAddressPart(components, 'country');
+                            const stateName = getAddressPart(components, 'administrative_area_level_1');
+                            const postcode = getAddressPart(components, 'postal_code');
+                            const cityCandidates = [
+                                getAddressPart(components, 'locality'),
+                                getAddressPart(components, 'postal_town'),
+                                getAddressPart(components, 'administrative_area_level_2'),
+                                getAddressPart(components, 'sublocality_level_1'),
+                            ].filter(Boolean);
+
+                            if (addressInput && formattedAddress) {
+                                addressInput.value = formattedAddress;
+                                addressInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+
+                            const numericPostcode = postcode.replace(/\s+/g, '');
+                            if (pincodeInput && /^[0-9]{6}$/.test(numericPostcode)) {
+                                pincodeInput.value = numericPostcode;
+                                pincodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+
+                            const countryOption = findOptionByText(countrySelect, [countryName]);
+                            if (!countryOption) {
+                                return;
+                            }
+
+                            countrySelect.value = countryOption.value;
+                            syncFieldState(countrySelect);
+
+                            const matchedState = await loadStates(countrySelect.value, stateName);
+                            await loadCities(countrySelect.value, matchedState);
+
+                            const cityOption = findOptionByText(citySelect, cityCandidates);
+                            if (!cityOption) {
+                                syncPlaceholder(citySelect);
+                                zoneSelect.innerHTML = '';
+                                syncPlaceholder(zoneSelect);
+                                return;
+                            }
+
+                            citySelect.value = cityOption.value;
+                            syncFieldState(citySelect);
+                            await selectZoneFromPostcode(countrySelect.value, citySelect.value, postcode);
+                        };
+
+                        window.initAdminVendorAddressAutocomplete = function () {
+                            if (!addressInput || !window.google?.maps?.places?.Autocomplete) {
+                                return;
+                            }
+
+                            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                                types: ['address'],
+                                fields: ['formatted_address', 'geometry', 'address_components', 'name'],
+                            });
+
+                            autocomplete.addListener('place_changed', function () {
+                                applyPlaceToVendorLocation(autocomplete.getPlace());
+                            });
+                        };
 
                         countrySelect.addEventListener('change', async () => {
                             const countryId = countrySelect.value;
@@ -351,7 +482,7 @@
                             syncPlaceholder(citySelect);
                             syncPlaceholder(zoneSelect);
                             const resolvedState = await loadStates(countryId);
-                            const selectedCityId = (!resolvedState && hasStateChoices()) ? '' : await loadCities(countryId, resolvedState);
+                            const selectedCityId = await loadCities(countryId, resolvedState);
                             if (selectedCityId) {
                                 await loadZones(countryId, selectedCityId);
                             }
@@ -365,7 +496,7 @@
                             syncPlaceholder(stateSelect);
                             syncPlaceholder(citySelect);
                             syncPlaceholder(zoneSelect);
-                            const selectedCityId = (!state && hasStateChoices()) ? '' : await loadCities(countryId, state);
+                            const selectedCityId = await loadCities(countryId, state);
                             if (selectedCityId) {
                                 await loadZones(countryId, selectedCityId);
                             }
@@ -395,7 +526,7 @@
 
                             if (initialCountry) {
                                 const initialState = await loadStates(initialCountry, selectedState);
-                                const initialCity = (!initialState && hasStateChoices()) ? '' : await loadCities(initialCountry, initialState, selectedCity);
+                                const initialCity = await loadCities(initialCountry, initialState, selectedCity);
                                 await loadZones(initialCountry, initialCity, selectedZone);
                                 syncPlaceholder(stateSelect);
                                 syncPlaceholder(citySelect);
@@ -411,5 +542,12 @@
                         })();
                     })();
                 </script>
+                @if (config('services.google_maps.key'))
+                    <script
+                        src="https://maps.googleapis.com/maps/api/js?key={{ rawurlencode(config('services.google_maps.key')) }}&libraries=places&callback=initAdminVendorAddressAutocomplete&loading=async"
+                        async
+                        defer
+                    ></script>
+                @endif
             @endpush
 @endsection

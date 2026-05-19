@@ -25,7 +25,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 d-none" aria-hidden="true">
                     <label class="form-label">State / Province</label>
                     <select class="form-select" data-state-select data-selected-state="{{ old('state', $city->state) }}">
                         <option value="">Select state</option>

@@ -128,6 +128,12 @@
                                         <a href="{{ $safeRouteUrl('storefront.addresses.index', '/account/addresses') }}" class="dropdown-item rounded-2">
                                             <i class="ti ti-map-pin me-2"></i>Address
                                         </a>
+                                        <form action="{{ $safeRouteUrl('storefront.logout', '/logout') }}" method="POST" class="m-0 js-logout-form">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-2 text-danger">
+                                                <i class="ti ti-logout me-2"></i>Logout
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                                 <div class="dropdown">
