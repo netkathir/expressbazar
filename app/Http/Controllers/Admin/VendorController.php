@@ -81,7 +81,7 @@ class VendorController extends Controller
 
         $vendor = Vendor::create($data);
         $mailSent = $this->sendCredentialsMail($vendor, $plainPassword);
-        $setupMailSent = $this->sendSetupMail($vendor);
+        $setupMailSent = null;
 
         return redirect()
             ->route('admin.vendors.index')
@@ -108,7 +108,7 @@ class VendorController extends Controller
         $data['updated_by'] = $request->user()?->id;
         $plainPassword = null;
 
-        if ($request->boolean('send_credentials') || empty($vendor->password)) {
+        if (empty($vendor->password)) {
             $plainPassword = $this->generatePassword();
             $data['password'] = Hash::make($plainPassword);
             $data['setup_token'] = Str::random(40);
@@ -122,7 +122,7 @@ class VendorController extends Controller
         if ($plainPassword) {
             $freshVendor = $vendor->fresh();
             $mailSent = $this->sendCredentialsMail($freshVendor, $plainPassword);
-            $setupMailSent = $this->sendSetupMail($freshVendor);
+            $setupMailSent = null;
         }
 
         return redirect()
@@ -196,7 +196,7 @@ class VendorController extends Controller
             'vendor_name' => trim((string) $request->input('vendor_name')),
             'email' => mb_strtolower(trim((string) $request->input('email'))),
             'phone' => preg_replace('/\s+/', '', (string) $request->input('phone')),
-            'pincode' => trim((string) $request->input('pincode')),
+            'pincode' => mb_strtoupper(trim((string) $request->input('pincode'))),
         ]);
 
         $data = $request->validate([
@@ -217,7 +217,7 @@ class VendorController extends Controller
             'role' => ['required', 'exists:roles,role_name'],
             'phone' => ['nullable', 'regex:/^[0-9]{10,15}$/'],
             'address' => ['nullable', 'string'],
-            'pincode' => ['nullable', 'regex:/^[0-9]{6}$/'],
+            'pincode' => ['nullable', 'regex:/^[A-Za-z0-9 ]{3,12}$/'],
             'country_id' => ['required', 'exists:countries,id'],
             'city_id' => ['required', 'exists:cities,id'],
             'region_zone_id' => ['required', 'exists:regions_zones,id'],
@@ -230,7 +230,7 @@ class VendorController extends Controller
             'vendor_name.regex' => 'Vendor name must include letters or numbers and cannot contain unsupported special characters.',
             'email.regex' => 'Enter a valid email address with domain and extension.',
             'phone.regex' => 'Phone must contain only 10 to 15 digits.',
-            'pincode.regex' => 'Pincode must be exactly 6 digits.',
+            'pincode.regex' => 'Pincode must contain 3 to 12 letters or numbers.',
         ]);
 
         $city = City::findOrFail($data['city_id']);

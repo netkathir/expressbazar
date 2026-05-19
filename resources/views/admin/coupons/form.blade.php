@@ -9,7 +9,7 @@
         <div class="card-body p-4 p-md-5">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
-                    <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Add Coupon' : 'Edit Coupon' }}</h1>
+                    <h1 class="h3 mb-1">{{ $mode === 'create' ? 'Create Coupon Code' : 'Edit Coupon Code' }}</h1>
                 </div>
                 <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
@@ -21,13 +21,14 @@
                 @endif
 
                 <div class="col-md-4">
-                    <label class="form-label">Create Coupon Code</label>
+                    <label class="form-label">Coupon Code</label>
                     <input type="text" name="code" value="{{ old('code', $coupon->code) }}" class="form-control text-uppercase" placeholder="WELCOME10" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Discount Type</label>
                     <select name="type" class="form-select" required>
-                        <option value="percentage" @selected(old('type', $coupon->type ?: 'percentage') === 'percentage')>Percentage</option>
+                        <option value="" disabled hidden>Select discount type</option>
+                        <option value="percentage" @selected(old('type', $coupon->type) === 'percentage')>Percentage</option>
                         <option value="fixed" @selected(old('type', $coupon->type) === 'fixed')>Fixed Amount</option>
                     </select>
                 </div>

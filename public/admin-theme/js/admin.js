@@ -127,6 +127,67 @@ if (deleteConfirmModalEl) {
     });
 }
 
+window.adminConfirm = (message, options = {}) => new Promise((resolve) => {
+    if (!deleteConfirmModal || !deleteConfirmMessageEl || !deleteConfirmButtonEl) {
+        resolve(window.confirm(message || 'Are you sure?'));
+        return;
+    }
+
+    const titleEl = deleteConfirmModalEl.querySelector('.modal-title');
+    const cancelButton = deleteConfirmModalEl.querySelector('[data-bs-dismiss="modal"]');
+    const defaultTitle = titleEl?.textContent || 'Confirm';
+    const defaultConfirmText = deleteConfirmButtonEl.textContent || 'Confirm';
+    const defaultConfirmClass = deleteConfirmButtonEl.className;
+    let settled = false;
+
+    const cleanup = () => {
+        deleteConfirmButtonEl.removeEventListener('click', onConfirm);
+        deleteConfirmModalEl.removeEventListener('hidden.bs.modal', onHidden);
+        if (titleEl) {
+            titleEl.textContent = defaultTitle;
+        }
+        deleteConfirmButtonEl.textContent = defaultConfirmText;
+        deleteConfirmButtonEl.className = defaultConfirmClass;
+        pendingDeleteForm = null;
+    };
+
+    const finish = (confirmed) => {
+        if (settled) {
+            return;
+        }
+
+        settled = true;
+        cleanup();
+        resolve(confirmed);
+    };
+
+    const onConfirm = () => {
+        deleteConfirmModal.hide();
+        finish(true);
+    };
+
+    const onHidden = () => {
+        finish(false);
+    };
+
+    pendingDeleteForm = null;
+    if (titleEl && options.title) {
+        titleEl.textContent = options.title;
+    }
+    deleteConfirmMessageEl.textContent = message || 'Are you sure?';
+    deleteConfirmButtonEl.textContent = options.confirmText || 'Confirm';
+    deleteConfirmButtonEl.className = defaultConfirmClass;
+    if (options.confirmClass) {
+        deleteConfirmButtonEl.classList.remove('btn-primary', 'btn-danger', 'btn-dark');
+        deleteConfirmButtonEl.classList.add(options.confirmClass);
+    }
+    cancelButton?.focus?.();
+
+    deleteConfirmButtonEl.addEventListener('click', onConfirm);
+    deleteConfirmModalEl.addEventListener('hidden.bs.modal', onHidden);
+    deleteConfirmModal.show();
+});
+
 const openBackConfirm = (link, message) => {
     if (!backConfirmModal || !backConfirmMessageEl || !backConfirmButtonEl) {
         return false;

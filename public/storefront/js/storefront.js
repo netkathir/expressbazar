@@ -348,21 +348,6 @@ function updateProductControls(payload = {}) {
     const productId = String(item.productId);
     const quantity = Number(item.quantity || 0);
 
-    document.querySelectorAll(`.js-add-to-cart[action$="/${productId}"]`).forEach((form) => {
-        if (form.classList.contains('sf-card-add')) {
-            return;
-        }
-
-        const stepper = document.createElement('div');
-        stepper.className = 'sf-stepper';
-        stepper.innerHTML = `
-            <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="-1" data-product="${escapeHtml(productId)}">-</button>
-            <span class="sf-stepper-value" data-cart-stepper-value>${quantity}</span>
-            <button type="button" class="sf-stepper-btn js-cart-adjust" data-delta="1" data-product="${escapeHtml(productId)}">+</button>
-        `;
-        form.replaceWith(stepper);
-    });
-
     document.querySelectorAll(`.js-cart-adjust[data-product="${productId}"]`)
         .forEach((button) => {
             const value = button.closest('.sf-stepper')?.querySelector('.sf-stepper-value');

@@ -24,9 +24,9 @@
                             <h3 class="mb-0">Saved Addresses</h3>
                             <a href="{{ route('storefront.account') }}" class="btn btn-outline-dark rounded-pill btn-sm">My Account</a>
                         </div>
-                        <div class="d-grid gap-3">
+                        <div class="d-grid gap-3" data-address-list>
                             @forelse ($addresses as $address)
-                                <div class="sf-sidepanel p-3">
+                                <div class="sf-sidepanel p-3 {{ $loop->index >= 3 ? 'd-none' : '' }}" data-address-item data-extra-address="{{ $loop->index >= 3 ? 'true' : 'false' }}">
                                     <div class="d-flex justify-content-between gap-2">
                                         <div>
                                             <div class="fw-semibold">{{ $address->label ?: $address->recipient_name }}</div>
@@ -48,6 +48,11 @@
                                 <div class="sf-empty-state">No addresses saved yet.</div>
                             @endforelse
                         </div>
+                        @if ($addresses->count() > 3)
+                            <div class="mt-3 text-center">
+                                <button type="button" class="btn btn-outline-dark rounded-pill btn-sm px-4" data-address-view-more>View more addresses</button>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="sf-info-card">
@@ -132,3 +137,15 @@
         </section>
     </main>
 @endsection
+
+@push('scripts')
+    <script>
+        document.querySelector('[data-address-view-more]')?.addEventListener('click', function () {
+            const items = document.querySelectorAll('[data-address-item][data-extra-address="true"]');
+            const isExpanding = Array.from(items).some((item) => item.classList.contains('d-none'));
+
+            items.forEach((item) => item.classList.toggle('d-none', !isExpanding));
+            this.textContent = isExpanding ? 'Show fewer addresses' : 'View more addresses';
+        });
+    </script>
+@endpush

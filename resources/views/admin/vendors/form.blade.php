@@ -75,25 +75,25 @@
                         name="pincode"
                         value="{{ old('pincode', $vendor->pincode) }}"
                         class="form-control"
-                        inputmode="numeric"
-                        pattern="[0-9]{6}"
-                        minlength="6"
-                        maxlength="6"
-                        title="Enter exactly 6 digits."
+                        pattern="[A-Za-z0-9 ]{3,12}"
+                        minlength="3"
+                        maxlength="12"
+                        title="Enter 3 to 12 letters or numbers."
                     >
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Inventory Mode <span class="text-danger">*</span></label>
                     <select name="inventory_mode" class="form-select" required>
                         <option value="" disabled hidden>Choose mode</option>
-                        <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode ?: 'internal') === 'internal')>Internal</option>
+                        <option value="internal" @selected(old('inventory_mode', $vendor->inventory_mode) === 'internal')>Internal</option>
                         <option value="epos" @selected(old('inventory_mode', $vendor->inventory_mode) === 'epos')>EPOS</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Status <span class="text-danger">*</span></label>
                     <select name="status" class="form-select" required>
-                        <option value="active" @selected(old('status', $vendor->status ?: 'active') === 'active')>Active</option>
+                        <option value="" disabled hidden>Select status</option>
+                        <option value="active" @selected(old('status', $vendor->status) === 'active')>Active</option>
                         <option value="inactive" @selected(old('status', $vendor->status) === 'inactive')>Inactive</option>
                     </select>
                 </div>
@@ -102,7 +102,7 @@
                     <select name="role" class="form-select" required>
                         <option value="" disabled hidden>Choose role</option>
                         @foreach ($roles as $role)
-                            <option value="{{ $role->role_name }}" @selected(old('role', $vendor->role ?: 'vendor') === $role->role_name)>{{ \Illuminate\Support\Str::headline($role->role_name) }}</option>
+                            <option value="{{ $role->role_name }}" @selected(old('role', $vendor->role) === $role->role_name)>{{ \Illuminate\Support\Str::headline($role->role_name) }}</option>
                         @endforeach
                     </select>
                     <div class="form-text">Controls vendor panel permissions.</div>
@@ -118,6 +118,7 @@
                     <label class="form-label">Country <span class="text-danger">*</span></label>
                     <div class="select-field-placeholder-wrap">
                         <select name="country_id" class="form-select" required id="countryId" data-placeholder-target="country">
+                            <option value="" disabled hidden>Select country</option>
                             @foreach ($countries as $country)
                                 <option value="{{ $country->id }}" @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
                             @endforeach
@@ -158,14 +159,6 @@
                     <label class="form-label">Credentials</label>
                     <textarea name="credentials" class="form-control" rows="4">{{ old('credentials', $vendor->credentials) }}</textarea>
                 </div>
-                @if ($mode === 'edit')
-                    <div class="col-12">
-                        <div class="form-check">
-                            <input type="checkbox" name="send_credentials" value="1" class="form-check-input" id="sendCredentials">
-                            <label class="form-check-label" for="sendCredentials">Generate and email new vendor panel credentials</label>
-                        </div>
-                    </div>
-                @endif
                 <div class="col-12">
                     <button class="btn btn-primary" type="submit">{{ $mode === 'create' ? 'Save Vendor' : 'Update Vendor' }}</button>
                 </div>
@@ -427,9 +420,9 @@
                                 addressInput.dispatchEvent(new Event('input', { bubbles: true }));
                             }
 
-                            const numericPostcode = postcode.replace(/\s+/g, '');
-                            if (pincodeInput && /^[0-9]{6}$/.test(numericPostcode)) {
-                                pincodeInput.value = numericPostcode;
+                            const compactPostcode = postcode.replace(/[^A-Za-z0-9 ]/g, '').trim();
+                            if (pincodeInput && /^[A-Za-z0-9 ]{3,12}$/.test(compactPostcode)) {
+                                pincodeInput.value = compactPostcode;
                                 pincodeInput.dispatchEvent(new Event('input', { bubbles: true }));
                             }
 

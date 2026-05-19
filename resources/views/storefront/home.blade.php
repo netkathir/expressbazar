@@ -47,18 +47,13 @@
         @endif
 
         <section class="container-fluid px-3 px-lg-4 pt-0 sf-category-showcase">
-            <div class="sf-category-strip-header">
-                <div>
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <h2>Shop by categories</h2>
-                        <div class="sf-top-status js-storefront-status {{ $topStatusMessage ? '' : 'd-none' }}">
-                            {{ $topStatusMessage }}
-                        </div>
+            @if ($topStatusMessage)
+                <div class="sf-category-strip-header sf-category-strip-status">
+                    <div class="sf-top-status js-storefront-status">
+                        {{ $topStatusMessage }}
                     </div>
-                    <p>Find everything you need, all in one place.</p>
                 </div>
-                <a href="#all-categories">See all categories <i class="ti ti-chevron-right"></i></a>
-            </div>
+            @endif
             <div class="sf-rail-wrap sf-category-rail-wrap">
                 <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll categories left">
                     <i class="ti ti-chevron-left"></i>
