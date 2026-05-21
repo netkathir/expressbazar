@@ -122,6 +122,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [PanelController::class, 'dashboard'])->name('dashboard');
         Route::get('/dashboard', fn () => redirect()->route('admin.dashboard'))->name('dashboard.alias');
         Route::get('/modules/{module}', [PanelController::class, 'module'])->name('module');
+        Route::get('get-cities/{country_id}', [CityController::class, 'getCities'])->name('cities.by-country');
 
         Route::resource('countries', CountryController::class)->except(['show']);
         Route::resource('cities', CityController::class)->except(['show']);

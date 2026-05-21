@@ -557,6 +557,21 @@ async function fetchLocationSuggestions(keyword) {
     }
 }
 
+async function getLocationSuggestions(keyword) {
+    if (!config.locationAutocompleteUrl || !String(keyword || '').trim()) {
+        return [];
+    }
+
+    try {
+        const url = new URL(config.locationAutocompleteUrl, window.location.origin);
+        url.searchParams.set('keyword', keyword);
+        const payload = await fetchJson(url);
+        return payload.suggestions || [];
+    } catch (error) {
+        return [];
+    }
+}
+
 async function saveLocationFormData(form, formData) {
     if (!form) {
         return;
@@ -623,6 +638,47 @@ async function selectLocationSuggestion(item) {
     await saveLocationFormData(locationForm, formData);
 }
 
+async function resolveGooglePlaceAgainstDeliveryLocations(place, address, postcode) {
+    const city = googlePlaceComponent(place, 'locality')
+        || googlePlaceComponent(place, 'postal_town')
+        || googlePlaceComponent(place, 'administrative_area_level_2')
+        || googlePlaceComponent(place, 'administrative_area_level_1');
+    const keywords = [postcode, city, address]
+        .map((keyword) => String(keyword || '').trim())
+        .filter((keyword, index, list) => keyword.length >= 2 && list.indexOf(keyword) === index);
+
+    for (const keyword of keywords) {
+        const suggestions = await getLocationSuggestions(keyword);
+        if (!Array.isArray(suggestions) || suggestions.length === 0) {
+            continue;
+        }
+
+        const normalizedPostcode = String(postcode || '').toLowerCase();
+        const normalizedCity = String(city || '').toLowerCase();
+        const match = suggestions.find((item) => normalizedPostcode && String(item.postcode || '').toLowerCase() === normalizedPostcode)
+            || suggestions.find((item) => normalizedCity && String(item.label || '').toLowerCase().includes(normalizedCity))
+            || suggestions.find((item) => normalizedCity && String(item.meta || '').toLowerCase().includes(normalizedCity))
+            || suggestions[0];
+
+        if (!match?.country_id || !match?.city_id) {
+            continue;
+        }
+
+        const formData = new FormData(locationForm);
+        formData.set('force_clear', '0');
+        formData.set('country_id', match.country_id || '');
+        formData.set('city_id', match.city_id || '');
+        formData.set('zone_id', match.zone_id || '');
+        formData.set('postcode', match.postcode || postcode || '');
+        formData.set('address_line_1', address || match.label || '');
+
+        await saveLocationFormData(locationForm, formData);
+        return true;
+    }
+
+    return false;
+}
+
 function googlePlaceComponent(place, type, useShortName = false) {
     const component = place?.address_components?.find((entry) => entry.types?.includes(type));
 
@@ -658,7 +714,12 @@ async function saveGooglePlaceLocation(place) {
     }
 
     if (!place.geometry || !postcode) {
-        showLocationAlert('Please select an address with a postcode, or choose your country, city and zone manually.');
+        const resolved = await resolveGooglePlaceAgainstDeliveryLocations(place, address, postcode);
+        if (resolved) {
+            return;
+        }
+
+        showLocationAlert('Please select a suggested delivery location from the search results.');
         return;
     }
 

@@ -795,3 +795,61 @@ textarea:-ms-input-placeholder {
         font-size: 13px !important;
     }
 }
+
+.storefront-shell .sf-actions .sf-login-signup-link {
+    min-height: 36px;
+    min-width: 148px;
+    padding: 0 16px 0 12px;
+    border: 1px solid rgba(31, 122, 99, .28);
+    border-radius: 999px;
+    background: #fff;
+    color: #1f7a63;
+    box-shadow: 0 6px 18px rgba(31, 122, 99, .08);
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.storefront-shell .sf-actions .sf-login-signup-link > i {
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgba(31, 122, 99, .28);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f7a63;
+    font-size: 14px;
+    line-height: 1;
+    flex: 0 0 22px;
+}
+
+.storefront-shell .sf-actions .sf-login-signup-link > span {
+    display: inline-block;
+    min-width: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.storefront-shell .sf-actions .sf-login-signup-link:hover,
+.storefront-shell .sf-actions .sf-login-signup-link:focus {
+    border-color: rgba(31, 122, 99, .48);
+    color: #1f7a63;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(31, 122, 99, .12);
+}
+
+@media (max-width: 575.98px) {
+    .storefront-shell .sf-actions .sf-login-signup-link {
+        min-width: 136px;
+        padding-inline: 10px 12px;
+        font-size: 11px;
+    }
+}

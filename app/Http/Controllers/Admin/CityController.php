@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\CustomerAddress;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
 class CityController extends Controller
@@ -48,7 +50,7 @@ class CityController extends Controller
             'title' => 'Add City',
             'activeMenu' => 'cities',
             'city' => new City(),
-            'countries' => Country::orderBy('country_name')->get(),
+            'countries' => $this->countriesForForm(),
             'stateOptions' => $this->stateOptions(),
             'cityOptions' => $this->cityOptions(),
             'mode' => 'create',
@@ -80,7 +82,7 @@ class CityController extends Controller
             'title' => 'Edit City',
             'activeMenu' => 'cities',
             'city' => $city,
-            'countries' => Country::orderBy('country_name')->get(),
+            'countries' => $this->countriesForForm($city),
             'stateOptions' => $this->stateOptions(),
             'cityOptions' => $this->cityOptions(),
             'mode' => 'edit',
@@ -89,7 +91,7 @@ class CityController extends Controller
 
     public function update(Request $request, City $city)
     {
-        $data = $this->validateCity($request);
+        $data = $this->validateCity($request, $city);
 
         $duplicate = $this->cityDuplicateQuery($data)
             ->where('id', '!=', $city->id)
@@ -117,7 +119,38 @@ class CityController extends Controller
         return redirect()->route('admin.cities.index')->with('success', 'City deleted successfully.');
     }
 
-    private function validateCity(Request $request): array
+    public function getCities(Request $request, int $country_id): Response|JsonResponse
+    {
+        $cities = City::query()
+            ->where('country_id', $country_id)
+            ->where('status', 'active')
+            ->whereHas('country', fn ($query) => $query->where('status', 'active'))
+            ->orderBy('city_name')
+            ->get(['id', 'city_name', 'state']);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => $cities,
+                'message' => $cities->isEmpty() ? 'No cities available' : null,
+            ]);
+        }
+
+        $html = '<option value="">Select City</option>';
+
+        if ($cities->isEmpty()) {
+            $html .= '<option value="" disabled>No cities available</option>';
+
+            return response($html);
+        }
+
+        foreach ($cities as $city) {
+            $html .= '<option value="'.e($city->id).'" data-city-name="'.e($city->city_name).'" data-state="'.e((string) $city->state).'">'.e($city->city_name).'</option>';
+        }
+
+        return response($html);
+    }
+
+    private function validateCity(Request $request, ?City $city = null): array
     {
         $request->merge([
             'state' => trim((string) $request->input('state')),
@@ -126,7 +159,17 @@ class CityController extends Controller
         ]);
 
         return $request->validate([
-            'country_id' => ['required', 'exists:countries,id'],
+            'country_id' => [
+                'required',
+                'exists:countries,id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($city) {
+                    $country = Country::find($value);
+
+                    if ($country?->status !== 'active' && (string) $value !== (string) $city?->country_id) {
+                        $fail('Please select an active country.');
+                    }
+                },
+            ],
             'state' => ['nullable', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z])[A-Za-z .\'()-]+$/'],
             'city_name' => ['required', 'string', 'max:255', 'regex:/^(?=.*[A-Za-z])[A-Za-z .\'()-]+$/'],
             'city_code' => ['nullable', 'string', 'max:10', 'regex:/^[A-Z0-9-]+$/'],
@@ -183,5 +226,19 @@ class CityController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function countriesForForm(?City $city = null)
+    {
+        return Country::query()
+            ->where(function ($query) use ($city) {
+                $query->where('status', 'active');
+
+                if ($city?->country_id) {
+                    $query->orWhereKey($city->country_id);
+                }
+            })
+            ->orderBy('country_name')
+            ->get();
     }
 }

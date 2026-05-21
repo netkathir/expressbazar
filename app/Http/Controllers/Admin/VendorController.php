@@ -220,7 +220,7 @@ class VendorController extends Controller
             'pincode' => ['nullable', 'regex:/^[A-Za-z0-9 ]{3,12}$/'],
             'country_id' => ['required', 'exists:countries,id'],
             'city_id' => ['required', 'exists:cities,id'],
-            'region_zone_id' => ['required', 'exists:regions_zones,id'],
+            'region_zone_id' => ['nullable', 'exists:regions_zones,id'],
             'inventory_mode' => ['required', Rule::in(['internal', 'epos'])],
             'api_url' => ['nullable', 'string'],
             'api_key' => ['nullable', 'string', 'max:255'],
@@ -240,6 +240,16 @@ class VendorController extends Controller
             ]);
         }
 
+        if (empty($data['region_zone_id'])) {
+            $data['region_zone_id'] = $this->resolveVendorZoneId($data, $request->user()?->id);
+        }
+
+        if (empty($data['region_zone_id'])) {
+            throw ValidationException::withMessages([
+                'city_id' => 'Please add an active region or zone for the selected city before saving this vendor.',
+            ]);
+        }
+
         $zone = RegionZone::findOrFail($data['region_zone_id']);
         if ((int) $zone->country_id !== (int) $data['country_id'] || (int) $zone->city_id !== (int) $data['city_id']) {
             throw ValidationException::withMessages([
@@ -252,6 +262,42 @@ class VendorController extends Controller
         $data['zone_id'] = $data['region_zone_id'];
 
         return $data;
+    }
+
+    private function resolveVendorZoneId(array $data, ?int $userId): ?int
+    {
+        $zoneId = RegionZone::query()
+            ->where('country_id', $data['country_id'])
+            ->where('city_id', $data['city_id'])
+            ->where('status', 'active')
+            ->orderBy('zone_name')
+            ->value('id');
+
+        if ($zoneId) {
+            return (int) $zoneId;
+        }
+
+        $zone = RegionZone::withTrashed()->firstOrNew([
+            'country_id' => $data['country_id'],
+            'city_id' => $data['city_id'],
+            'zone_name' => 'City-wide',
+        ]);
+
+        if (! $zone->exists) {
+            $zone->created_by = $userId;
+        } elseif ($zone->trashed()) {
+            $zone->restore();
+        }
+
+        $zone->fill([
+            'zone_code' => null,
+            'delivery_available' => true,
+            'status' => 'active',
+            'updated_by' => $userId,
+        ]);
+        $zone->save();
+
+        return (int) $zone->id;
     }
 
     private function generatePassword(): string

@@ -1,5 +1,47 @@
 @extends('layouts.admin')
 
+@push('head')
+    <style>
+        .city-autocomplete {
+            position: relative;
+        }
+
+        .city-autocomplete-menu {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: min(60vh, 520px);
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #d8dee9;
+            border-radius: 0.375rem;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+        }
+
+        .city-autocomplete-option {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            padding: 0.65rem 0.85rem;
+            text-align: left;
+            color: #111827;
+        }
+
+        .city-autocomplete-option:hover,
+        .city-autocomplete-option:focus {
+            background: #eef7e7;
+            outline: 0;
+        }
+
+        .city-autocomplete-empty {
+            padding: 0.65rem 0.85rem;
+            color: #6b7280;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="card shell-card">
         <div class="card-body p-4 p-md-5">
@@ -10,7 +52,7 @@
                 <a href="{{ route('admin.cities.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.cities.store') : route('admin.cities.update', $city) }}" class="row g-3" data-dirty-check>
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.cities.store') : route('admin.cities.update', $city) }}" class="row g-3" data-dirty-check data-cities-url="{{ route('admin.cities.by-country', ['country_id' => '__COUNTRY_ID__']) }}">
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -35,11 +77,21 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">City Name</label>
-                    <select class="form-select" required data-city-select data-selected-city="{{ old('city_name', $city->city_name) }}">
-                        <option value="">Select city</option>
-                    </select>
-                    <input type="text" value="{{ old('city_name', $city->city_name) }}" class="form-control mt-2 d-none" required pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$" placeholder="Enter city name" data-city-custom>
-                    <input type="hidden" name="city_name" value="{{ old('city_name', $city->city_name) }}" data-city-value>
+                    <div class="city-autocomplete" data-city-autocomplete>
+                        <input
+                            type="text"
+                            name="city_name"
+                            value="{{ old('city_name', $city->city_name) }}"
+                            class="form-control"
+                            required
+                            pattern="^(?=.*[A-Za-z])[A-Za-z .'()-]+$"
+                            placeholder="Type or select city"
+                            autocomplete="off"
+                            data-city-input
+                        >
+                        <div class="city-autocomplete-menu" data-city-suggestions hidden></div>
+                    </div>
+                    <div class="form-text" data-city-load-status>Select a country to load city suggestions.</div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">City Code</label>
@@ -63,20 +115,25 @@
 @push('scripts')
     <script>
         (function () {
+            const form = document.querySelector('[data-cities-url]');
             const countrySelect = document.querySelector('[data-country-select]');
             const stateSelect = document.querySelector('[data-state-select]');
             const stateCustom = document.querySelector('[data-state-custom]');
             const stateValue = document.querySelector('[data-state-value]');
-            const citySelect = document.querySelector('[data-city-select]');
-            const cityCustom = document.querySelector('[data-city-custom]');
-            const cityValue = document.querySelector('[data-city-value]');
+            const cityAutocomplete = document.querySelector('[data-city-autocomplete]');
+            const cityInput = document.querySelector('[data-city-input]');
+            const citySuggestions = document.querySelector('[data-city-suggestions]');
+            const cityLoadStatus = document.querySelector('[data-city-load-status]');
             const states = @json($stateOptions);
-            const cities = @json($cityOptions);
             const customValue = '__custom__';
 
-            if (!countrySelect || !stateSelect || !stateCustom || !stateValue || !citySelect || !cityCustom || !cityValue) {
+            if (!form || !countrySelect || !stateSelect || !stateCustom || !stateValue || !cityAutocomplete || !cityInput || !citySuggestions || !cityLoadStatus) {
                 return;
             }
+
+            const citiesUrlTemplate = form.dataset.citiesUrl;
+            const citiesByCountry = new Map();
+            let cityRequestController = null;
 
             function addOption(select, value, label) {
                 const option = document.createElement('option');
@@ -106,18 +163,6 @@
                 setCustomInput(stateCustom, false, false);
             }
 
-            function syncCityValue() {
-                if (citySelect.value === customValue) {
-                    cityValue.value = cityCustom.value;
-                    setCustomInput(cityCustom, true, true);
-                    return;
-                }
-
-                cityValue.value = citySelect.value;
-                cityCustom.value = citySelect.value;
-                setCustomInput(cityCustom, false, false);
-            }
-
             function populateStates(selectedState = '') {
                 stateSelect.innerHTML = '';
                 addOption(stateSelect, '', 'Select state');
@@ -133,42 +178,169 @@
                 syncStateValue();
             }
 
-            function populateCities(selectedCity = '') {
-                const selectedState = stateValue.value;
-                citySelect.innerHTML = '';
-                addOption(citySelect, '', 'Select city');
+            function setCityStatus(message) {
+                cityLoadStatus.textContent = message;
+            }
 
-                cities
-                    .filter((city) => (!countrySelect.value || city.country_id === countrySelect.value) && (!selectedState || city.state === selectedState))
-                    .forEach((city) => addOption(citySelect, city.city_name, city.city_name));
+            function hideCitySuggestions() {
+                citySuggestions.hidden = true;
+            }
 
-                addOption(citySelect, customValue, 'Add new city');
+            function showCitySuggestions() {
+                citySuggestions.hidden = false;
+            }
 
-                citySelect.value = optionExists(citySelect, selectedCity) ? selectedCity : (selectedCity ? customValue : '');
-                cityCustom.value = selectedCity || '';
-                syncCityValue();
+            function selectedCountryCities() {
+                return citiesByCountry.get(countrySelect.value) || [];
+            }
+
+            function renderCitySuggestions(cities) {
+                const search = cityInput.value.trim().toLowerCase();
+                citySuggestions.innerHTML = '';
+
+                const uniqueCities = Array.from(
+                    new Map(cities.map((city) => [city.city_name.toLowerCase(), city])).values()
+                ).sort((first, second) => first.city_name.localeCompare(second.city_name));
+
+                const filteredCities = uniqueCities.filter((city) => !search || city.city_name.toLowerCase().includes(search));
+
+                if (filteredCities.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'city-autocomplete-empty';
+                    empty.textContent = cities.length ? 'No matching cities' : 'No cities available';
+                    citySuggestions.appendChild(empty);
+                    showCitySuggestions();
+                    return;
+                }
+
+                filteredCities.forEach((city) => {
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'city-autocomplete-option';
+                    option.textContent = city.city_name;
+                    option.addEventListener('mousedown', function (event) {
+                        event.preventDefault();
+                        cityInput.value = city.city_name;
+                        cityInput.classList.remove('is-invalid');
+                        cityInput.removeAttribute('aria-invalid');
+                        cityInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        hideCitySuggestions();
+                    });
+                    citySuggestions.appendChild(option);
+                });
+
+                showCitySuggestions();
+            }
+
+            async function populateCitySuggestions(clearCity = false) {
+                const countryId = countrySelect.value;
+
+                if (clearCity) {
+                    cityInput.value = '';
+                    cityInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+
+                citySuggestions.innerHTML = '';
+
+                if (!countryId) {
+                    setCityStatus('Select a country to load city suggestions.');
+                    hideCitySuggestions();
+                    return;
+                }
+
+                if (citiesByCountry.has(countryId)) {
+                    const cachedCities = citiesByCountry.get(countryId);
+                    renderCitySuggestions(cachedCities);
+                    setCityStatus(cachedCities.length ? `Showing all ${cachedCities.length} available cities.` : 'No cities available.');
+                    hideCitySuggestions();
+                    return;
+                }
+
+                cityRequestController?.abort();
+                cityRequestController = new AbortController();
+                setCityStatus('Loading city suggestions...');
+
+                try {
+                    const url = citiesUrlTemplate.replace('__COUNTRY_ID__', encodeURIComponent(countryId));
+                    const response = await fetch(url, {
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        signal: cityRequestController.signal,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Unable to fetch cities');
+                    }
+
+                    const payload = await response.json();
+                    const cities = payload.data || [];
+                    citiesByCountry.set(countryId, cities);
+                    renderCitySuggestions(cities);
+                    setCityStatus(cities.length ? `Showing all ${cities.length} available cities.` : 'No cities available.');
+                    hideCitySuggestions();
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        return;
+                    }
+
+                    setCityStatus('Unable to fetch cities.');
+                }
             }
 
             populateStates(stateSelect.dataset.selectedState || '');
-            populateCities(citySelect.dataset.selectedCity || '');
+            populateCitySuggestions(false);
 
             countrySelect.addEventListener('change', function () {
                 populateStates();
-                populateCities();
+                populateCitySuggestions(true);
             });
 
             stateSelect.addEventListener('change', function () {
                 syncStateValue();
-                populateCities();
+                if (countrySelect.value && citiesByCountry.has(countrySelect.value)) {
+                    renderCitySuggestions(citiesByCountry.get(countrySelect.value));
+                    hideCitySuggestions();
+                }
             });
 
             stateCustom.addEventListener('input', function () {
                 syncStateValue();
-                populateCities(cityValue.value);
+                if (countrySelect.value && citiesByCountry.has(countrySelect.value)) {
+                    renderCitySuggestions(citiesByCountry.get(countrySelect.value));
+                    hideCitySuggestions();
+                }
             });
 
-            citySelect.addEventListener('change', syncCityValue);
-            cityCustom.addEventListener('input', syncCityValue);
+            cityInput.addEventListener('focus', function () {
+                if (countrySelect.value && citiesByCountry.has(countrySelect.value)) {
+                    renderCitySuggestions(selectedCountryCities());
+                }
+            });
+
+            cityInput.addEventListener('click', function () {
+                if (countrySelect.value && citiesByCountry.has(countrySelect.value)) {
+                    renderCitySuggestions(selectedCountryCities());
+                }
+            });
+
+            cityInput.addEventListener('input', function () {
+                if (countrySelect.value && citiesByCountry.has(countrySelect.value)) {
+                    renderCitySuggestions(selectedCountryCities());
+                }
+            });
+
+            document.addEventListener('mousedown', function (event) {
+                if (!cityAutocomplete.contains(event.target)) {
+                    hideCitySuggestions();
+                }
+            });
+
+            cityInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    hideCitySuggestions();
+                }
+            });
         })();
     </script>
 @endpush

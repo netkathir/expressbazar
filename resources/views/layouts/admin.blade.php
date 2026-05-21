@@ -137,6 +137,8 @@
 
         <div class="nav flex-column py-3">
             @foreach ($panelNavigation as $group)
+                @continue(strcasecmp($group['group'] ?? '', 'Location') === 0)
+
                 @php
                     $visibleItems = collect($group['items'])->filter(function ($item) use ($panelUser, $isVendorPanel) {
                         if (! $panelUser) {

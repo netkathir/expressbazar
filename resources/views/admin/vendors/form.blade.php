@@ -140,10 +140,10 @@
                         <span class="select-field-placeholder" data-select-placeholder>Select city</span>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 d-none" aria-hidden="true">
                     <label class="form-label">Region / Zone <span class="text-danger">*</span></label>
                     <div class="select-field-placeholder-wrap">
-                        <select name="region_zone_id" class="form-select" required id="zoneId" data-placeholder-target="zone"></select>
+                        <select name="region_zone_id" class="form-select" id="zoneId" data-placeholder-target="zone"></select>
                         <span class="select-field-placeholder" data-select-placeholder>Select zone</span>
                     </div>
                 </div>
@@ -178,6 +178,8 @@
                         if (!form || !countrySelect || !stateSelect || !citySelect || !zoneSelect) {
                             return;
                         }
+
+                        zoneSelect.required = false;
 
                         const stateUrl = form.dataset.stateUrl;
                         const cityUrl = form.dataset.cityUrl;
@@ -337,7 +339,7 @@
                                 zoneSelect.appendChild(option);
                             });
 
-                            const resolvedZoneId = zoneId || (zones.length === 1 ? String(zones[0].id) : '');
+                            const resolvedZoneId = zoneId || (zones.length ? String(zones[0].id) : '');
                             if (resolvedZoneId) {
                                 zoneSelect.value = resolvedZoneId;
                             }

@@ -158,9 +158,9 @@
                                 </a>
                             @endif
                         @else
-                            <a href="{{ $safeRouteUrl('storefront.login', '/login') }}" class="sf-action-link">
-                                <i class="ti ti-user-circle"></i>
-                                <span>Login</span>
+                            <a href="{{ $safeRouteUrl('storefront.login', '/login') }}" class="sf-action-link sf-login-signup-link">
+                                <i class="ti ti-user-circle" aria-hidden="true"></i>
+                                <span>Login / Sign up</span>
                             </a>
                         @endauth
                         <button class="sf-action-link js-open-cart" type="button">
@@ -303,11 +303,11 @@
                         <div id="locationSuggestionBox" class="js-location-suggestion-box" role="listbox" hidden></div>
                     </div>
                     <div>
-                        <label class="form-label">Postcode / Zone code</label>
-                        <input type="text" name="postcode" class="form-control" placeholder="Enter postcode to auto-detect zone" value="{{ $selectedDeliveryAddress['postcode'] ?? ($pincode ?? '') }}">
+                        <label class="form-label">Postcode</label>
+                        <input type="text" name="postcode" class="form-control" placeholder="Enter postcode" value="{{ $selectedDeliveryAddress['postcode'] ?? ($pincode ?? '') }}">
                     </div>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-4">
+                    <div class="row g-3 d-none" aria-hidden="true">
+                        <div class="col-12 col-md-6">
                             <label class="form-label">Country</label>
                             <select name="country_id" class="form-select js-country-select">
                                 <option value="">Choose country</option>
@@ -316,13 +316,13 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-6">
                             <label class="form-label">City</label>
                             <select name="city_id" class="form-select js-city-select">
                                 <option value="">Choose city</option>
                             </select>
                         </div>
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 d-none" aria-hidden="true">
                             <label class="form-label">Zone</label>
                             <select name="zone_id" class="form-select js-zone-select">
                                 <option value="">Optional exact zone</option>
