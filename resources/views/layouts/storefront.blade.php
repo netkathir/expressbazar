@@ -158,10 +158,12 @@
                                 </a>
                             @endif
                         @else
-                            <a href="{{ $safeRouteUrl('storefront.login', '/login') }}" class="sf-action-link sf-login-signup-link">
+                            <div class="sf-login-signup-link" role="group" aria-label="Customer authentication">
                                 <i class="ti ti-user-circle" aria-hidden="true"></i>
-                                <span>Login / Sign up</span>
-                            </a>
+                                <a href="{{ $safeRouteUrl('storefront.login', '/login') }}" class="sf-login-signup-link__item">Login</a>
+                                <span class="sf-login-signup-link__divider" aria-hidden="true"></span>
+                                <a href="{{ $safeRouteUrl('storefront.register', '/register') }}" class="sf-login-signup-link__item">Sign up</a>
+                            </div>
                         @endauth
                         <button class="sf-action-link js-open-cart" type="button">
                             <i class="ti ti-shopping-cart"></i>
