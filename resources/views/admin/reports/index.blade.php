@@ -363,6 +363,57 @@
     </div>
     @endif
 
+    @if (! $activeReport || $activeReport === 'adjust-stock-log')
+    <div id="adjust-stock-log" class="card shell-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Adjust Stock Log</h2>
+                    <p class="text-secondary mb-0">Stock additions and reductions with previous and updated counts.</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Vendor</th>
+                            <th>Type</th>
+                            <th>Quantity</th>
+                            <th>Previous</th>
+                            <th>New</th>
+                            <th>Source</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($stockAdjustmentLogs as $log)
+                            <tr>
+                                <td>{{ \App\Support\StoreDate::dateTime($log->created_at) }}</td>
+                                <td class="fw-semibold">{{ $log->product?->product_name ?? '-' }}</td>
+                                <td>{{ $log->vendor?->vendor_name ?? $log->product?->vendor?->vendor_name ?? '-' }}</td>
+                                <td>
+                                    <span class="badge text-bg-{{ $log->change_type === 'add' ? 'success' : 'warning' }}">
+                                        {{ ucfirst($log->change_type) }}
+                                    </span>
+                                </td>
+                                <td>{{ $log->quantity }}</td>
+                                <td>{{ $log->previous_stock }}</td>
+                                <td>{{ $log->new_stock }}</td>
+                                <td>{{ ucfirst($log->source ?? 'internal') }}</td>
+                                <td>{{ $log->reason ?: '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="9" class="text-center text-secondary py-4">No stock adjustment logs found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @if (! $activeReport || $activeReport === 'recent-payments')
     <div id="recent-payments" class="card shell-card mb-4">
         <div class="card-body p-4">

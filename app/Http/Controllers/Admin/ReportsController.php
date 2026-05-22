@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
@@ -25,6 +26,7 @@ class ReportsController extends Controller
         'vendor-performance' => 'Vendor Performance',
         'order-analytics' => 'Order Analytics',
         'inventory-status' => 'Inventory Status',
+        'adjust-stock-log' => 'Adjust Stock Log',
         'recent-payments' => 'Recent Payments',
         'location-revenue' => 'Location Revenue',
     ];
@@ -128,6 +130,7 @@ class ReportsController extends Controller
             'salesOrders' => $salesOrders,
             'vendorPerformance' => $this->buildVendorPerformance($salesOrders),
             'inventoryItems' => $this->buildInventoryItems($filters),
+            'stockAdjustmentLogs' => $this->buildStockAdjustmentLogs($filters),
             'orderAnalytics' => $this->buildOrderAnalytics($salesOrders),
             'locationReport' => $this->buildLocationReport($salesOrders),
             'recentPayments' => $this->buildRecentPayments($filters),
@@ -310,6 +313,36 @@ class ReportsController extends Controller
             })
             ->latest()
             ->limit(25)
+            ->get();
+    }
+
+    private function buildStockAdjustmentLogs(array $filters): Collection
+    {
+        return InventoryLog::query()
+            ->with(['product.vendor', 'vendor', 'inventory'])
+            ->whereIn('change_type', ['add', 'reduce'])
+            ->when($filters['date_from'], fn (Builder $query, string $dateFrom) => $query->whereDate('created_at', '>=', $dateFrom))
+            ->when($filters['date_to'], fn (Builder $query, string $dateTo) => $query->whereDate('created_at', '<=', $dateTo))
+            ->when($filters['vendor_id'], function (Builder $query, int $vendorId) {
+                $query->where(function (Builder $vendorQuery) use ($vendorId) {
+                    $vendorQuery
+                        ->where('vendor_id', $vendorId)
+                        ->orWhereHas('product', fn (Builder $productQuery) => $productQuery->where('vendor_id', $vendorId));
+                });
+            })
+            ->when($filters['inventory_mode'], function (Builder $query, string $mode) {
+                $query->whereHas('inventory', fn (Builder $inventoryQuery) => $inventoryQuery->where('inventory_mode', $mode));
+            })
+            ->when($filters['country_id'] || $filters['city_id'] || $filters['zone_id'], function (Builder $query) use ($filters) {
+                $query->whereHas('product.vendor', function (Builder $vendorQuery) use ($filters) {
+                    $vendorQuery
+                        ->when($filters['country_id'], fn (Builder $subQuery, int $countryId) => $subQuery->where('country_id', $countryId))
+                        ->when($filters['city_id'], fn (Builder $subQuery, int $cityId) => $subQuery->where('city_id', $cityId))
+                        ->when($filters['zone_id'], fn (Builder $subQuery, int $zoneId) => $subQuery->where('region_zone_id', $zoneId));
+                });
+            })
+            ->latest()
+            ->limit(50)
             ->get();
     }
 

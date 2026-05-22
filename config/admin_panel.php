@@ -64,6 +64,7 @@ return [
                         ['label' => 'Vendor Performance', 'route' => 'admin.reports.show', 'params' => ['report' => 'vendor-performance']],
                         ['label' => 'Order Analytics', 'route' => 'admin.reports.show', 'params' => ['report' => 'order-analytics']],
                         ['label' => 'Inventory Status', 'route' => 'admin.reports.show', 'params' => ['report' => 'inventory-status']],
+                        ['label' => 'Adjust Stock Log', 'route' => 'admin.reports.show', 'params' => ['report' => 'adjust-stock-log']],
                         ['label' => 'Recent Payments', 'route' => 'admin.reports.show', 'params' => ['report' => 'recent-payments']],
                         ['label' => 'Location Revenue', 'route' => 'admin.reports.show', 'params' => ['report' => 'location-revenue']],
                     ],

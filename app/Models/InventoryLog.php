@@ -20,4 +20,19 @@ class InventoryLog extends Model
         'source',
         'reason',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function inventory()
+    {
+        return $this->belongsTo(ProductInventory::class, 'product_inventory_id');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class);
+    }
 }
