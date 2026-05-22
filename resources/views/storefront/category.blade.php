@@ -69,8 +69,15 @@
                         </form>
                     </div>
 
-                    <div class="sf-grid sf-product-grid js-product-list" id="product-list">
-                        @include('storefront.partials.product-grid', ['products' => $products, 'emptyMessage' => $emptyMessage])
+                    <div class="{{ $selectedSubcategory ? 'sf-grid sf-product-grid' : 'sf-category-product-sections' }} js-product-list" id="product-list">
+                        @if ($selectedSubcategory)
+                            @include('storefront.partials.product-grid', ['products' => $products, 'emptyMessage' => $emptyMessage])
+                        @else
+                            @include('storefront.partials.product-sections', [
+                                'sections' => $categoryPageSections ?? [],
+                                'emptyMessage' => $emptyMessage,
+                            ])
+                        @endif
                     </div>
                 </section>
             </div>

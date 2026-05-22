@@ -188,32 +188,6 @@
             </section>
         @endif
 
-        @if (!$isSearch && ($selectedVendor ?? null))
-            <section class="container-fluid px-3 px-lg-4 mt-4">
-                <div class="sf-section-header">
-                    <div>
-                        <h3>{{ $selectedVendor->vendor_name }}</h3>
-                        <p class="text-secondary mb-0">Products from your selected vendor</p>
-                    </div>
-                </div>
-                <div class="sf-rail-wrap">
-                    <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll vendor products left">
-                        <i class="ti ti-chevron-left"></i>
-                    </button>
-                    <div class="sf-product-rail">
-                        @forelse ($selectedVendorProducts as $product)
-                            @include('storefront.partials.product-card', ['product' => $product])
-                        @empty
-                            <x-empty-state>No products available</x-empty-state>
-                        @endforelse
-                    </div>
-                    <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll vendor products right">
-                        <i class="ti ti-chevron-right"></i>
-                    </button>
-                </div>
-            </section>
-        @endif
-
         @if (!$isSearch && $showNoPincodeData)
             <section class="container-fluid px-3 px-lg-4 mt-4">
                 <x-empty-state>{{ config('ui_messages.no_products') }}</x-empty-state>
@@ -273,30 +247,16 @@
             </section>
 
             <section id="featured-sections" class="container-fluid px-3 px-lg-4 mt-5">
-                @foreach ($featuredSections as $section)
-                    <div class="sf-section-header">
-                        <div>
-                            <h3>{{ $section['title'] }}</h3>
-                            <p class="text-secondary mb-0">{{ $locationLabel === 'Select Location' ? 'City level discovery' : 'Deliverable to your area' }}</p>
-                        </div>
-                        @if (!empty($section['subcategory'] ?? null))
-                            <a href="{{ $safeRouteUrl('storefront.subcategory', '/subcategories/'.$section['subcategory']->getRouteKey().($filterQueryString ? '?'.$filterQueryString : ''), array_merge(['subcategory' => $section['subcategory']], $filterQuery)) }}">See all</a>
-                        @endif
+                <div class="sf-section-header">
+                    <div>
+                        <h3>Shop by category</h3>
+                        <p class="text-secondary mb-0">{{ ($selectedVendor ?? null) ? 'Filtered for '.$selectedVendor->vendor_name : 'Products from available vendors' }}</p>
                     </div>
-                    <div class="sf-rail-wrap mb-4">
-                        <button type="button" class="sf-rail-arrow sf-rail-arrow-left js-rail-scroll" data-direction="-1" aria-label="Scroll products left">
-                            <i class="ti ti-chevron-left"></i>
-                        </button>
-                        <div class="sf-product-rail">
-                            @foreach ($section['products'] as $product)
-                                @include('storefront.partials.product-card', ['product' => $product])
-                            @endforeach
-                        </div>
-                        <button type="button" class="sf-rail-arrow sf-rail-arrow-right js-rail-scroll" data-direction="1" aria-label="Scroll products right">
-                            <i class="ti ti-chevron-right"></i>
-                        </button>
-                    </div>
-                @endforeach
+                </div>
+                @include('storefront.partials.product-sections', [
+                    'sections' => $categoryProductSections ?? [],
+                    'emptyMessage' => config('ui_messages.no_products'),
+                ])
             </section>
 
             @if (($banners ?? collect())->isNotEmpty())

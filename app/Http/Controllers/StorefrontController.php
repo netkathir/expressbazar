@@ -68,9 +68,14 @@ class StorefrontController extends Controller
             'category' => $category->loadMissing('subcategories'),
             'selectedSubcategory' => $selectedSubcategory,
             'products' => $this->categoryProducts($category, $selectedSubcategory),
+            'categoryPageSections' => $this->categoryProductSections($this->browsingLocation(), $category, $selectedSubcategory, 16),
         ]);
 
         if ($request->ajax()) {
+            if (! $selectedSubcategory && ! empty($data['categoryPageSections'])) {
+                return $this->productSectionsResponse($data['categoryPageSections'], config('ui_messages.no_products'));
+            }
+
             return $this->productGridResponse($data['products'], config('ui_messages.no_products'));
         }
 
@@ -1046,6 +1051,7 @@ class StorefrontController extends Controller
         $selectedVendorId = $request->filled('vendor_id') ? $request->integer('vendor_id') : null;
         $featuredSections = $this->featuredSections($location);
         $selectedVendor = $selectedVendorId ? $this->activeVendor($selectedVendorId, $location, $pincode) : null;
+        $categoryProductSections = $this->categoryProductSections($location);
         $categories = Category::query()
             ->where('status', 'active')
             ->withCount('products')
@@ -1070,6 +1076,7 @@ class StorefrontController extends Controller
             'cartTotals' => $this->cartTotals(),
             'categories' => $categories,
             'featuredSections' => $featuredSections,
+            'categoryProductSections' => $categoryProductSections,
             'discountedProducts' => $this->discountedProducts($location),
             'banners' => Banner::query()
                 ->where('status', 'active')
@@ -1183,6 +1190,84 @@ class StorefrontController extends Controller
         }
 
         return $query->limit(60)->get();
+    }
+
+    private function categoryProductSections(?array $location, ?Category $category = null, ?Subcategory $subcategory = null, int $limitPerSection = 12): array
+    {
+        if ($subcategory) {
+            $products = $this->productsQuery($location)
+                ->where('subcategory_id', $subcategory->id)
+                ->limit(60)
+                ->get();
+
+            return $products->isEmpty() ? [] : [[
+                'title' => $subcategory->subcategory_name,
+                'category' => $subcategory->category ?: $category,
+                'subcategory' => $subcategory,
+                'products' => $products,
+            ]];
+        }
+
+        if ($category) {
+            $sections = $category->subcategories()
+                ->where('status', 'active')
+                ->orderBy('subcategory_name')
+                ->get()
+                ->map(function (Subcategory $sectionSubcategory) use ($location, $category, $limitPerSection) {
+                    $products = $this->productsQuery($location)
+                        ->where('category_id', $category->id)
+                        ->where('subcategory_id', $sectionSubcategory->id)
+                        ->limit($limitPerSection)
+                        ->get();
+
+                    return [
+                        'title' => $sectionSubcategory->subcategory_name,
+                        'category' => $category,
+                        'subcategory' => $sectionSubcategory,
+                        'products' => $products,
+                    ];
+                })
+                ->filter(fn (array $section) => $section['products']->isNotEmpty())
+                ->values()
+                ->all();
+
+            if (! empty($sections)) {
+                return $sections;
+            }
+
+            $products = $this->productsQuery($location)
+                ->where('category_id', $category->id)
+                ->limit(60)
+                ->get();
+
+            return $products->isEmpty() ? [] : [[
+                'title' => $category->category_name,
+                'category' => $category,
+                'subcategory' => null,
+                'products' => $products,
+            ]];
+        }
+
+        return Category::query()
+            ->where('status', 'active')
+            ->orderBy('category_name')
+            ->get()
+            ->map(function (Category $sectionCategory) use ($location, $limitPerSection) {
+                $products = $this->productsQuery($location)
+                    ->where('category_id', $sectionCategory->id)
+                    ->limit($limitPerSection)
+                    ->get();
+
+                return [
+                    'title' => $sectionCategory->category_name,
+                    'category' => $sectionCategory,
+                    'subcategory' => null,
+                    'products' => $products,
+                ];
+            })
+            ->filter(fn (array $section) => $section['products']->isNotEmpty())
+            ->values()
+            ->all();
     }
 
     private function subcategoryProducts(Subcategory $subcategory)
@@ -1305,6 +1390,21 @@ class StorefrontController extends Controller
         return response()->json(array_merge([
             'html' => View::make('storefront.partials.product-grid', [
                 'products' => $products,
+                'emptyMessage' => $emptyMessage,
+                'cartMap' => $cartItems->keyBy(fn ($item) => $item['product']->id),
+                'pincode' => $this->activePincode(),
+                'selectedVendorId' => request()->filled('vendor_id') ? request()->integer('vendor_id') : null,
+            ])->render(),
+        ], $extra));
+    }
+
+    private function productSectionsResponse(array $sections, string $emptyMessage, array $extra = []): JsonResponse
+    {
+        $cartItems = $this->cartItems();
+
+        return response()->json(array_merge([
+            'html' => View::make('storefront.partials.product-sections', [
+                'sections' => $sections,
                 'emptyMessage' => $emptyMessage,
                 'cartMap' => $cartItems->keyBy(fn ($item) => $item['product']->id),
                 'pincode' => $this->activePincode(),
