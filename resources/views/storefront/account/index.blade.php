@@ -27,7 +27,7 @@
                     </div>
                 </div>
                 <div class="col-12 col-xl-8">
-                    <div class="sf-info-card mb-4">
+                    <div class="sf-info-card mb-4" id="wishlist">
                         <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
                             <h4 class="mb-0">Wishlist</h4>
                             <a href="{{ route('user.home') }}" class="btn btn-outline-dark rounded-pill btn-sm">Browse products</a>

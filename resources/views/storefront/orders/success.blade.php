@@ -41,15 +41,21 @@
                     <div class="sf-info-card text-start">
                         <h4 class="mb-3">Next Steps</h4>
                         <div class="d-grid gap-2">
-                            <div class="sf-coupon-row"><span>Track this order from your order history</span><i class="ti ti-chevron-right"></i></div>
-                            <div class="sf-coupon-row"><span>{{ $paymentStatus === 'paid' ? 'Payment confirmed through Stripe' : 'Retry payment later if needed' }}</span><i class="ti ti-chevron-right"></i></div>
-                            <div class="sf-coupon-row"><span>Continue shopping for more items</span><i class="ti ti-chevron-right"></i></div>
+                            <a href="{{ route('storefront.orders.index') }}" class="sf-coupon-row text-decoration-none text-dark">
+                                <span>Track this order from your order history</span><i class="ti ti-chevron-right"></i>
+                            </a>
+                            @if ($paymentStatus === 'paid')
+                                <div class="sf-coupon-row"><span>Payment confirmed through Stripe</span><i class="ti ti-chevron-right"></i></div>
+                            @endif
+                            <a href="{{ route('user.home') }}" class="sf-coupon-row text-decoration-none text-dark">
+                                <span>Continue shopping for more items</span><i class="ti ti-chevron-right"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex flex-wrap justify-content-center gap-2">
-                    <a href="{{ route('storefront.orders.show', $order) }}" class="btn btn-dark rounded-pill px-4">View Order Details</a>
+                    <a href="{{ route('storefront.orders.show', $order) }}" class="btn sf-order-details-btn rounded-pill px-4">View Order Details</a>
                     <a href="{{ route('storefront.orders.index') }}" class="btn btn-outline-dark rounded-pill px-4">My Orders</a>
                     <a href="{{ route('user.home') }}" class="btn btn-danger rounded-pill px-4">Continue Shopping</a>
                 </div>

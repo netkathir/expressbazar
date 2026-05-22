@@ -122,6 +122,9 @@
                                         <a href="{{ $safeRouteUrl('storefront.account', '/account') }}" class="dropdown-item rounded-2">
                                             <i class="ti ti-user-circle me-2"></i>My Account
                                         </a>
+                                        <a href="{{ $safeRouteUrl('storefront.account', '/account') }}#wishlist" class="dropdown-item rounded-2">
+                                            <i class="ti ti-heart me-2"></i>Wishlist
+                                        </a>
                                         <a href="{{ $safeRouteUrl('user.home', '/') }}#top-offers" class="dropdown-item rounded-2">
                                             <i class="ti ti-discount-2 me-2"></i>Offers
                                         </a>

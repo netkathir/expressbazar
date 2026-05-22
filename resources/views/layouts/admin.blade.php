@@ -160,14 +160,56 @@
                 </div>
 
                 @foreach ($visibleItems as $item)
+                    @php
+                        $isActiveItem = ($activeMenu ?? '') === ($item['active'] ?? '');
+                        $itemHref = route($item['route'], $item['params'] ?? []);
+                        if (! empty($item['fragment'])) {
+                            $itemHref .= '#'.$item['fragment'];
+                        }
+                    @endphp
                     <a
-                        class="nav-link {{ ($activeMenu ?? '') === ($item['active'] ?? '') ? 'active' : '' }}"
-                        href="{{ route($item['route'], $item['params'] ?? []) }}"
+                        class="nav-link {{ $isActiveItem ? 'active' : '' }}"
+                        href="{{ $itemHref }}"
                         title="{{ $item['label'] }}"
                     >
                         <i class="ti ti-{{ $item['icon'] }}"></i>
                         <span class="nav-text">{{ $item['label'] }}</span>
                     </a>
+                    @if ($isActiveItem && ! empty($item['children']))
+                        @php
+                            $visibleChildren = collect($item['children'])->filter(function ($child) use ($panelUser, $isVendorPanel) {
+                                if (! $panelUser) {
+                                    return true;
+                                }
+
+                                if ($isVendorPanel && method_exists($panelUser, 'canAccessVendorRoute')) {
+                                    return $panelUser->canAccessVendorRoute($child['route'], 'GET');
+                                }
+
+                                return ! $isVendorPanel && method_exists($panelUser, 'canAccessAdminRoute') && $panelUser->canAccessAdminRoute($child['route'], 'GET');
+                            });
+                        @endphp
+                        @foreach ($visibleChildren as $child)
+                            @php
+                                $childHref = route($child['route'], $child['params'] ?? []);
+                                if (! empty($child['fragment'])) {
+                                    $childHref .= '#'.$child['fragment'];
+                                }
+                                $isActiveChild = request()->routeIs($child['route']);
+                                foreach (($child['params'] ?? []) as $paramKey => $paramValue) {
+                                    $isActiveChild = $isActiveChild && (string) request()->route($paramKey) === (string) $paramValue;
+                                }
+                            @endphp
+                            <a
+                                class="nav-link nav-sub-link {{ $isActiveChild ? 'active' : '' }}"
+                                href="{{ $childHref }}"
+                                title="{{ $child['label'] }}"
+                            >
+                                <i class="ti ti-point-filled"></i>
+                                <span class="nav-text">{{ $child['label'] }}</span>
+                            </a>
+                        @endforeach
+                    @endif
                 @endforeach
             @endforeach
         </div>

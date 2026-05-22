@@ -151,6 +151,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('system-config', [SystemConfigController::class, 'update'])->name('system-config.update');
         Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
         Route::get('reports/export', [ReportsController::class, 'export'])->name('reports.export');
+        Route::get('reports/{report}', [ReportsController::class, 'show'])->name('reports.show');
         Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
         Route::get('vendors/options/states', [VendorController::class, 'states'])->name('vendors.states');
         Route::get('vendors/options/cities', [VendorController::class, 'cities'])->name('vendors.cities');

@@ -37,19 +37,19 @@
                 <div class="sf-info-card">
                     <h4 class="mb-3">Order Items</h4>
                     <div class="d-grid gap-3">
-                        @foreach ($order->items as $item)
-                            @php
+                        <?php foreach ($order->items as $item): ?>
+                            <?php
                                 $baseUnit = \App\Support\StoreOfferPricing::orderItemBaseUnit($item);
                                 $offerUnit = \App\Support\StoreOfferPricing::orderItemOfferUnit($item);
                                 $itemSavings = \App\Support\StoreOfferPricing::orderItemSavings($item);
                                 $discountLabel = \App\Support\StoreOfferPricing::discountLabel($item->product, $baseUnit, $offerUnit);
-                            @endphp
+                            ?>
                             <div class="sf-sidepanel p-3">
                                 <div class="d-flex justify-content-between gap-3 align-items-center">
                                     <div class="d-flex gap-3 align-items-center">
                                         @if ($item->product)
                                             <a href="{{ route('storefront.product', $item->product) }}" class="flex-shrink-0">
-                                                <img src="{{ $item->product->images->first() ? asset($item->product->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $item->item_name }}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 10px;">
+                                                <img src="{{ \App\Support\StoreImage::product($item->product) }}" alt="{{ $item->item_name }}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 10px;" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                                             </a>
                                         @endif
                                         <div>
@@ -68,7 +68,7 @@
                                     <div class="fw-semibold">{{ \App\Support\StoreCurrency::format($item->subtotal, 0) }}</div>
                                 </div>
                             </div>
-                        @endforeach
+                        <?php endforeach; ?>
                     </div>
                 </div>
 

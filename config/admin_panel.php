@@ -54,7 +54,20 @@ return [
             'items' => [
                 ['label' => 'Notification Management', 'route' => 'admin.notifications.index', 'icon' => 'bell', 'active' => 'notifications'],
                 ['label' => 'Contact Inquiries', 'route' => 'admin.contacts.index', 'icon' => 'mail', 'active' => 'contacts'],
-                ['label' => 'Reports & Analytics', 'route' => 'admin.reports.index', 'icon' => 'chart-bar', 'active' => 'reports'],
+                [
+                    'label' => 'Reports & Analytics',
+                    'route' => 'admin.reports.index',
+                    'icon' => 'chart-bar',
+                    'active' => 'reports',
+                    'children' => [
+                        ['label' => 'Sales Snapshot', 'route' => 'admin.reports.show', 'params' => ['report' => 'sales-snapshot']],
+                        ['label' => 'Vendor Performance', 'route' => 'admin.reports.show', 'params' => ['report' => 'vendor-performance']],
+                        ['label' => 'Order Analytics', 'route' => 'admin.reports.show', 'params' => ['report' => 'order-analytics']],
+                        ['label' => 'Inventory Status', 'route' => 'admin.reports.show', 'params' => ['report' => 'inventory-status']],
+                        ['label' => 'Recent Payments', 'route' => 'admin.reports.show', 'params' => ['report' => 'recent-payments']],
+                        ['label' => 'Location Revenue', 'route' => 'admin.reports.show', 'params' => ['report' => 'location-revenue']],
+                    ],
+                ],
                 ['label' => 'User & Role Management', 'route' => 'admin.roles.index', 'icon' => 'shield-lock', 'active' => 'roles'],
                 ['label' => 'Admin Users', 'route' => 'admin.users.index', 'icon' => 'user-shield', 'active' => 'users'],
                 ['label' => 'System Configuration', 'route' => 'admin.system-config.edit', 'icon' => 'settings', 'active' => 'config'],

@@ -1,10 +1,18 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $activeReport = $activeReport ?? null;
+        $reportPages = $reportPages ?? [];
+        $reportActionUrl = $activeReport
+            ? route('admin.reports.show', ['report' => $activeReport])
+            : route('admin.reports.index');
+    @endphp
+
     <div class="card shell-card mb-4">
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
-                <h1 class="h3 mb-1">Reports & Analytics</h1>
+                <h1 class="h3 mb-1">{{ $reportTitle ?? 'Reports & Analytics' }}</h1>
             </div>
             @canRoute('admin.reports.export')
                 <a href="{{ route('admin.reports.export', request()->query()) }}" class="btn btn-primary">
@@ -16,7 +24,7 @@
 
     <div class="card shell-card mb-4">
         <div class="card-body p-4">
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="row g-3 align-items-end">
+            <form method="GET" action="{{ $reportActionUrl }}" class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label">Date From</label>
                     <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control">
@@ -85,13 +93,14 @@
                     </div>
                     <div class="ms-auto d-flex gap-2">
                         <button class="btn btn-dark" type="submit">Apply Filters</button>
-                        <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-secondary">Reset</a>
+                        <a href="{{ $reportActionUrl }}" class="btn btn-outline-secondary">Reset</a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
+    @if (! $activeReport)
     <div class="row g-3 mb-4">
         <div class="col-md-2 col-6">
             <div class="card shell-card h-100"><div class="card-body p-4"><div class="text-secondary small">Orders</div><div class="h3 mb-0">{{ $summary['orders'] }}</div></div></div>
@@ -114,6 +123,18 @@
     </div>
 
     <div class="card shell-card mb-4">
+        <div class="card-body p-3">
+            <div class="d-flex flex-wrap gap-2">
+                @foreach ($reportPages as $reportSlug => $reportLabel)
+                    <a href="{{ route('admin.reports.show', ['report' => $reportSlug]) }}" class="btn btn-sm btn-outline-primary">{{ $reportLabel }}</a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if (! $activeReport || $activeReport === 'sales-snapshot')
+    <div id="sales-snapshot" class="card shell-card mb-4">
         <div class="card-body p-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
                 <div>
@@ -184,171 +205,196 @@
             </div>
         </div>
     </div>
+    @endif
 
-    <div class="row g-4 mb-4">
-        <div class="col-lg-6">
-            <div class="card shell-card h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 mb-3">Vendor Performance</h2>
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Vendor</th>
-                                    <th>Orders</th>
-                                    <th>Revenue</th>
-                                    <th>Mode</th>
-                                    <th>Location</th>
-                                    <th>Active Zones</th>
-                                    <th>Zone</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($vendorPerformance as $row)
-                                    <tr>
-                                        <td>{{ $row->vendor_name }}</td>
-                                        <td>{{ $row->orders_count }}</td>
-                                        <td>{{ \App\Support\StoreCurrency::format($row->revenue) }}</td>
-                                        <td><span class="badge text-bg-{{ $row->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($row->inventory_mode) }}</span></td>
-                                        <td>
-                                            <div>{{ $row->country_name }}</div>
-                                            <div class="small text-secondary">{{ $row->city_name }}</div>
-                                        </td>
-                                        <td>{{ $row->active_zones }}</td>
-                                        <td>{{ $row->zone_name }}</td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="7" class="text-center text-secondary py-4">No vendor performance data.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card shell-card h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 mb-3">Order Analytics</h2>
-                    <div class="row g-3 mb-3">
-                        <div class="col-6 col-md-3">
-                            <div class="soft-card p-3 h-100">
-                                <div class="small text-secondary">Total</div>
-                                <div class="h4 mb-0">{{ $orderAnalytics['total'] }}</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="soft-card p-3 h-100">
-                                <div class="small text-secondary">Pending</div>
-                                <div class="h4 mb-0">{{ $orderAnalytics['pending'] }}</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="soft-card p-3 h-100">
-                                <div class="small text-secondary">Completed</div>
-                                <div class="h4 mb-0">{{ $orderAnalytics['completed'] }}</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="soft-card p-3 h-100">
-                                <div class="small text-secondary">Cancelled</div>
-                                <div class="h4 mb-0">{{ $orderAnalytics['cancelled'] }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Status</th>
-                                    <th>Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ([
-                                    'accepted' => $orderAnalytics['accepted'],
-                                    'processing' => $orderAnalytics['processing'],
-                                    'dispatched' => $orderAnalytics['dispatched'],
-                                    'delivered' => $orderAnalytics['delivered'],
-                                ] as $label => $count)
-                                    <tr>
-                                        <td>{{ ucfirst($label) }}</td>
-                                        <td>{{ $count }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div class="card shell-card h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 mb-3">Inventory Status</h2>
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Vendor</th>
-                                    <th>Stock</th>
-                                    <th>Unit</th>
-                                    <th>Mode</th>
-                                    <th>Sync Status</th>
-                                    <th>Updated</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($inventoryItems as $inventory)
-                                    <tr>
-                                        <td class="fw-semibold">{{ $inventory->product?->product_name ?? '-' }}</td>
-                                        <td>{{ $inventory->product?->vendor?->vendor_name ?? '-' }}</td>
-                                        <td>
-                                            {{ $inventory->stock_quantity }}
-                                            @if (! is_null($inventory->low_stock_threshold) && $inventory->stock_quantity <= $inventory->low_stock_threshold)
-                                                <span class="badge text-bg-warning ms-2">Low</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $inventory->unit ?? '-' }}</td>
-                                        <td><span class="badge text-bg-{{ $inventory->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($inventory->inventory_mode) }}</span></td>
-                                        <td>{{ $inventory->sync_status ?: '-' }}</td>
-                                        <td>{{ \App\Support\StoreDate::dateTime($inventory->last_synced_at ?? $inventory->updated_at) }}</td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="7" class="text-center text-secondary py-4">No inventory items found.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card shell-card h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 mb-3">Recent Payments</h2>
-                    @forelse ($recentPayments as $payment)
-                        <div class="border-bottom py-2">
-                            <div class="fw-semibold">{{ $payment->transaction_id }}</div>
-                            <div class="small text-secondary">
-                                {{ $payment->order?->order_number ?? '-' }} - {{ ucfirst($payment->status) }}
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-secondary mb-0">No payment records yet.</p>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shell-card">
+    @if (! $activeReport || $activeReport === 'vendor-performance')
+    <div id="vendor-performance" class="card shell-card mb-4">
         <div class="card-body p-4">
-            <h2 class="h5 mb-3">Location Based Revenue</h2>
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Vendor Performance</h2>
+                    <p class="text-secondary mb-0">Orders, revenue, inventory mode and service location per vendor.</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Orders</th>
+                            <th>Revenue</th>
+                            <th>Mode</th>
+                            <th>Location</th>
+                            <th>Active Zones</th>
+                            <th>Zone</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($vendorPerformance as $row)
+                            <tr>
+                                <td>{{ $row->vendor_name }}</td>
+                                <td>{{ $row->orders_count }}</td>
+                                <td>{{ \App\Support\StoreCurrency::format($row->revenue) }}</td>
+                                <td><span class="badge text-bg-{{ $row->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($row->inventory_mode) }}</span></td>
+                                <td>
+                                    <div>{{ $row->country_name }}</div>
+                                    <div class="small text-secondary">{{ $row->city_name }}</div>
+                                </td>
+                                <td>{{ $row->active_zones }}</td>
+                                <td>{{ $row->zone_name }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7" class="text-center text-secondary py-4">No vendor performance data.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if (! $activeReport || $activeReport === 'order-analytics')
+    <div id="order-analytics" class="card shell-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Order Analytics</h2>
+                    <p class="text-secondary mb-0">Order status breakdown for the selected filters.</p>
+                </div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="soft-card p-3 h-100">
+                        <div class="small text-secondary">Total</div>
+                        <div class="h4 mb-0">{{ $orderAnalytics['total'] }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="soft-card p-3 h-100">
+                        <div class="small text-secondary">Pending</div>
+                        <div class="h4 mb-0">{{ $orderAnalytics['pending'] }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="soft-card p-3 h-100">
+                        <div class="small text-secondary">Completed</div>
+                        <div class="h4 mb-0">{{ $orderAnalytics['completed'] }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="soft-card p-3 h-100">
+                        <div class="small text-secondary">Cancelled</div>
+                        <div class="h4 mb-0">{{ $orderAnalytics['cancelled'] }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ([
+                            'accepted' => $orderAnalytics['accepted'],
+                            'processing' => $orderAnalytics['processing'],
+                            'dispatched' => $orderAnalytics['dispatched'],
+                            'delivered' => $orderAnalytics['delivered'],
+                        ] as $label => $count)
+                            <tr>
+                                <td>{{ ucfirst($label) }}</td>
+                                <td>{{ $count }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if (! $activeReport || $activeReport === 'inventory-status')
+    <div id="inventory-status" class="card shell-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Inventory Status</h2>
+                    <p class="text-secondary mb-0">Stock quantity, inventory mode and sync status by product.</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Vendor</th>
+                            <th>Stock</th>
+                            <th>Unit</th>
+                            <th>Mode</th>
+                            <th>Sync Status</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($inventoryItems as $inventory)
+                            <tr>
+                                <td class="fw-semibold">{{ $inventory->product?->product_name ?? '-' }}</td>
+                                <td>{{ $inventory->product?->vendor?->vendor_name ?? '-' }}</td>
+                                <td>
+                                    {{ $inventory->stock_quantity }}
+                                    @if (! is_null($inventory->low_stock_threshold) && $inventory->stock_quantity <= $inventory->low_stock_threshold)
+                                        <span class="badge text-bg-warning ms-2">Low</span>
+                                    @endif
+                                </td>
+                                <td>{{ $inventory->unit ?? '-' }}</td>
+                                <td><span class="badge text-bg-{{ $inventory->inventory_mode === 'epos' ? 'info' : 'primary' }}">{{ strtoupper($inventory->inventory_mode) }}</span></td>
+                                <td>{{ $inventory->sync_status ?: '-' }}</td>
+                                <td>{{ \App\Support\StoreDate::dateTime($inventory->last_synced_at ?? $inventory->updated_at) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7" class="text-center text-secondary py-4">No inventory items found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if (! $activeReport || $activeReport === 'recent-payments')
+    <div id="recent-payments" class="card shell-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Recent Payments</h2>
+                    <p class="text-secondary mb-0">Latest payment records and their linked orders.</p>
+                </div>
+            </div>
+            @forelse ($recentPayments as $payment)
+                <div class="border-bottom py-2">
+                    <div class="fw-semibold">{{ $payment->transaction_id }}</div>
+                    <div class="small text-secondary">
+                        {{ $payment->order?->order_number ?? '-' }} - {{ ucfirst($payment->status) }}
+                    </div>
+                </div>
+            @empty
+                <p class="text-secondary mb-0">No payment records yet.</p>
+            @endforelse
+        </div>
+    </div>
+    @endif
+
+    @if (! $activeReport || $activeReport === 'location-revenue')
+    <div id="location-revenue" class="card shell-card">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Location Based Revenue</h2>
+                    <p class="text-secondary mb-0">Revenue grouped by country, city and zone.</p>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead>
@@ -377,4 +423,5 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection

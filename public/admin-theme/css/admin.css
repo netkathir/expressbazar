@@ -199,6 +199,20 @@ body.admin-shell {
     justify-content: center;
 }
 
+.sidebar .nav-sub-link {
+    margin-left: 28px;
+    padding-top: .45rem;
+    padding-bottom: .45rem;
+    font-size: .84rem;
+    color: var(--admin-muted);
+}
+
+.sidebar .nav-sub-link > .ti {
+    width: 14px;
+    min-width: 14px;
+    font-size: .64rem;
+}
+
 .sidebar.collapsed {
     width: 72px;
 }

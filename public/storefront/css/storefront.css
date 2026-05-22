@@ -44,6 +44,20 @@ body.storefront-shell {
     color: #fff;
 }
 
+.storefront-shell .sf-order-details-btn {
+    background: #FF8C42;
+    border-color: #FF8C42;
+    color: #1f2528;
+    font-weight: 700;
+}
+
+.storefront-shell .sf-order-details-btn:hover,
+.storefront-shell .sf-order-details-btn:focus {
+    background: #e9772f;
+    border-color: #e9772f;
+    color: #1f2528;
+}
+
 .storefront-shell .required-symbol {
     color: var(--sf-pink);
     font-weight: 800;

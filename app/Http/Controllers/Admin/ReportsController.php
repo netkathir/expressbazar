@@ -20,13 +20,34 @@ use Illuminate\Validation\ValidationException;
 
 class ReportsController extends Controller
 {
+    private const REPORT_PAGES = [
+        'sales-snapshot' => 'Sales Snapshot',
+        'vendor-performance' => 'Vendor Performance',
+        'order-analytics' => 'Order Analytics',
+        'inventory-status' => 'Inventory Status',
+        'recent-payments' => 'Recent Payments',
+        'location-revenue' => 'Location Revenue',
+    ];
+
     public function index(Request $request)
     {
+        return redirect()->route('admin.reports.show', array_merge([
+            'report' => 'sales-snapshot',
+        ], $request->query()));
+    }
+
+    public function show(Request $request, string $report)
+    {
+        abort_unless(array_key_exists($report, self::REPORT_PAGES), 404);
+
         $data = $this->buildReportData($request);
 
         return view('admin.reports.index', array_merge([
-            'title' => 'Reports & Analytics',
+            'title' => self::REPORT_PAGES[$report],
             'activeMenu' => 'reports',
+            'reportPages' => self::REPORT_PAGES,
+            'activeReport' => $report,
+            'reportTitle' => self::REPORT_PAGES[$report],
         ], $data));
     }
 
@@ -109,10 +130,7 @@ class ReportsController extends Controller
             'inventoryItems' => $this->buildInventoryItems($filters),
             'orderAnalytics' => $this->buildOrderAnalytics($salesOrders),
             'locationReport' => $this->buildLocationReport($salesOrders),
-            'recentPayments' => Payment::with('order')
-                ->latest()
-                ->limit(8)
-                ->get(),
+            'recentPayments' => $this->buildRecentPayments($filters),
             'filterOptions' => [
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'countries' => Country::orderBy('country_name')->get(),
@@ -197,7 +215,12 @@ class ReportsController extends Controller
 
     private function orderQuery(array $filters): Builder
     {
-        return Order::query()
+        return $this->applyOrderFilters(Order::query(), $filters);
+    }
+
+    private function applyOrderFilters(Builder $query, array $filters): Builder
+    {
+        return $query
             ->when($filters['date_from'], fn (Builder $query, string $dateFrom) => $query->whereDate('placed_at', '>=', $dateFrom))
             ->when($filters['date_to'], fn (Builder $query, string $dateTo) => $query->whereDate('placed_at', '<=', $dateTo))
             ->when($filters['vendor_id'], fn (Builder $query, int $vendorId) => $query->where('vendor_id', $vendorId))
@@ -210,6 +233,20 @@ class ReportsController extends Controller
                         ->when($filters['zone_id'], fn (Builder $subQuery, int $zoneId) => $subQuery->where('region_zone_id', $zoneId));
                 });
             });
+    }
+
+    private function buildRecentPayments(array $filters): Collection
+    {
+        return Payment::query()
+            ->with('order')
+            ->when(array_filter($filters), function (Builder $query) use ($filters) {
+                $query->whereHas('order', function (Builder $orderQuery) use ($filters) {
+                    $this->applyOrderFilters($orderQuery, $filters);
+                });
+            })
+            ->latest()
+            ->limit(25)
+            ->get();
     }
 
     private function buildVendorPerformance(Collection $salesOrders): Collection
