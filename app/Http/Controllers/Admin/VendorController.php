@@ -104,30 +104,31 @@ class VendorController extends Controller
 
     public function update(Request $request, Vendor $vendor)
     {
+        $originalEmail = $vendor->email;
         $data = $this->validateVendor($request, $vendor);
         $data['updated_by'] = $request->user()?->id;
         $plainPassword = null;
 
-        if (empty($vendor->password)) {
+        if (empty($vendor->password) || $originalEmail !== $data['email']) {
             $plainPassword = $this->generatePassword();
             $data['password'] = Hash::make($plainPassword);
             $data['setup_token'] = Str::random(40);
             $data['is_setup_complete'] = false;
+        } elseif (empty($vendor->setup_token)) {
+            $data['setup_token'] = Str::random(40);
         }
 
         $vendor->update($data);
 
         $mailSent = null;
         $setupMailSent = null;
-        if ($plainPassword) {
-            $freshVendor = $vendor->fresh();
-            $mailSent = $this->sendCredentialsMail($freshVendor, $plainPassword);
-            $setupMailSent = null;
-        }
+        $freshVendor = $vendor->fresh();
+
+        $mailSent = $this->sendCredentialsMail($freshVendor, $plainPassword);
 
         return redirect()
             ->route('admin.vendors.index')
-            ->with('success', $this->vendorMailMessage('Vendor updated successfully.', $vendor->fresh(), $mailSent, $setupMailSent));
+            ->with('success', $this->vendorMailMessage('Vendor updated successfully.', $freshVendor, $mailSent, $setupMailSent));
     }
 
     public function destroy(Vendor $vendor)
@@ -305,10 +306,11 @@ class VendorController extends Controller
         return Str::password(12, true, true, false);
     }
 
-    private function sendCredentialsMail(Vendor $vendor, string $plainPassword): bool
+    private function sendCredentialsMail(Vendor $vendor, ?string $plainPassword = null): bool
     {
         try {
-            $mail = new VendorCredentialsMail($vendor, $plainPassword);
+            $setupUrl = $vendor->setup_token ? route('vendor.setup.edit', $vendor->setup_token) : null;
+            $mail = new VendorCredentialsMail($vendor, $plainPassword, $setupUrl);
 
             Mail::to($vendor->email)->send($mail);
 

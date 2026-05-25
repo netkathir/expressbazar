@@ -11,7 +11,7 @@ class VendorCredentialsMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Vendor $vendor, public string $plainPassword)
+    public function __construct(public Vendor $vendor, public ?string $plainPassword = null, public ?string $setupUrl = null)
     {
     }
 
@@ -28,6 +28,7 @@ class VendorCredentialsMail extends Mailable
                 'vendor' => $this->vendor,
                 'plainPassword' => $this->plainPassword,
                 'loginUrl' => route('vendor.login'),
+                'setupUrl' => $this->setupUrl,
             ]);
 
         if ($replyToAddress && filter_var($replyToAddress, FILTER_VALIDATE_EMAIL) && $replyToAddress !== $fromAddress) {
