@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class NotificationController extends Controller
@@ -217,13 +218,45 @@ class NotificationController extends Controller
 
     private function validateTemplate(Request $request, ?NotificationTemplate $template = null): array
     {
+        $normalizedType = Str::of((string) $request->input('notification_type'))
+            ->trim()
+            ->replaceMatches('/[^A-Za-z0-9]+/', '_')
+            ->trim('_')
+            ->upper()
+            ->toString();
+
+        $request->merge([
+            'template_name' => trim((string) $request->input('template_name')),
+            'notification_type' => $normalizedType,
+            'subject' => trim((string) $request->input('subject')),
+            'message_body' => trim((string) $request->input('message_body')),
+        ]);
+
         return $request->validate([
-            'template_name' => ['required', 'string', 'max:255'],
-            'notification_type' => ['required', 'string', 'max:255'],
+            'template_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('notification_templates', 'template_name')->ignore($template?->id),
+            ],
+            'notification_type' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/\A[A-Z][A-Z0-9_]*\z/',
+                Rule::unique('notification_templates', 'notification_type')
+                    ->where(fn ($query) => $query->where('channel', $request->input('channel')))
+                    ->ignore($template?->id),
+            ],
             'channel' => ['required', Rule::in(['email', 'sms', 'push'])],
             'subject' => ['nullable', 'string', 'max:255'],
             'message_body' => ['required', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+        ], [
+            'template_name.unique' => 'A notification template with this name already exists.',
+            'notification_type.regex' => 'Type must use uppercase letters, numbers, and underscores only.',
+            'notification_type.unique' => 'A notification template with this type and channel already exists.',
+            'message_body.required' => 'Message body is required.',
         ]);
     }
 }

@@ -26,11 +26,11 @@
                 <tbody>
                     @forelse ($logs as $log)
                         <tr>
-                            <td>{{ $log->recipient_type }} #{{ $log->recipient_id }}</td>
-                            <td>{{ $log->template?->template_name ?? '-' }}</td>
-                            <td>{{ strtoupper($log->channel) }}</td>
+                            <td>{{ $log->displayRecipient() }}</td>
+                            <td>{{ $log->displayTemplateName() }}</td>
+                            <td>{{ $log->displayChannel() }}</td>
                             <td>{{ ucfirst($log->status) }}</td>
-                            <td>{{ $log->error_message ?? '-' }}</td>
+                            <td>{{ $log->displayErrorMessage() }}</td>
                             <td>{{ \App\Support\StoreDate::dateTime($log->created_at) }}</td>
                         </tr>
                     @empty

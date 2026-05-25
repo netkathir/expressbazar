@@ -34,8 +34,8 @@
                         @forelse ($templates as $template)
                             <tr>
                                 <td class="fw-semibold">{{ $template->template_name }}</td>
-                                <td>{{ $template->notification_type }}</td>
-                                <td>{{ strtoupper($template->channel) }}</td>
+                                <td>{{ \Illuminate\Support\Str::of($template->notification_type)->snake()->upper() }}</td>
+                                <td>{{ $template->channel === 'sms' ? 'SMS' : \Illuminate\Support\Str::headline($template->channel) }}</td>
                                 <td><span class="badge text-bg-{{ $template->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($template->status) }}</span></td>
                                 <td class="text-end">
                                     @canRoute('admin.notifications.edit')
@@ -85,9 +85,9 @@
                     <tbody>
                         @forelse ($logs as $log)
                             <tr>
-                                <td>{{ $log->recipient_type }} #{{ $log->recipient_id }}</td>
-                                <td>{{ $log->template?->template_name ?? '-' }}</td>
-                                <td>{{ strtoupper($log->channel) }}</td>
+                                <td>{{ $log->displayRecipient() }}</td>
+                                <td>{{ $log->displayTemplateName() }}</td>
+                                <td>{{ $log->displayChannel() }}</td>
                                 <td>{{ ucfirst($log->status) }}</td>
                                 <td>{{ \App\Support\StoreDate::dateTime($log->created_at) }}</td>
                             </tr>

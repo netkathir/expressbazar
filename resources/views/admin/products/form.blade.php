@@ -79,8 +79,14 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label">Product Images</label>
-                    <input type="file" name="images[]" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" data-max-file-size="2097152" data-max-files="5">
+                    <input type="file" name="images[]" class="form-control @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" data-max-file-size="2097152" data-max-files="5" data-allowed-types="image/jpeg,image/png,image/webp,image/gif">
                     <div class="form-text">You can upload up to 5 images: JPG, JPEG, PNG, WEBP or GIF, maximum 2 MB each. Leave blank to keep the current images on edit.</div>
+                    @error('images')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    @error('images.*')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 @if ($mode === 'edit' && $product->images->isNotEmpty())
                     <div class="col-12">
@@ -98,7 +104,12 @@
                 @endif
                 <div class="col-md-3">
                     <label class="form-label">Price</label>
-                    <input type="number" step="0.01" min="0.01" max="{{ $maxMoneyAmount }}" name="price" value="{{ old('price', $product->price) }}" class="form-control" required>
+                    <input type="number" step="0.01" min="0.01" max="{{ $maxMoneyAmount }}" name="price" value="{{ old('price', $product->price) }}" class="form-control @error('price') is-invalid @enderror" required>
+                    @error('price')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @else
+                        <div class="invalid-feedback">Price must be greater than zero.</div>
+                    @enderror
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Discount Type</label>
@@ -247,15 +258,19 @@
 
             const maxBytes = Number(imageInput.dataset.maxFileSize || 0);
             const maxFiles = Number(imageInput.dataset.maxFiles || 0);
+            const allowedTypes = (imageInput.dataset.allowedTypes || '').split(',').filter(Boolean);
             const maxMb = Math.round((maxBytes / 1024 / 1024) * 10) / 10;
 
             const validateImages = () => {
                 const files = Array.from(imageInput.files || []);
+                const invalidType = files.find((file) => !allowedTypes.includes(file.type));
                 const oversized = files.find((file) => file.size > maxBytes);
                 let message = '';
 
                 if (maxFiles && files.length > maxFiles) {
                     message = `You can upload up to ${maxFiles} product images.`;
+                } else if (invalidType) {
+                    message = `${invalidType.name} is not a valid image format. Use JPG, JPEG, PNG, WEBP or GIF.`;
                 } else if (oversized) {
                     message = `${oversized.name} is larger than ${maxMb} MB.`;
                 }

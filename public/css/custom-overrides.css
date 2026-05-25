@@ -153,6 +153,11 @@ textarea:-ms-input-placeholder {
     line-height: 1.35;
 }
 
+.admin-shell .admin-page-title {
+    font-size: clamp(1.95rem, 1.85vw + 1rem, 2.35rem);
+    font-weight: 500;
+}
+
 .storefront-shell .sf-promo-nav {
     display: none;
 }
