@@ -23,7 +23,7 @@
                             $discountLabel = \App\Support\StoreOfferPricing::discountLabel($item['product'], $baseUnit, $offerUnit);
                         @endphp
                         <div class="sf-cart-row" data-cart-row data-product="{{ $item['product']->id }}">
-                            <img src="{{ $item['product']->images->first() ? asset($item['product']->images->first()->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $item['product']->product_name }}">
+                            <img src="{{ \App\Support\StoreImage::product($item['product']) }}" alt="{{ $item['product']->product_name }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                             <div class="flex-grow-1">
                                 <div class="fw-semibold">{{ $item['product']->product_name }}</div>
                                 <div class="text-secondary small">{{ $item['product']->vendor?->vendor_name }}</div>

@@ -737,17 +737,17 @@ body.storefront-shell {
 
 .sf-product-rail .sf-product-card {
     min-height: 196px;
-    padding: 6px;
+    padding: 8px;
     border-radius: 14px;
 }
 
 .sf-product-rail .sf-product-image {
-    height: 88px;
+    height: 84px;
     border-radius: 12px;
 }
 
 .sf-product-rail .sf-product-image img {
-    padding: 8px 7px 7px;
+    padding: 8px;
 }
 
 .sf-product-media {
@@ -801,8 +801,8 @@ body.storefront-shell {
 }
 
 .sf-product-rail .sf-product-body {
-    padding: 5px 5px 3px;
-    gap: 1px;
+    padding: 7px 7px 4px;
+    gap: 2px;
 }
 
 .sf-product-name {
@@ -827,7 +827,7 @@ body.storefront-shell {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
     font-size: .6rem;
-    line-height: 1.15;
+    line-height: 1.2;
 }
 
 .sf-product-rail .sf-price {
@@ -854,11 +854,7 @@ body.storefront-shell {
 
 .sf-product-rail .sf-product-meta,
 .sf-product-rail .sf-product-price-row .small {
-    line-height: 1.1;
-}
-
-.sf-product-rail .sf-offer-price-label {
-    display: none;
+    line-height: 1.15;
 }
 
 .sf-product-price-line {
@@ -1148,6 +1144,15 @@ body.storefront-shell {
     padding: 26px;
     text-align: center;
     color: var(--sf-muted);
+}
+
+.sf-flash-message {
+    transition: opacity .3s ease, transform .3s ease;
+}
+
+.sf-flash-message.is-hiding {
+    opacity: 0;
+    transform: translateY(-6px);
 }
 
 .sf-product-detail {

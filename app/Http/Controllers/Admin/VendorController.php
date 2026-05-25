@@ -81,7 +81,7 @@ class VendorController extends Controller
 
         $vendor = Vendor::create($data);
         $mailSent = $this->sendCredentialsMail($vendor, $plainPassword);
-        $setupMailSent = null;
+        $setupMailSent = $this->sendSetupMail($vendor);
 
         return redirect()
             ->route('admin.vendors.index')
@@ -125,6 +125,7 @@ class VendorController extends Controller
         $freshVendor = $vendor->fresh();
 
         $mailSent = $this->sendCredentialsMail($freshVendor, $plainPassword);
+        $setupMailSent = $this->sendSetupMail($freshVendor);
 
         return redirect()
             ->route('admin.vendors.index')
@@ -309,8 +310,7 @@ class VendorController extends Controller
     private function sendCredentialsMail(Vendor $vendor, ?string $plainPassword = null): bool
     {
         try {
-            $setupUrl = $vendor->setup_token ? route('vendor.setup.edit', $vendor->setup_token) : null;
-            $mail = new VendorCredentialsMail($vendor, $plainPassword, $setupUrl);
+            $mail = new VendorCredentialsMail($vendor, $plainPassword);
 
             Mail::to($vendor->email)->send($mail);
 

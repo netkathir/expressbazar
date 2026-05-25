@@ -51,11 +51,11 @@
                                     <div class="sf-order-history-main">
                                         @if ($productUrl)
                                             <a href="{{ $productUrl }}" class="sf-order-history-image" aria-label="View {{ $item->item_name }}">
-                                                <img src="{{ $productImage ? asset($productImage->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $item->item_name }}">
+                                                <img src="{{ \App\Support\StoreImage::product($product) }}" alt="{{ $item->item_name }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                                             </a>
                                         @else
                                             <div class="sf-order-history-image" aria-hidden="true">
-                                                <img src="{{ asset('admin-theme/assets/images/product-1.png') }}" alt="">
+                                                <img src="{{ \App\Support\StoreImage::product(null) }}" alt="" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                                             </div>
                                         @endif
 

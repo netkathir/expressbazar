@@ -1,4 +1,3 @@
-@php($image = $product->images->first())
 @php($basePrice = (float) $product->price)
 @php($salePrice = (float) ($product->final_price ?: $product->price))
 @php($hasDiscount = $basePrice > 0 && $salePrice >= 0 && $salePrice < $basePrice)
@@ -26,7 +25,7 @@
 <article class="sf-product-card">
     <div class="sf-product-media">
         <a href="{{ $safeRouteUrl('storefront.product', $productFallbackUrl, array_merge(['product' => $product], $pincodeQuery)) }}" class="sf-product-image">
-            <img src="{{ $image ? asset($image->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $product->product_name }}">
+            <img src="{{ \App\Support\StoreImage::product($product) }}" alt="{{ $product->product_name }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
         </a>
 
         <form method="POST" action="{{ $safeRouteUrl('storefront.cart.add', '/cart/items/'.$product->getRouteKey(), ['product' => $product]) }}" class="js-add-to-cart sf-card-add">
@@ -48,7 +47,6 @@
                     @endif
                 </div>
                 @if ($hasDiscount)
-                    <div class="small text-success sf-offer-price-label">Offer price</div>
                     <div class="sf-mrp">{{ \App\Support\StoreCurrency::format($basePrice, 0) }}</div>
                     <div class="small text-success">You save {{ \App\Support\StoreCurrency::format($discountAmount, 0) }}</div>
                 @endif

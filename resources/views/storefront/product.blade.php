@@ -12,9 +12,7 @@
                     ? rtrim(rtrim(number_format((float) $product->discount_value, 2), '0'), '.').'% off'
                     : \App\Support\StoreCurrency::format((float) $product->discount_value, 0).' off')
                 : null;
-            $productImages = $product->images->isNotEmpty()
-                ? $product->images
-                : collect([(object) ['image_path' => 'admin-theme/assets/images/product-1.png']]);
+            $productImages = \App\Support\StoreImage::productGallery($product);
             $firstImage = $productImages->first();
             $stockLimit = $product->inventory?->inventory_mode === 'internal'
                 ? max(1, min(99, (int) $product->inventory?->stock_quantity))
@@ -43,7 +41,7 @@
                                 aria-label="View image {{ $index + 1 }} of {{ $productImages->count() }}"
                                 aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
                             >
-                                <img src="{{ asset($image->image_path) }}" alt="{{ $product->product_name }} thumbnail {{ $index + 1 }}">
+                                <img src="{{ asset($image->image_path) }}" alt="{{ $product->product_name }} thumbnail {{ $index + 1 }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                             </button>
                         @endforeach
                     </div>
@@ -51,7 +49,7 @@
                         <button type="button" class="sf-gallery-nav sf-gallery-nav-prev js-gallery-nav" data-direction="-1" aria-label="Previous product image">
                             <i class="ti ti-chevron-left"></i>
                         </button>
-                        <img class="js-gallery-main-image" src="{{ asset($firstImage->image_path) }}" alt="{{ $product->product_name }}">
+                        <img class="js-gallery-main-image" src="{{ asset($firstImage->image_path) }}" alt="{{ $product->product_name }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                         <button type="button" class="sf-gallery-nav sf-gallery-nav-next js-gallery-nav" data-direction="1" aria-label="Next product image">
                             <i class="ti ti-chevron-right"></i>
                         </button>

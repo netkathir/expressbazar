@@ -181,7 +181,7 @@
 
     <div class="container-fluid px-3 px-lg-4 pt-3">
         @if (session('success'))
-            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-3">{{ session('success') }}</div>
+            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-3 sf-flash-message" data-auto-dismiss="true" role="status" aria-live="polite">{{ session('success') }}</div>
         @endif
 
         @if (session('error'))
@@ -479,6 +479,13 @@
             }
 
             button.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+        });
+
+        document.querySelectorAll('[data-auto-dismiss="true"]').forEach((message) => {
+            window.setTimeout(() => {
+                message.classList.add('is-hiding');
+                window.setTimeout(() => message.remove(), 300);
+            }, 3500);
         });
     </script>
     @stack('scripts')

@@ -62,7 +62,7 @@
                     @foreach ($categories as $category)
                         <a href="{{ $safeRouteUrl('storefront.category', '/categories/'.$category->getRouteKey().($filterQueryString ? '?'.$filterQueryString : ''), array_merge(['category' => $category], $filterQuery)) }}" class="sf-chip">
                             <span class="sf-chip-image">
-                                <img src="{{ $category->image_path ? asset($category->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
+                                <img src="{{ \App\Support\StoreImage::category($category) }}" alt="{{ $category->category_name }}" onerror="{{ \App\Support\StoreImage::onError('category') }}">
                             </span>
                             <span>{{ $category->category_name }}</span>
                         </a>

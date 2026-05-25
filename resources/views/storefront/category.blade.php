@@ -15,12 +15,12 @@
                     <h4 class="mb-3">{{ $category->category_name }}</h4>
                     <div class="sf-side-links">
                         <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="d-flex align-items-center gap-2 {{ empty($selectedSubcategory) ? 'active' : '' }}">
-                            <img src="{{ asset($category->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $category->category_name }}">
+                            <img src="{{ \App\Support\StoreImage::category($category) }}" alt="{{ $category->category_name }}" onerror="{{ \App\Support\StoreImage::onError('category') }}">
                             <span>All</span>
                         </a>
                         @foreach ($category->subcategories as $subcategory)
                             <a href="{{ route('storefront.category', array_merge(['category' => $category, 'subcategory' => $subcategory->id], $filterQuery)) }}" class="d-flex align-items-center gap-2 {{ ($selectedSubcategory?->id ?? null) === $subcategory->id ? 'active' : '' }}">
-                                <img src="{{ asset($subcategory->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $subcategory->subcategory_name }}">
+                                <img src="{{ \App\Support\StoreImage::subcategory($subcategory) }}" alt="{{ $subcategory->subcategory_name }}" onerror="{{ \App\Support\StoreImage::onError('category') }}">
                                 <span>{{ $subcategory->subcategory_name }}</span>
                             </a>
                         @endforeach
@@ -45,7 +45,7 @@
                         <a href="{{ route('storefront.category', array_merge(['category' => $category], $filterQuery)) }}" class="sf-filter-pill {{ empty($selectedSubcategory) ? 'active' : '' }}">All</a>
                         @foreach ($category->subcategories as $subcategory)
                             <a href="{{ route('storefront.category', array_merge(['category' => $category, 'subcategory' => $subcategory->id], $filterQuery)) }}" class="sf-filter-pill d-inline-flex align-items-center gap-2 {{ ($selectedSubcategory?->id ?? null) === $subcategory->id ? 'active' : '' }}">
-                                <img src="{{ asset($subcategory->image_path ?: 'admin-theme/assets/images/product-1.png') }}" alt="{{ $subcategory->subcategory_name }}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;">
+                                <img src="{{ \App\Support\StoreImage::subcategory($subcategory) }}" alt="{{ $subcategory->subcategory_name }}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;" onerror="{{ \App\Support\StoreImage::onError('category') }}">
                                 <span>{{ $subcategory->subcategory_name }}</span>
                             </a>
                         @endforeach

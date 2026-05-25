@@ -37,10 +37,9 @@
                                 @foreach ($wishlistItems as $wishlistItem)
                                     @php($wishlistProduct = $wishlistItem->product)
                                     @continue(! $wishlistProduct)
-                                    @php($wishlistImage = $wishlistProduct->images->first())
                                     <div class="sf-wishlist-card">
                                         <a href="{{ route('storefront.product', $wishlistProduct) }}" class="sf-wishlist-image" aria-label="View {{ $wishlistProduct->product_name }}">
-                                            <img src="{{ $wishlistImage ? asset($wishlistImage->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $wishlistProduct->product_name }}">
+                                            <img src="{{ \App\Support\StoreImage::product($wishlistProduct) }}" alt="{{ $wishlistProduct->product_name }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                                         </a>
                                         <div class="sf-wishlist-copy">
                                             <a href="{{ route('storefront.product', $wishlistProduct) }}" class="sf-wishlist-title">{{ $wishlistProduct->product_name }}</a>
@@ -72,7 +71,6 @@
                                 @php($displayPaymentStatus = $orderStatus === 'cancelled' ? 'cancelled' : ($latestPayment?->status ?? $order->payment_status))
                                 @php($firstItem = $order->items->first())
                                 @php($firstProduct = $firstItem?->product)
-                                @php($productImage = $firstProduct?->images->first())
                                 @php($productUrl = $firstProduct ? route('storefront.product', $firstProduct) : null)
                                 @php($firstBaseUnit = $firstItem ? \App\Support\StoreOfferPricing::orderItemBaseUnit($firstItem) : 0)
                                 @php($firstOfferUnit = $firstItem ? \App\Support\StoreOfferPricing::orderItemOfferUnit($firstItem) : 0)
@@ -82,11 +80,11 @@
                                         <div class="sf-recent-order-product">
                                             @if ($productUrl)
                                                 <a href="{{ $productUrl }}" class="sf-recent-order-image" aria-label="View {{ $firstItem?->item_name }}">
-                                                    <img src="{{ $productImage ? asset($productImage->image_path) : asset('admin-theme/assets/images/product-1.png') }}" alt="{{ $firstItem?->item_name ?? $order->order_number }}">
+                                                    <img src="{{ \App\Support\StoreImage::product($firstProduct) }}" alt="{{ $firstItem?->item_name ?? $order->order_number }}" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                                                 </a>
                                             @else
                                                 <div class="sf-recent-order-image" aria-hidden="true">
-                                                    <img src="{{ asset('admin-theme/assets/images/product-1.png') }}" alt="">
+                                                    <img src="{{ \App\Support\StoreImage::product(null) }}" alt="" onerror="{{ \App\Support\StoreImage::onError('product') }}">
                                                 </div>
                                             @endif
                                             <div class="sf-recent-order-copy">

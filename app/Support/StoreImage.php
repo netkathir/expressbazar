@@ -219,7 +219,15 @@ class StoreImage
             ->pluck('image_path')
             ->first(fn ($path) => self::isUsable($path));
 
-        return $imagePath ? self::cleanPath($imagePath) : ($preferredPath ?: self::fallbackProductPaths($product, 1)[0]);
+        if ($imagePath) {
+            return self::cleanPath($imagePath);
+        }
+
+        if ($preferredPath && self::isSampleProduct($product)) {
+            return $preferredPath;
+        }
+
+        return self::fallbackProductPaths($product, 1)[0];
     }
 
     private static function preferredProductPath(object|null $product): ?string
@@ -255,6 +263,8 @@ class StoreImage
             self::nameFor($product, ['product_name', 'name']),
             self::nameFor($product?->subcategory ?? null, ['subcategory_name', 'name']),
             self::nameFor($product?->category ?? null, ['category_name', 'name']),
+            self::nameFor($product?->vendor ?? null, ['vendor_name', 'name']),
+            (string) ($product?->vendor_id ?? ''),
         ]));
 
         $start = self::poolIndex(self::PRODUCT_POOL, $name, (int) ($product?->id ?? 0));
