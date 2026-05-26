@@ -171,7 +171,7 @@ class StoreImage
 
         $paths = collect($product?->images ?? [])
             ->pluck('image_path')
-            ->filter(fn ($path) => self::isUsable($path))
+            ->filter(fn ($path) => self::isDisplayable($path))
             ->values();
 
         if ($paths->isNotEmpty()) {
@@ -191,6 +191,10 @@ class StoreImage
 
     private static function categoryPath(object|null $category): string
     {
+        if (self::isUsable($category?->image_path ?? null)) {
+            return self::cleanPath($category->image_path);
+        }
+
         $name = self::nameFor($category, ['category_name', 'subcategory_name', 'name']);
         $normalized = self::normalize($name);
 
@@ -198,10 +202,6 @@ class StoreImage
             if (Str::contains($normalized, $keyword)) {
                 return $path;
             }
-        }
-
-        if (self::isUsable($category?->image_path ?? null)) {
-            return self::cleanPath($category->image_path);
         }
 
         return self::fallbackFromPool(self::CATEGORY_POOL, $name, (int) ($category?->id ?? 0));
@@ -217,7 +217,7 @@ class StoreImage
 
         $imagePath = collect($product?->images ?? [])
             ->pluck('image_path')
-            ->first(fn ($path) => self::isUsable($path));
+            ->first(fn ($path) => self::isDisplayable($path));
 
         if ($imagePath) {
             return self::cleanPath($imagePath);
@@ -279,21 +279,26 @@ class StoreImage
 
     private static function isUsable(string|null $path): bool
     {
-        if (! filled($path)) {
+        if (! self::isDisplayable($path)) {
             return false;
         }
 
         $cleanPath = self::cleanPath($path);
-
-        if (Str::contains($cleanPath, ['admin-theme/assets/images/product-', 'placeholder', 'default'])) {
-            return false;
-        }
 
         if (Str::startsWith($cleanPath, ['http://', 'https://'])) {
             return true;
         }
 
         return is_file(public_path($cleanPath));
+    }
+
+    private static function isDisplayable(string|null $path): bool
+    {
+        if (! filled($path)) {
+            return false;
+        }
+
+        return ! Str::contains(self::cleanPath($path), ['admin-theme/assets/images/product-', 'placeholder', 'default']);
     }
 
     private static function cleanPath(string $path): string

@@ -1102,6 +1102,7 @@ class StorefrontController extends Controller
         $subcategories = Subcategory::query()
             ->where('status', 'active')
             ->with(['category', 'products' => function ($query) use ($location, $pincode) {
+                $query->with(['category', 'subcategory', 'vendor', 'images', 'inventory', 'tax']);
                 $this->applyProductScope($query, $location);
                 $this->applyPincodeScope($query, $pincode);
                 $this->applySelectedVendorScope($query);
