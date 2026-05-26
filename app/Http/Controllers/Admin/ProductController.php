@@ -81,7 +81,7 @@ class ProductController extends Controller
         $this->syncInventory($product, $request);
         $this->syncImages($product, $request, false);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
+        return $this->redirectToIndex($request, 'admin.products.index', 'Product created successfully.');
     }
 
     public function edit(Product $product)
@@ -113,15 +113,15 @@ class ProductController extends Controller
         $this->removeSelectedImages($product, $request);
         $this->syncImages($product, $request, true);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
+        return $this->redirectToIndex($request, 'admin.products.index', 'Product updated successfully.');
     }
 
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
         $this->deleteImages($product);
         $this->deleteFromDatabase($product);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.products.index', 'Product deleted successfully.');
     }
 
     public function destroyImage(ProductImage $image)

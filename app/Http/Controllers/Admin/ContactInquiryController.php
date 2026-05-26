@@ -82,10 +82,10 @@ class ContactInquiryController extends Controller
         return back()->with('success', 'Contact inquiry status updated.');
     }
 
-    public function destroy(ContactInquiry $contact)
+    public function destroy(Request $request, ContactInquiry $contact)
     {
         $contact->delete();
 
-        return redirect()->route('admin.contacts.index')->with('success', 'Contact inquiry deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.contacts.index', 'Contact inquiry deleted successfully.');
     }
 }

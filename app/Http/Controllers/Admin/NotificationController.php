@@ -41,7 +41,7 @@ class NotificationController extends Controller
         $data = $this->validateTemplate($request);
         NotificationTemplate::create($data);
 
-        return redirect()->route('admin.notifications.index')->with('success', 'Notification template created successfully.');
+        return $this->redirectToIndex($request, 'admin.notifications.index', 'Notification template created successfully.');
     }
 
     public function edit(NotificationTemplate $notification)
@@ -59,14 +59,14 @@ class NotificationController extends Controller
         $data = $this->validateTemplate($request, $notification);
         $notification->update($data);
 
-        return redirect()->route('admin.notifications.index')->with('success', 'Notification template updated successfully.');
+        return $this->redirectToIndex($request, 'admin.notifications.index', 'Notification template updated successfully.');
     }
 
-    public function destroy(NotificationTemplate $notification)
+    public function destroy(Request $request, NotificationTemplate $notification)
     {
         $notification->delete();
 
-        return redirect()->route('admin.notifications.index')->with('success', 'Notification template deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.notifications.index', 'Notification template deleted successfully.');
     }
 
     public function logs()

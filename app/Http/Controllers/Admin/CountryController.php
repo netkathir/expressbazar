@@ -61,7 +61,7 @@ class CountryController extends Controller
 
         Country::create($data);
 
-        return redirect()->route('admin.countries.index')->with('success', 'Country created successfully.');
+        return $this->redirectToIndex($request, 'admin.countries.index', 'Country created successfully.');
     }
 
     public function edit(Country $country)
@@ -82,7 +82,7 @@ class CountryController extends Controller
 
         $country->update($data);
 
-        return redirect()->route('admin.countries.index')->with('success', 'Country updated successfully.');
+        return $this->redirectToIndex($request, 'admin.countries.index', 'Country updated successfully.');
     }
 
     public function destroy(Request $request, Country $country)
@@ -93,7 +93,7 @@ class CountryController extends Controller
 
         $this->deleteFromDatabase($country);
 
-        return redirect()->route('admin.countries.index')->with('success', 'Country deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.countries.index', 'Country deleted successfully.');
     }
 
     private function validateCountry(Request $request, ?Country $country = null): array

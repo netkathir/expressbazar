@@ -51,7 +51,7 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
+        return $this->redirectToIndex($request, 'admin.categories.index', 'Category created successfully.');
     }
 
     public function edit(Category $category)
@@ -76,10 +76,10 @@ class CategoryController extends Controller
 
         $category->update($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
+        return $this->redirectToIndex($request, 'admin.categories.index', 'Category updated successfully.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
         if ($category->subcategories()->withTrashed()->exists() || $category->products()->withTrashed()->exists()) {
             return back()->withErrors(['delete' => 'Category is mapped with subcategories/products and cannot be deleted.']);
@@ -88,7 +88,7 @@ class CategoryController extends Controller
         $this->deleteImage($category->image_path);
         $this->deleteFromDatabase($category);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.categories.index', 'Category deleted successfully.');
     }
 
     private function validateCategory(Request $request, ?Category $category = null): array

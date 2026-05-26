@@ -77,7 +77,7 @@ class RegionZoneController extends Controller
 
         RegionZone::create($data);
 
-        return redirect()->route('admin.zones.index')->with('success', 'Region / zone created successfully.');
+        return $this->redirectToIndex($request, 'admin.zones.index', 'Region / zone created successfully.');
     }
 
     public function edit(RegionZone $zone)
@@ -113,10 +113,10 @@ class RegionZoneController extends Controller
 
         $zone->update($data);
 
-        return redirect()->route('admin.zones.index')->with('success', 'Region / zone updated successfully.');
+        return $this->redirectToIndex($request, 'admin.zones.index', 'Region / zone updated successfully.');
     }
 
-    public function destroy(RegionZone $zone)
+    public function destroy(Request $request, RegionZone $zone)
     {
         if (Vendor::withTrashed()->where('region_zone_id', $zone->id)->exists() || DeliveryConfig::where('zone_id', $zone->id)->exists()) {
             return back()->withErrors(['delete' => 'Region / zone is mapped with vendors/delivery settings and cannot be deleted.']);
@@ -124,7 +124,7 @@ class RegionZoneController extends Controller
 
         $this->deleteFromDatabase($zone);
 
-        return redirect()->route('admin.zones.index')->with('success', 'Region / zone deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.zones.index', 'Region / zone deleted successfully.');
     }
 
     private function validateZone(Request $request): array

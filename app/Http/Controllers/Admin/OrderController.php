@@ -71,7 +71,7 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.orders.index')->with('success', 'Order created successfully.');
+        return $this->redirectToIndex($request, 'admin.orders.index', 'Order created successfully.');
     }
 
     public function show(Order $order)
@@ -113,14 +113,14 @@ class OrderController extends Controller
             }
         });
 
-        return redirect()->route('admin.orders.index')->with('success', 'Order updated successfully.');
+        return $this->redirectToIndex($request, 'admin.orders.index', 'Order updated successfully.');
     }
 
-    public function destroy(Order $order)
+    public function destroy(Request $request, Order $order)
     {
         $this->deleteFromDatabase($order);
 
-        return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.orders.index', 'Order deleted successfully.');
     }
 
     private function validateOrder(Request $request, ?Order $order = null): array

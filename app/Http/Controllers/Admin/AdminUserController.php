@@ -69,7 +69,7 @@ class AdminUserController extends Controller
 
         User::create($data);
 
-        return redirect()->route('admin.users.index')->with('success', 'Admin user created successfully.');
+        return $this->redirectToIndex($request, 'admin.users.index', 'Admin user created successfully.');
     }
 
     public function edit(User $user)
@@ -95,14 +95,14 @@ class AdminUserController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('admin.users.index')->with('success', 'Admin user updated successfully.');
+        return $this->redirectToIndex($request, 'admin.users.index', 'Admin user updated successfully.');
     }
 
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
         $user->delete();
 
-        return redirect()->route('admin.users.index')->with('success', 'Admin user deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.users.index', 'Admin user deleted successfully.');
     }
 
     private function validateUser(Request $request, ?User $user = null): array

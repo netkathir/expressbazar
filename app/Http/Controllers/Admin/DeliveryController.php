@@ -65,7 +65,7 @@ class DeliveryController extends Controller
         $data['updated_by'] = $request->user()?->id;
         DeliveryConfig::create($data);
 
-        return redirect()->route('admin.delivery.index')->with('success', 'Delivery configuration created successfully.');
+        return $this->redirectToIndex($request, 'admin.delivery.index', 'Delivery configuration created successfully.');
     }
 
     public function edit(DeliveryConfig $delivery)
@@ -86,14 +86,14 @@ class DeliveryController extends Controller
         $data['updated_by'] = $request->user()?->id;
         $delivery->update($data);
 
-        return redirect()->route('admin.delivery.index')->with('success', 'Delivery configuration updated successfully.');
+        return $this->redirectToIndex($request, 'admin.delivery.index', 'Delivery configuration updated successfully.');
     }
 
-    public function destroy(DeliveryConfig $delivery)
+    public function destroy(Request $request, DeliveryConfig $delivery)
     {
         $delivery->delete();
 
-        return redirect()->route('admin.delivery.index')->with('success', 'Delivery configuration deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.delivery.index', 'Delivery configuration deleted successfully.');
     }
 
     private function validateConfig(Request $request, ?DeliveryConfig $delivery = null): array

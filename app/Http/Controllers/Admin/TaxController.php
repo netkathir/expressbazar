@@ -56,7 +56,7 @@ class TaxController extends Controller
 
         Tax::create($data);
 
-        return redirect()->route('admin.taxes.index')->with('success', 'Tax created successfully.');
+        return $this->redirectToIndex($request, 'admin.taxes.index', 'Tax created successfully.');
     }
 
     public function edit(Tax $tax)
@@ -78,14 +78,14 @@ class TaxController extends Controller
 
         $tax->update($data);
 
-        return redirect()->route('admin.taxes.index')->with('success', 'Tax updated successfully.');
+        return $this->redirectToIndex($request, 'admin.taxes.index', 'Tax updated successfully.');
     }
 
-    public function destroy(Tax $tax)
+    public function destroy(Request $request, Tax $tax)
     {
         $this->deleteFromDatabase($tax);
 
-        return redirect()->route('admin.taxes.index')->with('success', 'Tax deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.taxes.index', 'Tax deleted successfully.');
     }
 
     private function validateTax(Request $request, ?Tax $tax = null): array

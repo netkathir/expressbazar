@@ -73,7 +73,7 @@ class CityController extends Controller
 
         City::create($data);
 
-        return redirect()->route('admin.cities.index')->with('success', 'City created successfully.');
+        return $this->redirectToIndex($request, 'admin.cities.index', 'City created successfully.');
     }
 
     public function edit(City $city)
@@ -105,10 +105,10 @@ class CityController extends Controller
 
         $city->update($data);
 
-        return redirect()->route('admin.cities.index')->with('success', 'City updated successfully.');
+        return $this->redirectToIndex($request, 'admin.cities.index', 'City updated successfully.');
     }
 
-    public function destroy(City $city)
+    public function destroy(Request $request, City $city)
     {
         if ($city->zones()->withTrashed()->exists() || CustomerAddress::where('city_id', $city->id)->exists()) {
             return back()->withErrors(['delete' => 'City is mapped with regions/vendors/customer addresses and cannot be deleted.']);
@@ -116,7 +116,7 @@ class CityController extends Controller
 
         $this->deleteFromDatabase($city);
 
-        return redirect()->route('admin.cities.index')->with('success', 'City deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.cities.index', 'City deleted successfully.');
     }
 
     public function getCities(Request $request, int $country_id): Response|JsonResponse

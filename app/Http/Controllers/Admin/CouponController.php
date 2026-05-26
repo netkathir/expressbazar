@@ -50,7 +50,7 @@ class CouponController extends Controller
     {
         Coupon::create($this->validateCoupon($request));
 
-        return redirect()->route('admin.coupons.index')->with('success', 'Coupon created successfully.');
+        return $this->redirectToIndex($request, 'admin.coupons.index', 'Coupon created successfully.');
     }
 
     public function edit(Coupon $coupon)
@@ -68,14 +68,14 @@ class CouponController extends Controller
     {
         $coupon->update($this->validateCoupon($request, $coupon));
 
-        return redirect()->route('admin.coupons.index')->with('success', 'Coupon updated successfully.');
+        return $this->redirectToIndex($request, 'admin.coupons.index', 'Coupon updated successfully.');
     }
 
-    public function destroy(Coupon $coupon)
+    public function destroy(Request $request, Coupon $coupon)
     {
         $coupon->delete();
 
-        return redirect()->route('admin.coupons.index')->with('success', 'Coupon deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.coupons.index', 'Coupon deleted successfully.');
     }
 
     private function validateCoupon(Request $request, ?Coupon $coupon = null): array

@@ -58,7 +58,7 @@ class CouponController extends Controller
 
         Coupon::create($data);
 
-        return redirect()->route('vendor.coupons.index')->with('success', 'Coupon created successfully.');
+        return $this->redirectToIndex($request, 'vendor.coupons.index', 'Coupon created successfully.');
     }
 
     public function edit(Coupon $coupon)
@@ -84,15 +84,15 @@ class CouponController extends Controller
 
         $coupon->update($data);
 
-        return redirect()->route('vendor.coupons.index')->with('success', 'Coupon updated successfully.');
+        return $this->redirectToIndex($request, 'vendor.coupons.index', 'Coupon updated successfully.');
     }
 
-    public function destroy(Coupon $coupon)
+    public function destroy(Request $request, Coupon $coupon)
     {
         $this->authorizeVendorCoupon($coupon);
         $this->deleteFromDatabase($coupon);
 
-        return redirect()->route('vendor.coupons.index')->with('success', 'Coupon deleted successfully.');
+        return $this->redirectToIndex($request, 'vendor.coupons.index', 'Coupon deleted successfully.');
     }
 
     private function authorizeVendorCoupon(Coupon $coupon): void

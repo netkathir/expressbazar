@@ -68,7 +68,7 @@ class InventoryController extends Controller
 
         app(InventoryService::class)->adjustStock($inventory, (int) $data['quantity'], $data['adjustment_type'], $request->input('reason'));
 
-        return redirect()->route('admin.inventory.index')->with('success', 'Inventory updated successfully.');
+        return $this->redirectToIndex($request, 'admin.inventory.index', 'Inventory updated successfully.');
     }
 
     public function edit(ProductInventory $inventory)
@@ -87,14 +87,14 @@ class InventoryController extends Controller
         $data = $this->validateInventory($request, $inventory->product_id);
         app(InventoryService::class)->adjustStock($inventory, (int) $data['quantity'], $data['adjustment_type'], $request->input('reason'));
 
-        return redirect()->route('admin.inventory.index')->with('success', 'Inventory updated successfully.');
+        return $this->redirectToIndex($request, 'admin.inventory.index', 'Inventory updated successfully.');
     }
 
-    public function destroy(ProductInventory $inventory)
+    public function destroy(Request $request, ProductInventory $inventory)
     {
         $inventory->delete();
 
-        return redirect()->route('admin.inventory.index')->with('success', 'Inventory record removed.');
+        return $this->redirectToIndex($request, 'admin.inventory.index', 'Inventory record removed.');
     }
 
     private function validateInventory(Request $request, ?int $ignoreProductId = null): array

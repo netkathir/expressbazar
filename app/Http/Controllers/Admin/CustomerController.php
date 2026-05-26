@@ -73,8 +73,9 @@ class CustomerController extends Controller
             Log::error('Customer password mail failed: '.$e->getMessage());
         }
 
-        return redirect()->route('admin.customers.index')->with(
-            'success',
+        return $this->redirectToIndex(
+            $request,
+            'admin.customers.index',
             $mailSent
                 ? 'Customer created successfully and password sent to email.'
                 : 'Customer created successfully, but password email could not be sent.'
@@ -117,16 +118,16 @@ class CustomerController extends Controller
             'status' => $data['status'],
         ]);
 
-        return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully.');
+        return $this->redirectToIndex($request, 'admin.customers.index', 'Customer updated successfully.');
     }
 
-    public function destroy(User $customer)
+    public function destroy(Request $request, User $customer)
     {
         abort_if($customer->role !== 'customer', 404);
 
         $customer->delete();
 
-        return redirect()->route('admin.customers.index')->with('success', 'Customer deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.customers.index', 'Customer deleted successfully.');
     }
 
     public function toggleStatus(User $customer)

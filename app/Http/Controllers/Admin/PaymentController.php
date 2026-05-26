@@ -56,7 +56,7 @@ class PaymentController extends Controller
             $this->dispatchPaymentSuccessNotification($payment->load('order.customer'));
         }
 
-        return redirect()->route('admin.payments.index')->with('success', 'Payment created successfully.');
+        return $this->redirectToIndex($request, 'admin.payments.index', 'Payment created successfully.');
     }
 
     public function edit(Payment $payment)
@@ -80,14 +80,14 @@ class PaymentController extends Controller
             $this->dispatchPaymentSuccessNotification($payment->load('order.customer'));
         }
 
-        return redirect()->route('admin.payments.index')->with('success', 'Payment updated successfully.');
+        return $this->redirectToIndex($request, 'admin.payments.index', 'Payment updated successfully.');
     }
 
-    public function destroy(Payment $payment)
+    public function destroy(Request $request, Payment $payment)
     {
         $payment->delete();
 
-        return redirect()->route('admin.payments.index')->with('success', 'Payment deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.payments.index', 'Payment deleted successfully.');
     }
 
     private function validatePayment(Request $request, ?Payment $payment = null): array

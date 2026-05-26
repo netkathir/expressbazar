@@ -120,7 +120,11 @@
                         <select name="country_id" class="form-select" required id="countryId" data-placeholder-target="country">
                             <option value="" disabled hidden>Select country</option>
                             @foreach ($countries as $country)
-                                <option value="{{ $country->id }}" @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)>{{ $country->country_name }}</option>
+                                <option
+                                    value="{{ $country->id }}"
+                                    data-country-code="{{ $country->country_code }}"
+                                    @selected((string) old('country_id', $vendor->country_id) === (string) $country->id)
+                                >{{ $country->country_name }}</option>
                             @endforeach
                         </select>
                         <span class="select-field-placeholder" data-select-placeholder>Select country</span>
@@ -228,7 +232,32 @@
                             control.dispatchEvent(new Event('input', { bubbles: true }));
                         };
 
-                        async function loadStates(countryId, state = '') {
+                        const optionExists = (select, value) => Array.from(select.options)
+                            .some((option) => normalizeText(option.value) === normalizeText(value));
+
+                        const selectedGoogleCountryCode = () => {
+                            const code = countrySelect.selectedOptions[0]?.dataset.countryCode || '';
+                            const normalizedCode = code.trim().toUpperCase();
+
+                            if (normalizedCode === 'UK') {
+                                return 'gb';
+                            }
+
+                            return /^[A-Z]{2}$/.test(normalizedCode) ? normalizedCode.toLowerCase() : '';
+                        };
+
+                        const syncAutocompleteCountryRestriction = () => {
+                            if (!window.adminVendorAddressAutocomplete?.setComponentRestrictions) {
+                                return;
+                            }
+
+                            const countryCode = selectedGoogleCountryCode();
+                            if (countryCode) {
+                                window.adminVendorAddressAutocomplete.setComponentRestrictions({ country: countryCode });
+                            }
+                        };
+
+                        async function loadStates(countryId, state = '', allowExternalState = false) {
                             stateSelect.innerHTML = '';
                             syncPlaceholder(stateSelect);
 
@@ -252,12 +281,19 @@
                             }
 
                             states.forEach((item) => {
-                                stateSelect.appendChild(createOption(item.state, item.state, item.state === state));
+                                stateSelect.appendChild(createOption(item.state, item.state, normalizeText(item.state) === normalizeText(state)));
                             });
 
-                            const resolvedState = state || (states.length === 1 ? states[0].state : '');
+                            if (allowExternalState && state && !optionExists(stateSelect, state)) {
+                                stateSelect.appendChild(createOption(state, state, true));
+                            }
+
+                            const matchedState = state && optionExists(stateSelect, state) ? state : '';
+                            const resolvedState = matchedState || (states.length === 1 ? states[0].state : '');
                             if (resolvedState) {
-                                stateSelect.value = resolvedState;
+                                const matchingOption = Array.from(stateSelect.options)
+                                    .find((option) => normalizeText(option.value) === normalizeText(resolvedState));
+                                stateSelect.value = matchingOption?.value || resolvedState;
                             }
 
                             if (!resolvedState && states.length > 1) {
@@ -375,6 +411,24 @@
                             }) || null;
                         };
 
+                        const findCountryOption = (countryName, countryCode) => {
+                            const normalizedCode = normalizeText(countryCode);
+                            const candidates = [countryName, countryCode].filter(Boolean);
+
+                            if (normalizedCode) {
+                                const byCode = Array.from(countrySelect.options).find((option) => {
+                                    const optionCode = normalizeText(option.dataset.countryCode || '');
+                                    return option.value && optionCode && (optionCode === normalizedCode || (optionCode === 'uk' && normalizedCode === 'gb'));
+                                });
+
+                                if (byCode) {
+                                    return byCode;
+                                }
+                            }
+
+                            return findOptionByText(countrySelect, candidates);
+                        };
+
                         const getAddressPart = (components, type, property = 'long_name') => {
                             const component = components.find((item) => item.types.includes(type));
                             return component ? component[property] : '';
@@ -408,6 +462,7 @@
                             const components = place.address_components || [];
                             const formattedAddress = place.formatted_address || addressInput?.value || '';
                             const countryName = getAddressPart(components, 'country');
+                            const countryCode = getAddressPart(components, 'country', 'short_name');
                             const stateName = getAddressPart(components, 'administrative_area_level_1');
                             const postcode = getAddressPart(components, 'postal_code');
                             const cityCandidates = [
@@ -428,16 +483,21 @@
                                 pincodeInput.dispatchEvent(new Event('input', { bubbles: true }));
                             }
 
-                            const countryOption = findOptionByText(countrySelect, [countryName]);
+                            const countryOption = findCountryOption(countryName, countryCode);
                             if (!countryOption) {
                                 return;
                             }
 
                             countrySelect.value = countryOption.value;
                             syncFieldState(countrySelect);
+                            syncAutocompleteCountryRestriction();
 
-                            const matchedState = await loadStates(countrySelect.value, stateName);
-                            await loadCities(countrySelect.value, matchedState);
+                            const matchedState = await loadStates(countrySelect.value, stateName, true);
+                            let matchedCityId = await loadCities(countrySelect.value, matchedState);
+
+                            if (!matchedCityId && matchedState) {
+                                matchedCityId = await loadCities(countrySelect.value);
+                            }
 
                             const cityOption = findOptionByText(citySelect, cityCandidates);
                             if (!cityOption) {
@@ -462,6 +522,9 @@
                                 fields: ['formatted_address', 'geometry', 'address_components', 'name'],
                             });
 
+                            window.adminVendorAddressAutocomplete = autocomplete;
+                            syncAutocompleteCountryRestriction();
+
                             autocomplete.addListener('place_changed', function () {
                                 applyPlaceToVendorLocation(autocomplete.getPlace());
                             });
@@ -473,6 +536,7 @@
                             citySelect.value = '';
                             zoneSelect.value = '';
                             syncPlaceholder(countrySelect);
+                            syncAutocompleteCountryRestriction();
                             syncPlaceholder(stateSelect);
                             syncPlaceholder(citySelect);
                             syncPlaceholder(zoneSelect);

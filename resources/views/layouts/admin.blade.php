@@ -283,6 +283,45 @@
     <script src="{{ asset('js/inline-validation.js') }}"></script>
     <script>
         (function () {
+            const sameOriginUrl = function (value) {
+                if (!value) {
+                    return '';
+                }
+
+                try {
+                    const url = new URL(value, window.location.origin);
+
+                    return url.origin === window.location.origin ? url.href : '';
+                } catch (error) {
+                    return '';
+                }
+            };
+
+            const returnUrlFromQuery = sameOriginUrl(new URLSearchParams(window.location.search).get('return_url'));
+            const referrerUrl = sameOriginUrl(document.referrer);
+            const currentUrl = sameOriginUrl(window.location.href);
+            const isFormPage = /\/create\/?$/.test(window.location.pathname) || /\/[^/]+\/edit\/?$/.test(window.location.pathname);
+            const formReturnUrl = isFormPage ? (returnUrlFromQuery || referrerUrl) : currentUrl;
+            const backReturnUrl = returnUrlFromQuery || referrerUrl;
+
+            document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function (form) {
+                if (!formReturnUrl || form.querySelector('input[name="return_url"]')) {
+                    return;
+                }
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'return_url';
+                input.value = formReturnUrl;
+                form.appendChild(input);
+            });
+
+            document.querySelectorAll('a[data-dirty-back]').forEach(function (link) {
+                if (backReturnUrl) {
+                    link.href = backReturnUrl;
+                }
+            });
+
             const flash = document.querySelector('[data-admin-flash]');
             if (!flash) {
                 return;

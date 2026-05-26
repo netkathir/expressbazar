@@ -73,7 +73,7 @@ class RoleController extends Controller
             $this->syncPermissions($created, $permissions);
         });
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
+        return $this->redirectToIndex($request, 'admin.roles.index', 'Role created successfully.');
     }
 
     public function edit(Role $role)
@@ -99,14 +99,14 @@ class RoleController extends Controller
             $this->syncPermissions($role, $permissions);
         });
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
+        return $this->redirectToIndex($request, 'admin.roles.index', 'Role updated successfully.');
     }
 
-    public function destroy(Role $role)
+    public function destroy(Request $request, Role $role)
     {
         $role->delete();
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.roles.index', 'Role deleted successfully.');
     }
 
     private function validateAndNormalize(Request $request, ?Role $role = null): array

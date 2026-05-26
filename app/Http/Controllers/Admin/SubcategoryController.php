@@ -54,7 +54,7 @@ class SubcategoryController extends Controller
 
         Subcategory::create($data);
 
-        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategory created successfully.');
+        return $this->redirectToIndex($request, 'admin.subcategories.index', 'Subcategory created successfully.');
     }
 
     public function edit(Subcategory $subcategory)
@@ -75,14 +75,14 @@ class SubcategoryController extends Controller
 
         $subcategory->update($data);
 
-        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategory updated successfully.');
+        return $this->redirectToIndex($request, 'admin.subcategories.index', 'Subcategory updated successfully.');
     }
 
-    public function destroy(Subcategory $subcategory)
+    public function destroy(Request $request, Subcategory $subcategory)
     {
         $this->deleteFromDatabase($subcategory);
 
-        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategory deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.subcategories.index', 'Subcategory deleted successfully.');
     }
 
     private function validateSubcategory(Request $request, ?Subcategory $subcategory = null): array

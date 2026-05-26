@@ -83,9 +83,7 @@ class VendorController extends Controller
         $mailSent = $this->sendCredentialsMail($vendor, $plainPassword);
         $setupMailSent = $this->sendSetupMail($vendor);
 
-        return redirect()
-            ->route('admin.vendors.index')
-            ->with('success', $this->vendorMailMessage('Vendor created successfully.', $vendor, $mailSent, $setupMailSent));
+        return $this->redirectToIndex($request, 'admin.vendors.index', $this->vendorMailMessage('Vendor created successfully.', $vendor, $mailSent, $setupMailSent));
     }
 
     public function edit(Vendor $vendor)
@@ -127,12 +125,10 @@ class VendorController extends Controller
         $mailSent = $this->sendCredentialsMail($freshVendor, $plainPassword);
         $setupMailSent = $this->sendSetupMail($freshVendor);
 
-        return redirect()
-            ->route('admin.vendors.index')
-            ->with('success', $this->vendorMailMessage('Vendor updated successfully.', $freshVendor, $mailSent, $setupMailSent));
+        return $this->redirectToIndex($request, 'admin.vendors.index', $this->vendorMailMessage('Vendor updated successfully.', $freshVendor, $mailSent, $setupMailSent));
     }
 
-    public function destroy(Vendor $vendor)
+    public function destroy(Request $request, Vendor $vendor)
     {
         if (Product::withTrashed()->where('vendor_id', $vendor->id)->exists()) {
             return back()->withErrors(['delete' => 'Vendor is mapped with products and cannot be deleted.']);
@@ -140,7 +136,7 @@ class VendorController extends Controller
 
         $this->deleteFromDatabase($vendor);
 
-        return redirect()->route('admin.vendors.index')->with('success', 'Vendor deleted successfully.');
+        return $this->redirectToIndex($request, 'admin.vendors.index', 'Vendor deleted successfully.');
     }
 
     public function cities(Request $request): JsonResponse
