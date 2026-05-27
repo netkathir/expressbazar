@@ -33,7 +33,7 @@ class PaymentController extends Controller
                 ->withErrors(['payment' => 'Online payment is not available for this order.']);
         }
 
-        $successUrl = route('storefront.orders.success', $order).'?session_id={CHECKOUT_SESSION_ID}';
+        $successUrl = route('storefront.orders.success', $order).'?checkout_session={CHECKOUT_SESSION_ID}';
         $cancelUrl = route('storefront.orders.cancel', $order);
 
         try {

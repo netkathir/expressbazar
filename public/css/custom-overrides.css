@@ -418,6 +418,16 @@ textarea:-ms-input-placeholder {
     min-width: 0;
 }
 
+/* Reduce category/subcategory filter wording size without changing links or form behavior. */
+.storefront-shell .sf-filter-row .sf-filter-pill {
+    font-size: .8rem;
+    line-height: 1.15;
+}
+
+.storefront-shell .sf-filter-row .form-select {
+    font-size: .8rem !important;
+}
+
 @media (max-width: 991.98px) {
     .storefront-shell .sf-category-layout {
         grid-template-columns: minmax(0, 1fr);

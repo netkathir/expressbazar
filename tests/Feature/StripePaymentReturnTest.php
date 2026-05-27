@@ -14,7 +14,7 @@ class StripePaymentReturnTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_checkout_success_url_includes_stripe_session_placeholder(): void
+    public function test_checkout_success_url_uses_mod_security_safe_stripe_session_placeholder(): void
     {
         $customer = User::factory()->create(['role' => 'customer']);
         $order = $this->onlineOrderFor($customer);
@@ -25,7 +25,8 @@ class StripePaymentReturnTest extends TestCase
                 ->once()
                 ->withArgs(function (Order $checkoutOrder, string $successUrl) use ($order) {
                     return $checkoutOrder->is($order)
-                        && str_contains($successUrl, 'session_id={CHECKOUT_SESSION_ID}');
+                        && str_contains($successUrl, 'checkout_session={CHECKOUT_SESSION_ID}')
+                        && ! str_contains($successUrl, 'session_id=');
                 })
                 ->andReturn([
                     'id' => 'cs_test_123',
@@ -70,7 +71,7 @@ class StripePaymentReturnTest extends TestCase
         $this->actingAs($customer)
             ->get(route('storefront.orders.success', [
                 'order' => $order,
-                'session_id' => 'cs_test_paid',
+                'checkout_session' => 'cs_test_paid',
             ]))
             ->assertOk();
 
@@ -80,6 +81,44 @@ class StripePaymentReturnTest extends TestCase
             'payment_status' => 'paid',
             'stripe_session_id' => 'cs_test_paid',
             'stripe_payment_intent' => 'pi_test_paid',
+        ]);
+
+        $this->assertDatabaseHas('payments', [
+            'id' => $payment->id,
+            'status' => 'paid',
+        ]);
+    }
+
+    public function test_success_return_still_accepts_legacy_session_id_parameter(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+        $order = $this->onlineOrderFor($customer, ['stripe_session_id' => 'cs_test_legacy']);
+        $payment = $this->pendingOnlinePaymentFor($order);
+
+        $this->mock(StripeCheckoutService::class, function ($mock) use ($order) {
+            $mock->shouldReceive('retrieveCheckoutSession')
+                ->once()
+                ->with('cs_test_legacy')
+                ->andReturn([
+                    'id' => 'cs_test_legacy',
+                    'payment_status' => 'paid',
+                    'payment_intent' => ['id' => 'pi_test_legacy'],
+                    'metadata' => ['order_id' => (string) $order->id],
+                ]);
+        });
+
+        $this->actingAs($customer)
+            ->get(route('storefront.orders.success', [
+                'order' => $order,
+                'session_id' => 'cs_test_legacy',
+            ]))
+            ->assertOk();
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'payment_status' => 'paid',
+            'stripe_session_id' => 'cs_test_legacy',
+            'stripe_payment_intent' => 'pi_test_legacy',
         ]);
 
         $this->assertDatabaseHas('payments', [

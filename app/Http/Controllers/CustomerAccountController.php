@@ -340,7 +340,11 @@ class CustomerAccountController extends Controller
         $user = $request->user();
         abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
 
-        $order = $this->confirmReturnedStripePayment($order, $request->query('session_id'), $user->id);
+        $order = $this->confirmReturnedStripePayment(
+            $order,
+            $request->query('checkout_session', $request->query('session_id')),
+            $user->id
+        );
 
         return view('storefront.orders.success', [
             'title' => 'Order Confirmed',
