@@ -2319,11 +2319,37 @@ body.storefront-shell {
     }
 
     .sf-cart-row {
-        gap: 10px;
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        gap: 10px 12px;
+    }
+
+    .sf-cart-row > img {
+        grid-row: 1 / span 2;
+    }
+
+    .sf-cart-row > .flex-grow-1 {
+        min-width: 0;
     }
 
     .sf-cart-row > .text-end {
-        min-width: 92px;
+        display: flex;
+        grid-column: 2;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+        text-align: left !important;
+    }
+
+    .sf-cart-row > .text-end .sf-stepper {
+        flex: 0 0 auto;
+        margin-top: 0 !important;
+    }
+
+    .sf-cart-row > .text-end .fw-semibold {
+        min-width: 0;
     }
 
     .sf-specs {

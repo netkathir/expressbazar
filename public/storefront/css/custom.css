@@ -2427,6 +2427,21 @@
         padding: 24px;
     }
 
+    .sf-promo-card-deal .sf-promo-copy {
+        padding: 18px 18px 10px;
+    }
+
+    .sf-promo-card-deal .sf-promo-kicker {
+        margin-bottom: 6px;
+        font-size: .68rem;
+    }
+
+    .sf-promo-card-deal h2 {
+        max-width: 11ch;
+        font-size: 1.34rem;
+        line-height: 1.08;
+    }
+
     .sf-promo-actions {
         gap: 10px;
     }
@@ -2435,6 +2450,12 @@
     .sf-promo-card-deal .btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .sf-promo-card-deal .btn {
+        min-height: 36px;
+        padding: 7px 14px;
+        font-size: .82rem;
     }
 
     .sf-grocery-bag {
@@ -2451,7 +2472,43 @@
         width: 92px;
     }
 
-    .sf-promo-benefits,
+    .sf-promo-benefits {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin: 10px 0 12px;
+    }
+
+    .sf-promo-benefits span {
+        font-size: .56rem;
+        line-height: 1.15;
+    }
+
+    .sf-promo-benefits i {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+        font-size: .8rem;
+    }
+
+    .sf-deal-basket {
+        min-height: 128px;
+        padding: 0 18px 18px;
+    }
+
+    .sf-deal-product-card {
+        width: min(58vw, 170px);
+        padding: 8px;
+        border-radius: 14px;
+    }
+
+    .sf-deal-basket strong {
+        top: 0;
+        right: 22px;
+        width: 48px;
+        height: 48px;
+        font-size: .52rem;
+    }
+
     .sf-service-strip {
         grid-template-columns: 1fr;
     }
