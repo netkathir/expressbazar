@@ -70,7 +70,11 @@ class User extends Authenticatable
 
         return $this->relationLoaded('adminRoleRecord')
             ? $this->getRelation('adminRoleRecord')
-            : Role::query()->with('permissions')->where('role_name', $this->role)->first();
+            : tap(Role::query()->with('permissions')->where('role_name', $this->role)->first(), function (?Role $role): void {
+                if ($role) {
+                    $this->setRelation('adminRoleRecord', $role);
+                }
+            });
     }
 
     public function adminRoleRecord()

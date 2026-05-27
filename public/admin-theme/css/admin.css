@@ -1288,9 +1288,47 @@ body.admin-shell {
     min-height: 260px;
 }
 
+.admin-doughnut-chart-wrap {
+    min-height: 230px;
+}
+
 .admin-chart-wrap canvas {
     width: 100% !important;
     height: 100% !important;
+}
+
+.admin-chart-legend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 10px 16px;
+    align-items: center;
+    max-width: 340px;
+    margin: 14px auto 0;
+}
+
+.admin-chart-legend-item {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: #5f6b7a;
+    font-size: .9rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.admin-chart-legend-swatch {
+    display: block;
+    width: 38px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+.admin-chart-legend-item:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    min-width: 148px;
 }
 
 .admin-product-row > div {
@@ -1432,6 +1470,76 @@ body.admin-shell {
 .admin-report-sales-table td:nth-child(6),
 .admin-report-sales-table td:nth-child(7),
 .admin-report-sales-table td:nth-child(9) {
+    white-space: nowrap !important;
+}
+
+.admin-stock-log-wrap {
+    border-radius: 14px;
+}
+
+.admin-stock-log-table {
+    min-width: 1040px;
+    table-layout: fixed;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .admin-stock-log-wrap > .admin-stock-log-table thead th,
+.admin-shell main > .container-fluid > .shell-card > .admin-stock-log-wrap > .admin-stock-log-table tbody td {
+    vertical-align: middle;
+}
+
+.admin-shell main > .container-fluid > .shell-card > .admin-stock-log-wrap > .admin-stock-log-table thead th {
+    white-space: nowrap !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    line-height: 1.15;
+}
+
+.admin-stock-log-table th:nth-child(1),
+.admin-stock-log-table td:nth-child(1) {
+    width: 155px;
+}
+
+.admin-stock-log-table th:nth-child(2),
+.admin-stock-log-table td:nth-child(2) {
+    width: 180px;
+}
+
+.admin-stock-log-table th:nth-child(3),
+.admin-stock-log-table td:nth-child(3) {
+    width: 220px;
+}
+
+.admin-stock-log-table th:nth-child(4),
+.admin-stock-log-table td:nth-child(4) {
+    width: 100px;
+}
+
+.admin-stock-log-table th:nth-child(5),
+.admin-stock-log-table td:nth-child(5),
+.admin-stock-log-table th:nth-child(6),
+.admin-stock-log-table td:nth-child(6),
+.admin-stock-log-table th:nth-child(7),
+.admin-stock-log-table td:nth-child(7) {
+    width: 92px;
+    text-align: center;
+}
+
+.admin-stock-log-table th:nth-child(8),
+.admin-stock-log-table td:nth-child(8) {
+    width: 105px;
+}
+
+.admin-stock-log-table th:nth-child(9),
+.admin-stock-log-table td:nth-child(9) {
+    width: 210px;
+}
+
+.admin-stock-log-table td:nth-child(1),
+.admin-stock-log-table td:nth-child(4),
+.admin-stock-log-table td:nth-child(5),
+.admin-stock-log-table td:nth-child(6),
+.admin-stock-log-table td:nth-child(7),
+.admin-stock-log-table td:nth-child(8) {
     white-space: nowrap !important;
 }
 
@@ -1628,6 +1736,21 @@ body.admin-shell {
     .admin-chart-wrap,
     .admin-chart-wrap-sm {
         min-height: 240px;
+    }
+
+    .admin-doughnut-chart-wrap {
+        min-height: 220px;
+    }
+
+    .admin-chart-legend-grid {
+        grid-template-columns: 1fr;
+        max-width: 220px;
+    }
+
+    .admin-chart-legend-item:last-child:nth-child(odd) {
+        grid-column: auto;
+        justify-self: stretch;
+        min-width: 0;
     }
 
     .admin-mini-stat-grid {

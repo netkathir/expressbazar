@@ -78,9 +78,10 @@
                 <div class="dashboard-card h-100">
                     <h5 class="fw-bold mb-1">Order Status Analytics</h5>
                     <div class="text-secondary small mb-3">Current order distribution.</div>
-                    <div class="admin-chart-wrap admin-chart-wrap-sm">
+                    <div class="admin-chart-wrap admin-chart-wrap-sm admin-doughnut-chart-wrap">
                         <canvas id="orderStatusChart"></canvas>
                     </div>
+                    <div id="orderStatusLegend" class="admin-chart-legend-grid"></div>
                 </div>
             </div>
         </div>
@@ -204,6 +205,22 @@
                 muted: '#DDE7E3',
                 dark: '#333333'
             };
+            const orderStatusColors = ['#F59E0B', '#3B82F6', '#8BC34A', '#06B6D4', '#0F766E', '#22C55E', '#EF4444'];
+
+            const renderOrderedLegend = (containerId, labels, colors) => {
+                const legend = document.getElementById(containerId);
+
+                if (!legend) {
+                    return;
+                }
+
+                legend.innerHTML = labels.map((label, index) => `
+                    <div class="admin-chart-legend-item">
+                        <span class="admin-chart-legend-swatch" style="background:${colors[index]};"></span>
+                        <span>${label}</span>
+                    </div>
+                `).join('');
+            };
 
             const monthlyRevenue = @json($monthlyRevenueChart);
             const orderStatus = @json($orderStatusChart);
@@ -238,10 +255,41 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } },
+                        layout: { padding: { bottom: 4 } },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 42,
+                                    boxHeight: 12,
+                                    padding: 18,
+                                    color: '#5F6B7A',
+                                    font: { size: 12, weight: '500' }
+                                }
+                            }
+                        },
                         scales: {
-                            y: { beginAtZero: true },
-                            orders: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } }
+                            x: {
+                                ticks: {
+                                    color: '#667085',
+                                    maxRotation: 0,
+                                    minRotation: 0,
+                                    padding: 8,
+                                    font: { size: 12, weight: '500' }
+                                },
+                                grid: { color: 'rgba(15, 118, 110, .08)' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#667085', padding: 8 },
+                                grid: { color: 'rgba(15, 118, 110, .1)' }
+                            },
+                            orders: {
+                                beginAtZero: true,
+                                position: 'right',
+                                ticks: { color: '#667085', padding: 8 },
+                                grid: { drawOnChartArea: false }
+                            }
                         }
                     }
                 });
@@ -255,16 +303,20 @@
                         labels: orderStatus.labels,
                         datasets: [{
                             data: orderStatus.counts,
-                            backgroundColor: ['#FBBF24', '#60A5FA', '#A3D65C', '#38BDF8', '#1F7A63', '#22C55E', '#EF4444']
+                            backgroundColor: orderStatusColors,
+                            borderColor: '#FFFFFF',
+                            borderWidth: 2,
+                            hoverOffset: 4
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } },
+                        plugins: { legend: { display: false } },
                         cutout: '62%'
                     }
                 });
+                renderOrderedLegend('orderStatusLegend', orderStatus.labels, orderStatusColors);
             }
 
             const customerGrowthChart = document.getElementById('customerGrowthChart');
@@ -284,7 +336,28 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } }
+                        layout: { padding: { bottom: 8 } },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    color: '#667085',
+                                    maxRotation: 0,
+                                    minRotation: 0,
+                                    padding: 10,
+                                    font: { size: 12, weight: '500' },
+                                    callback: function (value) {
+                                        const label = this.getLabelForValue(value);
+                                        return label.split(' ');
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#667085', precision: 0, padding: 8 },
+                                grid: { color: 'rgba(15, 118, 110, .1)' }
+                            }
+                        }
                     }
                 });
             }

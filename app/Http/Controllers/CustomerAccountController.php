@@ -12,11 +12,13 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Services\InventoryService;
 use App\Services\OrderLifecycleService;
+use App\Services\StripeCheckoutService;
 use App\Notifications\CustomerBellNotification;
 use App\Models\RegionZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -338,6 +340,8 @@ class CustomerAccountController extends Controller
         $user = $request->user();
         abort_if(! $user || $user->role !== 'customer' || (int) $order->customer_id !== (int) $user->id, 403);
 
+        $order = $this->confirmReturnedStripePayment($order, $request->query('session_id'), $user->id);
+
         return view('storefront.orders.success', [
             'title' => 'Order Confirmed',
             'order' => $order->load(['vendor', 'items.product', 'payments']),
@@ -412,6 +416,77 @@ class CustomerAccountController extends Controller
         $order->loadMissing(['items', 'customer']);
 
         return redirect()->route('payments.checkout', $order);
+    }
+
+    private function confirmReturnedStripePayment(Order $order, mixed $sessionId, int $userId): Order
+    {
+        $sessionId = is_string($sessionId) ? trim($sessionId) : '';
+
+        if ($sessionId === '' || $order->payment_status === 'paid') {
+            return $order;
+        }
+
+        $latestPayment = $order->payments()
+            ->where('payment_method', 'online')
+            ->latest()
+            ->first();
+
+        if (! $latestPayment || $latestPayment->status === 'paid') {
+            return $order;
+        }
+
+        try {
+            $session = app(StripeCheckoutService::class)->retrieveCheckoutSession($sessionId);
+        } catch (Throwable $exception) {
+            Log::warning('Stripe return payment verification failed.', [
+                'order_id' => $order->id,
+                'stripe_session_id' => $sessionId,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $order;
+        }
+
+        $metadataOrderId = (int) data_get($session, 'metadata.order_id');
+        $sessionBelongsToOrder = $metadataOrderId === (int) $order->id
+            || ((string) $order->stripe_session_id !== '' && hash_equals((string) $order->stripe_session_id, $sessionId));
+
+        if (! $sessionBelongsToOrder || data_get($session, 'payment_status') !== 'paid') {
+            return $order;
+        }
+
+        $paymentIntent = data_get($session, 'payment_intent');
+        $paymentIntentId = is_array($paymentIntent) ? data_get($paymentIntent, 'id') : $paymentIntent;
+
+        return DB::transaction(function () use ($order, $latestPayment, $session, $sessionId, $paymentIntentId, $userId) {
+            $order->refresh();
+
+            if ($order->payment_status === 'paid') {
+                return $order;
+            }
+
+            $order->update([
+                'status' => 'paid',
+                'payment_status' => 'paid',
+                'stripe_session_id' => $sessionId,
+                'stripe_payment_intent' => $paymentIntentId,
+                'updated_by' => $userId,
+            ]);
+
+            $latestPayment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+                'gateway_response' => json_encode([
+                    'source' => 'stripe_return',
+                    'status' => 'paid',
+                    'stripe_session_id' => $sessionId,
+                    'stripe_payment_intent' => $paymentIntentId,
+                    'stripe_payment_status' => data_get($session, 'payment_status'),
+                ]),
+            ]);
+
+            return $order->fresh();
+        });
     }
 
     public function storeAddress(Request $request)

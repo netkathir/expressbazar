@@ -139,7 +139,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Filtered Sales Snapshot</h2>
-                    <p class="text-secondary mb-0">Filtered by date, vendor and location.</p>
                 </div>
                 <div class="d-flex gap-3 flex-wrap">
                     <div class="soft-card px-3 py-2">
@@ -213,7 +212,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Vendor Performance</h2>
-                    <p class="text-secondary mb-0">Orders, revenue, inventory mode and service location per vendor.</p>
                 </div>
             </div>
             <div class="table-responsive">
@@ -259,7 +257,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Order Analytics</h2>
-                    <p class="text-secondary mb-0">Order status breakdown for the selected filters.</p>
                 </div>
             </div>
             <div class="row g-3 mb-3">
@@ -321,7 +318,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Inventory Status</h2>
-                    <p class="text-secondary mb-0">Stock quantity, inventory mode and sync status by product.</p>
                 </div>
             </div>
             <div class="table-responsive">
@@ -369,11 +365,10 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Adjust Stock Log</h2>
-                    <p class="text-secondary mb-0">Stock additions and reductions with previous and updated counts.</p>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+            <div class="table-responsive admin-stock-log-wrap">
+                <table class="table table-sm align-middle mb-0 admin-stock-log-table">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -420,7 +415,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Recent Payments</h2>
-                    <p class="text-secondary mb-0">Latest payment records and their linked orders.</p>
                 </div>
             </div>
             @forelse ($recentPayments as $payment)
@@ -433,6 +427,12 @@
             @empty
                 <p class="text-secondary mb-0">No payment records yet.</p>
             @endforelse
+
+            @if ($recentPayments->hasPages())
+                <div class="pt-3">
+                    {{ $recentPayments->links() }}
+                </div>
+            @endif
         </div>
     </div>
     @endif
@@ -443,7 +443,6 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Location Based Revenue</h2>
-                    <p class="text-secondary mb-0">Revenue grouped by country, city and zone.</p>
                 </div>
             </div>
             <div class="table-responsive">

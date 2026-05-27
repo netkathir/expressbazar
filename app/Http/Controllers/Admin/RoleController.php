@@ -37,7 +37,7 @@ class RoleController extends Controller
     public function index()
     {
         $permissionCountQuery = RolePermission::query()
-            ->selectRaw('COALESCE(SUM(CASE WHEN can_view = 1 OR can_create = 1 OR can_edit = 1 OR can_delete = 1 THEN 1 ELSE 0 END), 0)')
+            ->selectRaw('COALESCE(SUM(can_view + can_create + can_edit + can_delete), 0)')
             ->whereColumn('role_permissions.role_id', 'roles.id');
 
         return view('admin.roles.index', [

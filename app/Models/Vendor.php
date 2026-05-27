@@ -66,7 +66,11 @@ class Vendor extends Authenticatable
 
         return $this->relationLoaded('roleRecordRelation')
             ? $this->getRelation('roleRecordRelation')
-            : Role::query()->with('permissions')->where('role_name', $this->role)->first();
+            : tap(Role::query()->with('permissions')->where('role_name', $this->role)->first(), function (?Role $role): void {
+                if ($role) {
+                    $this->setRelation('roleRecordRelation', $role);
+                }
+            });
     }
 
     public function roleRecordRelation()

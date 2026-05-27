@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -238,7 +239,7 @@ class ReportsController extends Controller
             });
     }
 
-    private function buildRecentPayments(array $filters): Collection
+    private function buildRecentPayments(array $filters): LengthAwarePaginator
     {
         return Payment::query()
             ->with('order')
@@ -248,8 +249,8 @@ class ReportsController extends Controller
                 });
             })
             ->latest()
-            ->limit(25)
-            ->get();
+            ->paginate(5, ['*'], 'payments_page')
+            ->withQueryString();
     }
 
     private function buildVendorPerformance(Collection $salesOrders): Collection
