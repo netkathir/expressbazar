@@ -242,10 +242,8 @@ class ProductBulkImportService
             'created_by' => $options['created_by'] ?? null,
             'updated_by' => $options['updated_by'] ?? null,
         ];
-        $uniqueProductName = Rule::unique('products', 'product_name');
-        if ($vendor) {
-            $uniqueProductName->where('vendor_id', $vendorId);
-        }
+        $uniqueProductName = Rule::unique('products', 'product_name')
+            ->where('vendor_id', $vendorId);
 
         $validator = Validator::make($data, [
             'product_name' => [

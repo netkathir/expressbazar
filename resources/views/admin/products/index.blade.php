@@ -22,9 +22,7 @@
             </div>
             @if ($canCreateProducts)
                 <div class="d-flex flex-wrap gap-2">
-                    @if ($isVendorPanel)
-                        <a href="{{ route($routePrefix.'.bulk') }}" class="btn btn-outline-primary">Bulk Import</a>
-                    @endif
+                    <a href="{{ route($routePrefix.'.bulk') }}" class="btn btn-outline-primary">Bulk Import</a>
                     <a href="{{ route($routePrefix.'.create') }}" class="btn btn-primary">Add Product</a>
                 </div>
             @endif

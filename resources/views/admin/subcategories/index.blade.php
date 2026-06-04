@@ -51,6 +51,7 @@
                     <tr>
                         <th>Subcategory</th>
                         <th>Category</th>
+                        <th>Image</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -60,6 +61,13 @@
                         <tr>
                             <td class="fw-semibold">{{ $subcategory->subcategory_name }}</td>
                             <td>{{ $subcategory->category?->category_name }}</td>
+                            <td>
+                                @if ($subcategory->image_path)
+                                    <img src="{{ asset($subcategory->image_path) }}" alt="{{ $subcategory->subcategory_name }}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px;">
+                                @else
+                                    <span class="text-secondary">-</span>
+                                @endif
+                            </td>
                             <td><span class="badge text-bg-{{ $subcategory->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($subcategory->status) }}</span></td>
                             <td class="text-end">
                                 @canRoute('admin.subcategories.edit')
@@ -80,7 +88,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center text-secondary py-5">No subcategories found.</td>
+                            <td colspan="5" class="text-center text-secondary py-5">No subcategories found.</td>
                         </tr>
                     @endforelse
                 </tbody>

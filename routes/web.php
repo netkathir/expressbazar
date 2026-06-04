@@ -133,6 +133,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('customers', CustomerController::class);
         Route::resource('taxes', TaxController::class)->except(['show']);
         Route::resource('coupons', CouponController::class)->except(['show']);
+        Route::get('products/bulk', [ProductController::class, 'bulkCreate'])->name('products.bulk');
+        Route::post('products/bulk', [ProductController::class, 'bulkStore'])->name('products.bulk.store');
+        Route::get('products/bulk/template', [ProductController::class, 'bulkTemplate'])->name('products.bulk.template');
         Route::resource('products', ProductController::class)->except(['show']);
         Route::delete('products/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::resource('inventory', InventoryController::class)->except(['show']);

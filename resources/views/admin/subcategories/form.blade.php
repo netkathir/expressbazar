@@ -10,7 +10,7 @@
                 <a href="{{ route('admin.subcategories.index') }}" class="btn btn-outline-secondary" data-dirty-back>Back</a>
             </div>
 
-            <form method="POST" action="{{ $mode === 'create' ? route('admin.subcategories.store') : route('admin.subcategories.update', $subcategory) }}" class="row g-3" data-dirty-check>
+            <form method="POST" action="{{ $mode === 'create' ? route('admin.subcategories.store') : route('admin.subcategories.update', $subcategory) }}" class="row g-3" enctype="multipart/form-data" data-dirty-check>
                 @csrf
                 @if ($mode === 'edit')
                     @method('PUT')
@@ -36,6 +36,16 @@
                         <option value="inactive" @selected(old('status', $subcategory->status) === 'inactive')>Inactive</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Image</label>
+                    <input type="file" name="image" class="form-control">
+                </div>
+                @if ($mode === 'edit' && $subcategory->image_path)
+                    <div class="col-12">
+                        <div class="small text-secondary mb-2">Current image</div>
+                        <img src="{{ asset($subcategory->image_path) }}" alt="{{ $subcategory->subcategory_name }}" style="width: 96px; height: 96px; object-fit: cover; border-radius: 16px;">
+                    </div>
+                @endif
                 <div class="col-12">
                     <button class="btn btn-primary" type="submit">{{ $mode === 'create' ? 'Save Subcategory' : 'Update Subcategory' }}</button>
                 </div>

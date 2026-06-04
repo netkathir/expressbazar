@@ -13,9 +13,9 @@ use App\Models\Tax;
 use App\Services\InventoryService;
 use App\Services\ProductBulkImportService;
 use App\Services\ProductBulkTemplateService;
+use App\Support\UploadedImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -194,11 +194,7 @@ class ProductController extends Controller
         $product = $image->product;
         abort_if(! $product || (int) $product->vendor_id !== (int) Auth::guard('vendor')->id(), 404);
 
-        $fullPath = public_path($image->image_path);
-
-        if (File::exists($fullPath)) {
-            File::delete($fullPath);
-        }
+        UploadedImage::delete($image->image_path);
 
         $productId = $image->product_id;
         $image->delete();
@@ -369,11 +365,7 @@ class ProductController extends Controller
 
         if ($replaceExisting) {
             foreach ($product->images as $existingImage) {
-                $fullPath = public_path($existingImage->image_path);
-
-                if (File::exists($fullPath)) {
-                    File::delete($fullPath);
-                }
+                UploadedImage::delete($existingImage->image_path);
             }
 
             $product->images()->delete();
@@ -412,11 +404,7 @@ class ProductController extends Controller
             ->whereIn('id', $imageIds)
             ->get()
             ->each(function (ProductImage $image) {
-                $fullPath = public_path($image->image_path);
-
-                if (File::exists($fullPath)) {
-                    File::delete($fullPath);
-                }
+                UploadedImage::delete($image->image_path);
 
                 $image->delete();
             });
@@ -425,25 +413,12 @@ class ProductController extends Controller
     private function deleteImages(Product $product): void
     {
         foreach ($product->images as $image) {
-            $fullPath = public_path($image->image_path);
-
-            if (File::exists($fullPath)) {
-                File::delete($fullPath);
-            }
+            UploadedImage::delete($image->image_path);
         }
     }
 
     private function storeImage($file): string
     {
-        $directory = public_path('uploads/products');
-
-        if (! File::exists($directory)) {
-            File::makeDirectory($directory, 0755, true);
-        }
-
-        $filename = uniqid('product_', true).'.'.$file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-
-        return 'uploads/products/'.$filename;
+        return UploadedImage::store($file, 'products', 'product');
     }
 }

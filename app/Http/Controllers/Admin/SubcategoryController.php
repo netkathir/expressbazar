@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Support\UploadedImage;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -52,6 +53,10 @@ class SubcategoryController extends Controller
         $data['created_by'] = $request->user()?->id;
         $data['updated_by'] = $request->user()?->id;
 
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $this->storeImage($request->file('image'));
+        }
+
         Subcategory::create($data);
 
         return $this->redirectToIndex($request, 'admin.subcategories.index', 'Subcategory created successfully.');
@@ -73,6 +78,11 @@ class SubcategoryController extends Controller
         $data = $this->validateSubcategory($request, $subcategory);
         $data['updated_by'] = $request->user()?->id;
 
+        if ($request->hasFile('image')) {
+            $this->deleteImage($subcategory->image_path);
+            $data['image_path'] = $this->storeImage($request->file('image'));
+        }
+
         $subcategory->update($data);
 
         return $this->redirectToIndex($request, 'admin.subcategories.index', 'Subcategory updated successfully.');
@@ -80,6 +90,7 @@ class SubcategoryController extends Controller
 
     public function destroy(Request $request, Subcategory $subcategory)
     {
+        $this->deleteImage($subcategory->image_path);
         $this->deleteFromDatabase($subcategory);
 
         return $this->redirectToIndex($request, 'admin.subcategories.index', 'Subcategory deleted successfully.');
@@ -97,7 +108,18 @@ class SubcategoryController extends Controller
                     ->where(fn ($query) => $query->where('category_id', $request->integer('category_id')))
                     ->ignore($subcategory?->id),
             ],
+            'image' => ['nullable', 'image', 'max:2048'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
+    }
+
+    private function storeImage($file): string
+    {
+        return UploadedImage::store($file, 'subcategories', 'subcategory');
+    }
+
+    private function deleteImage(?string $path): void
+    {
+        UploadedImage::delete($path);
     }
 }

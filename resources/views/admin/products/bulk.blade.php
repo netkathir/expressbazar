@@ -8,7 +8,7 @@
         $categories = $categories ?? collect();
         $previewColumns = $isVendorPanel
             ? ['product_name', 'category_name', 'subcategory_name', 'price', 'inventory_mode', 'stock_quantity', 'unit', 'status']
-            : ['product_name', 'vendor_name', 'category_name', 'subcategory_name', 'price', 'inventory_mode', 'stock_quantity', 'unit', 'status'];
+            : ['product_name', 'vendor', 'category_name', 'subcategory_name', 'price', 'inventory_mode', 'stock_quantity', 'unit', 'status'];
     @endphp
 
     <div class="card shell-card mb-4">
@@ -52,61 +52,6 @@
             </div>
         </div>
     @endif
-
-    <div class="card shell-card mt-4">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-                <div>
-                    <h2 class="h5 mb-1">Available Lookup Names</h2>
-                    <p class="text-secondary mb-0">Use the Excel template dropdowns, or type these exact names manually in Excel or CSV.</p>
-                </div>
-            </div>
-            <div class="row g-3">
-                @unless ($isVendorPanel)
-                    <div class="col-12 col-lg-4">
-                        <div class="border rounded-3 p-3 h-100">
-                            <h3 class="h6 mb-2">Vendors</h3>
-                            @forelse ($vendors->take(30) as $vendor)
-                                <div class="small py-1 border-bottom">
-                                    <strong>{{ $vendor->vendor_name }}</strong>
-                                    @if ($vendor->email)
-                                        <span class="text-secondary d-block">{{ $vendor->email }}</span>
-                                    @endif
-                                </div>
-                            @empty
-                                <p class="text-secondary small mb-0">No active vendors found.</p>
-                            @endforelse
-                        </div>
-                    </div>
-                @endunless
-                <div class="col-12 {{ $isVendorPanel ? 'col-lg-12' : 'col-lg-8' }}">
-                    <div class="border rounded-3 p-3 h-100">
-                        <h3 class="h6 mb-2">Categories and Subcategories</h3>
-                        <div class="row g-2">
-                            @forelse ($categories->take(30) as $category)
-                                <div class="col-12 col-md-6">
-                                    <div class="small border rounded-3 p-2 h-100">
-                                        <strong>{{ $category->category_name }}</strong>
-                                        <div class="text-secondary mt-1">
-                                            @forelse ($category->subcategories->take(8) as $subcategory)
-                                                <span class="badge text-bg-light me-1 mb-1">{{ $subcategory->subcategory_name }}</span>
-                                            @empty
-                                                <span>No subcategories</span>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="col-12">
-                                    <p class="text-secondary small mb-0">No categories found.</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="card shell-card mt-4 d-none" id="bulkPreviewCard">
         <div class="card-body p-4">
@@ -251,7 +196,11 @@
                 }
 
                 rowsBody.innerHTML = records.slice(0, 25).map((record) => {
-                    const cells = previewColumns.map((column) => `<td>${escapeHtml(record[column] || '-')}</td>`).join('');
+                    const cells = previewColumns.map((column) => {
+                        const value = column === 'vendor' ? (record.vendor || record.vendor_name) : record[column];
+
+                        return `<td>${escapeHtml(value || '-')}</td>`;
+                    }).join('');
                     return `<tr>${cells}</tr>`;
                 }).join('');
 

@@ -11,8 +11,10 @@ use App\Models\Tax;
 use App\Models\Subcategory;
 use App\Models\Vendor;
 use App\Services\InventoryService;
+use App\Services\ProductBulkImportService;
+use App\Services\ProductBulkTemplateService;
+use App\Support\UploadedImage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -60,6 +62,53 @@ class ProductController extends Controller
             'taxes' => Tax::orderBy('tax_name')->get(),
             'mode' => 'create',
         ]);
+    }
+
+    public function bulkCreate()
+    {
+        return view('admin.products.bulk', [
+            'title' => 'Bulk Import Products',
+            'activeMenu' => 'products',
+            'routePrefix' => 'admin.products',
+            'categories' => Category::query()->with(['subcategories' => fn ($query) => $query->orderBy('subcategory_name')])->orderBy('category_name')->get(['id', 'category_name']),
+            'vendors' => Vendor::orderBy('vendor_name')->get(['id', 'vendor_name']),
+        ]);
+    }
+
+    public function bulkStore(Request $request, ProductBulkImportService $importer)
+    {
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'max:5120'],
+        ]);
+
+        $result = $importer->import($data['file'], [
+            'created_by' => $request->user()?->id,
+            'updated_by' => $request->user()?->id,
+            'queue_epos_sync' => false,
+        ]);
+
+        if ($result['created'] === 0 && ! empty($result['errors'])) {
+            return redirect()
+                ->route('admin.products.bulk')
+                ->withErrors(['file' => 'No products were imported. Please review the skipped row details below.'])
+                ->with('bulk_errors', $result['errors']);
+        }
+
+        return redirect()
+            ->route('admin.products.bulk')
+            ->with('success', $result['created'].' products imported successfully.'.(empty($result['errors']) ? '' : ' Some rows were skipped.'))
+            ->with('bulk_errors', $result['errors']);
+    }
+
+    public function bulkTemplate(ProductBulkTemplateService $templateService)
+    {
+        $path = $templateService->adminTemplate();
+
+        return response()
+            ->download($path, 'admin-product-bulk-template.xlsx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend(true);
     }
 
     public function store(Request $request)
@@ -126,11 +175,7 @@ class ProductController extends Controller
 
     public function destroyImage(ProductImage $image)
     {
-        $fullPath = public_path($image->image_path);
-
-        if (File::exists($fullPath)) {
-            File::delete($fullPath);
-        }
+        UploadedImage::delete($image->image_path);
 
         $productId = $image->product_id;
         $image->delete();
@@ -254,11 +299,7 @@ class ProductController extends Controller
 
         if ($replaceExisting) {
             foreach ($product->images as $existingImage) {
-                $fullPath = public_path($existingImage->image_path);
-
-                if (File::exists($fullPath)) {
-                    File::delete($fullPath);
-                }
+                UploadedImage::delete($existingImage->image_path);
             }
 
             $product->images()->delete();
@@ -297,11 +338,7 @@ class ProductController extends Controller
             ->whereIn('id', $imageIds)
             ->get()
             ->each(function (ProductImage $image) {
-                $fullPath = public_path($image->image_path);
-
-                if (File::exists($fullPath)) {
-                    File::delete($fullPath);
-                }
+                UploadedImage::delete($image->image_path);
 
                 $image->delete();
             });
@@ -310,25 +347,12 @@ class ProductController extends Controller
     private function deleteImages(Product $product): void
     {
         foreach ($product->images as $image) {
-            $fullPath = public_path($image->image_path);
-
-            if (File::exists($fullPath)) {
-                File::delete($fullPath);
-            }
+            UploadedImage::delete($image->image_path);
         }
     }
 
     private function storeImage($file): string
     {
-        $directory = public_path('uploads/products');
-
-        if (! File::exists($directory)) {
-            File::makeDirectory($directory, 0755, true);
-        }
-
-        $filename = uniqid('product_', true).'.'.$file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-
-        return 'uploads/products/'.$filename;
+        return UploadedImage::store($file, 'products', 'product');
     }
 }

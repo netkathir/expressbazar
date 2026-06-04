@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Support\UploadedImage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
@@ -115,26 +115,11 @@ class CategoryController extends Controller
 
     private function storeImage($file): string
     {
-        $directory = public_path('uploads/categories');
-
-        if (! File::exists($directory)) {
-            File::makeDirectory($directory, 0755, true);
-        }
-
-        $filename = uniqid('category_', true).'.'.$file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-
-        return 'uploads/categories/'.$filename;
+        return UploadedImage::store($file, 'categories', 'category');
     }
 
     private function deleteImage(?string $path): void
     {
-        if ($path) {
-            $fullPath = public_path($path);
-
-            if (File::exists($fullPath)) {
-                File::delete($fullPath);
-            }
-        }
+        UploadedImage::delete($path);
     }
 }

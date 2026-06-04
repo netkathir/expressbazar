@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\UploadedImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,4 +18,9 @@ class Banner extends Model
         'status',
         'sort_order',
     ];
+
+    public function getImagePathAttribute($value): ?string
+    {
+        return UploadedImage::normalize($value);
+    }
 }
