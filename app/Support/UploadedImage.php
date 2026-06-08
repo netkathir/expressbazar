@@ -4,26 +4,24 @@ namespace App\Support;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UploadedImage
 {
     private const ROOT = 'uploads';
+    private const PUBLIC_ROOT = 'storage/uploads';
 
     public static function store(UploadedFile $file, string $folder, string $prefix): string
     {
         $folder = trim($folder, '/\\');
-        $directory = public_path(self::ROOT.'/'.$folder);
-
-        if (! File::exists($directory)) {
-            File::makeDirectory($directory, 0755, true);
-        }
+        $directory = self::ROOT.'/'.$folder;
 
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
         $filename = $prefix.'_'.Str::uuid()->toString().'.'.$extension;
-        $file->move($directory, $filename);
+        Storage::disk('public')->putFileAs($directory, $file, $filename);
 
-        return self::normalize(self::ROOT.'/'.$folder.'/'.$filename);
+        return self::normalize(self::PUBLIC_ROOT.'/'.$folder.'/'.$filename);
     }
 
     public static function delete(?string $path): void
@@ -32,6 +30,12 @@ class UploadedImage
 
         if ($fullPath && File::exists($fullPath)) {
             File::delete($fullPath);
+        }
+
+        $legacyPath = self::legacyPublicPath($path);
+
+        if ($legacyPath && $legacyPath !== $fullPath && File::exists($legacyPath)) {
+            File::delete($legacyPath);
         }
     }
 
@@ -57,6 +61,10 @@ class UploadedImage
             $path = substr($path, 7);
         }
 
+        if (str_starts_with($path, 'app/public/')) {
+            $path = 'storage/'.substr($path, 11);
+        }
+
         return $path;
     }
 
@@ -68,6 +76,29 @@ class UploadedImage
             return null;
         }
 
+        if (str_starts_with((string) $path, self::PUBLIC_ROOT.'/')) {
+            return storage_path('app/public/'.substr($path, 8));
+        }
+
+        if (str_starts_with((string) $path, self::ROOT.'/')) {
+            $storedPath = storage_path('app/public/'.$path);
+
+            if (File::exists($storedPath)) {
+                return $storedPath;
+            }
+        }
+
         return $path ? public_path($path) : null;
+    }
+
+    private static function legacyPublicPath(?string $path): ?string
+    {
+        $path = self::normalize($path);
+
+        if (! $path || filter_var($path, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return public_path($path);
     }
 }

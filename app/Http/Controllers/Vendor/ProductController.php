@@ -86,7 +86,7 @@ class ProductController extends Controller
     public function bulkStore(Request $request, ProductBulkImportService $importer)
     {
         $data = $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
         ]);
 
         $result = $importer->import($data['file'], [
@@ -112,8 +112,8 @@ class ProductController extends Controller
         $path = $templateService->vendorTemplate(Auth::guard('vendor')->user());
 
         return response()
-            ->download($path, 'vendor-product-bulk-template.xlsx', [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ->download($path, 'vendor-product-bulk-template.csv', [
+                'Content-Type' => 'text/csv',
             ])
             ->deleteFileAfterSend(true);
     }

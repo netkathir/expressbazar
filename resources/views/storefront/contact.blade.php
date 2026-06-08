@@ -45,7 +45,6 @@
                     <dl class="sf-specs mb-0">
                         <dt>Email</dt><dd>support@expressbazaar.local</dd>
                         <dt>Address</dt><dd>73 Colby Street, Southampton, SO16 9RU, United Kingdom</dd>
-                        <dt>Orders</dt><dd><a href="{{ auth()->check() && auth()->user()->role === 'customer' ? url('/account/orders') : url('/login') }}">Track your order</a></dd>
                     </dl>
                 </div>
             </div>

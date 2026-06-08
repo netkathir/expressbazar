@@ -160,6 +160,15 @@ class StoreImage
 
     public static function productGallery(object|null $product): Collection
     {
+        $paths = collect($product?->images ?? [])
+            ->pluck('image_path')
+            ->filter(fn ($path) => self::isUsable($path))
+            ->values();
+
+        if ($paths->isNotEmpty()) {
+            return $paths->map(fn ($path) => (object) ['image_path' => self::cleanPath($path)]);
+        }
+
         $preferredPath = self::preferredProductPath($product);
 
         if ($preferredPath && self::isSampleProduct($product)) {
@@ -167,15 +176,6 @@ class StoreImage
                 $preferredPath,
                 ...self::fallbackProductPaths($product, 2),
             ])))->take(2)->map(fn ($path) => (object) ['image_path' => $path]);
-        }
-
-        $paths = collect($product?->images ?? [])
-            ->pluck('image_path')
-            ->filter(fn ($path) => self::isDisplayable($path))
-            ->values();
-
-        if ($paths->isNotEmpty()) {
-            return $paths->map(fn ($path) => (object) ['image_path' => self::cleanPath($path)]);
         }
 
         return collect(self::fallbackProductPaths($product, 2))
@@ -209,19 +209,15 @@ class StoreImage
 
     private static function productPath(object|null $product): string
     {
-        $preferredPath = self::preferredProductPath($product);
-
-        if ($preferredPath && self::isSampleProduct($product)) {
-            return $preferredPath;
-        }
-
         $imagePath = collect($product?->images ?? [])
             ->pluck('image_path')
-            ->first(fn ($path) => self::isDisplayable($path));
+            ->first(fn ($path) => self::isUsable($path));
 
         if ($imagePath) {
             return self::cleanPath($imagePath);
         }
+
+        $preferredPath = self::preferredProductPath($product);
 
         if ($preferredPath && self::isSampleProduct($product)) {
             return $preferredPath;
@@ -289,7 +285,9 @@ class StoreImage
             return true;
         }
 
-        return is_file(public_path($cleanPath));
+        $fullPath = UploadedImage::publicPath($cleanPath);
+
+        return $fullPath ? is_file($fullPath) : false;
     }
 
     private static function isDisplayable(string|null $path): bool

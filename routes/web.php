@@ -39,10 +39,29 @@ use App\Http\Controllers\Vendor\PaymentController as VendorPaymentController;
 use App\Http\Controllers\Vendor\ProductController as VendorProductController;
 use App\Http\Controllers\Vendor\ReferenceModuleController as VendorReferenceModuleController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+
+$servePublicUpload = function (string $path) {
+    $diskPath = 'uploads/'.ltrim(str_replace('\\', '/', $path), '/');
+
+    if (str_contains($diskPath, '../') || ! Storage::disk('public')->exists($diskPath)) {
+        abort(404);
+    }
+
+    return response()->file(Storage::disk('public')->path($diskPath));
+};
+
+Route::get('/storage/uploads/{path}', $servePublicUpload)->where('path', '.*')->name('uploads.public');
+Route::get('/uploads/{path}', $servePublicUpload)->where('path', '.*')->name('uploads.legacy-public');
 
 Route::get('/', [StorefrontController::class, 'home'])->name('user.home');
 Route::get('/contact-us', [StorefrontController::class, 'contact'])->name('storefront.contact');
 Route::post('/contact-us', [StorefrontController::class, 'submitContact'])->name('storefront.contact.submit');
+Route::get('/about-express-bazaar', [StorefrontController::class, 'about'])->name('storefront.about');
+Route::get('/terms-and-conditions', [StorefrontController::class, 'terms'])->name('storefront.terms');
+Route::get('/privacy-policy', [StorefrontController::class, 'privacy'])->name('storefront.privacy');
+Route::get('/faqs', [StorefrontController::class, 'faqs'])->name('storefront.faqs');
+Route::get('/shipping-policy', [StorefrontController::class, 'shipping'])->name('storefront.shipping');
 Route::get('/login', [CustomerAuthController::class, 'createLogin'])->name('storefront.login');
 Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->name('storefront.login.store');
 Route::get('/register', [CustomerAuthController::class, 'createRegister'])->name('storefront.register');

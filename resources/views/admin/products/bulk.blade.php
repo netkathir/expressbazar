@@ -20,7 +20,7 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route($routePrefix.'.bulk.template') }}" class="btn btn-outline-primary">
-                        <i class="ti ti-download me-1"></i> Download Excel Template
+                        <i class="ti ti-download me-1"></i> Download CSV Template
                     </a>
                     <a href="{{ route($routePrefix.'.index') }}" class="btn btn-outline-secondary">Back</a>
                 </div>
@@ -29,9 +29,9 @@
             <form method="POST" action="{{ route($routePrefix.'.bulk.store') }}" enctype="multipart/form-data" class="row g-3" id="bulkProductForm">
                 @csrf
                 <div class="col-12 col-lg-7">
-                    <label class="form-label">Excel or CSV File</label>
-                    <input type="file" name="file" class="form-control" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required id="bulkProductFile">
-                    <div class="form-text">Maximum file size: 5 MB. Use the Excel template for dropdowns. Product images are not imported in bulk.</div>
+                    <label class="form-label">CSV File</label>
+                    <input type="file" name="file" class="form-control" accept=".csv,text/csv" required id="bulkProductFile">
+                    <div class="form-text">Maximum file size: 5 MB. Use the CSV template format. Product images are not imported in bulk.</div>
                 </div>
                 <div class="col-12">
                     <button class="btn btn-primary bulk-product-submit" type="submit" disabled>Import Previewed Products</button>
@@ -159,16 +159,6 @@
 
                 if (!file) {
                     card.classList.add('d-none');
-                    return;
-                }
-
-                if (file.name.toLowerCase().endsWith('.xlsx')) {
-                    card.classList.remove('d-none');
-                    badge.textContent = 'Excel file';
-                    summary.textContent = 'Excel template selected. Dropdown values will be validated during import.';
-                    alert.textContent = 'Row preview is available for CSV files only. You can submit this Excel file now.';
-                    alert.classList.remove('d-none');
-                    setSubmitState(false);
                     return;
                 }
 

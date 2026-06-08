@@ -221,16 +221,16 @@
 
                 <div class="sf-footer-col">
                     <h6>About Us</h6>
-                    <a href="#">About Express Bazaar</a>
-                    <a href="#">Terms &amp; Conditions</a>
-                    <a href="#">Privacy Policy</a>
+                    <a href="{{ $safeRouteUrl('storefront.about', '/about-express-bazaar') }}">About Express Bazaar</a>
+                    <a href="{{ $safeRouteUrl('storefront.terms', '/terms-and-conditions') }}">Terms &amp; Conditions</a>
+                    <a href="{{ $safeRouteUrl('storefront.privacy', '/privacy-policy') }}">Privacy Policy</a>
                 </div>
 
                 <div class="sf-footer-col">
                     <h6>Customer Service</h6>
                     <a href="{{ url('/contact-us') }}">Contact Us</a>
-                    <a href="#">FAQs</a>
-                    <a href="#">Shipping Policy</a>
+                    <a href="{{ $safeRouteUrl('storefront.faqs', '/faqs') }}">FAQs</a>
+                    <a href="{{ $safeRouteUrl('storefront.shipping', '/shipping-policy') }}">Shipping Policy</a>
                     <a href="{{ auth()->check() && auth()->user()->role === 'customer' ? $safeRouteUrl('storefront.orders.index', '/account/orders') : $safeRouteUrl('storefront.login', '/login') }}">Track Your Order</a>
                 </div>
 

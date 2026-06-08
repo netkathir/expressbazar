@@ -191,6 +191,148 @@ class StorefrontController extends Controller
         return view('storefront.contact', $this->storefrontData($request, 'Contact Us'));
     }
 
+    public function about(Request $request)
+    {
+        return view('storefront.static-page', $this->storefrontData($request, 'About Express Bazaar') + [
+            'pageTitle' => 'About Express Bazaar',
+            'intro' => 'Express Bazaar is a sample everyday ecommerce marketplace built to make shopping simple, reliable, and convenient for customers.',
+            'sections' => [
+                [
+                    'heading' => 'Who We Are',
+                    'body' => 'We bring together trusted sellers, practical product categories, and a straightforward buying experience so customers can browse, compare, and order with confidence. Our sample marketplace focuses on groceries, household essentials, personal care, electronics, fashion, and daily-use products.',
+                ],
+                [
+                    'heading' => 'What We Offer',
+                    'body' => 'Customers can explore curated products, add items to their cart, manage delivery details, track orders, and receive support from our customer service team. We aim to keep product information clear, pricing transparent, and checkout simple.',
+                ],
+                [
+                    'heading' => 'Our Promise',
+                    'body' => 'Express Bazaar is committed to a dependable shopping experience with responsive support, secure payments, and continuous improvements based on customer feedback.',
+                ],
+            ],
+        ]);
+    }
+
+    public function terms(Request $request)
+    {
+        return view('storefront.static-page', $this->storefrontData($request, 'Terms & Conditions') + [
+            'pageTitle' => 'Terms & Conditions',
+            'intro' => 'These sample terms explain the general conditions for using Express Bazaar and placing orders through the website.',
+            'sections' => [
+                [
+                    'heading' => 'Use of the Website',
+                    'body' => 'By accessing Express Bazaar, customers agree to use the website for lawful shopping and account-related activities only. Users should provide accurate registration, billing, and delivery information when placing orders.',
+                ],
+                [
+                    'heading' => 'Products, Pricing, and Availability',
+                    'body' => 'Product images, descriptions, prices, discounts, and stock availability are shown for customer convenience and may change without prior notice. If an item becomes unavailable after an order is placed, we may contact the customer for a replacement, refund, or order update.',
+                ],
+                [
+                    'heading' => 'Orders and Payments',
+                    'body' => 'Orders are confirmed after successful checkout and payment authorization where applicable. Express Bazaar may cancel or review orders that appear incomplete, incorrect, duplicated, or suspicious.',
+                ],
+                [
+                    'heading' => 'Delivery, Returns, and Support',
+                    'body' => 'Delivery timelines are estimates and may vary based on seller, address, product availability, and external conditions. Customers should contact support for order issues, returns, exchanges, or refund requests within a reasonable time after delivery.',
+                ],
+                [
+                    'heading' => 'Limitation of Liability',
+                    'body' => 'Express Bazaar works to keep the platform accurate and available, but sample content on this page does not create legal advice or a final commercial policy. The business may update these terms when required.',
+                ],
+            ],
+        ]);
+    }
+
+    public function privacy(Request $request)
+    {
+        return view('storefront.static-page', $this->storefrontData($request, 'Privacy Policy') + [
+            'pageTitle' => 'Privacy Policy',
+            'intro' => 'This sample privacy policy describes how Express Bazaar may collect and use customer information to operate an ecommerce service.',
+            'sections' => [
+                [
+                    'heading' => 'Information We Collect',
+                    'body' => 'We may collect details such as name, email address, phone number, delivery address, account activity, order history, payment status, and messages sent through customer support forms.',
+                ],
+                [
+                    'heading' => 'How We Use Information',
+                    'body' => 'Customer information is used to process orders, arrange delivery, manage accounts, respond to inquiries, prevent misuse, improve website performance, and send important service updates.',
+                ],
+                [
+                    'heading' => 'Payments and Security',
+                    'body' => 'Payment transactions may be handled through secure payment partners. Express Bazaar does not intend to store sensitive card details directly and uses reasonable safeguards to protect customer data.',
+                ],
+                [
+                    'heading' => 'Sharing Information',
+                    'body' => 'We may share necessary order and delivery details with sellers, delivery partners, payment providers, and support teams only for completing customer requests and operating the service.',
+                ],
+                [
+                    'heading' => 'Customer Choices',
+                    'body' => 'Customers may contact support to update account details, ask questions about their information, or request help with privacy-related concerns. This sample policy may be updated as the platform grows.',
+                ],
+            ],
+        ]);
+    }
+
+    public function faqs(Request $request)
+    {
+        return view('storefront.static-page', $this->storefrontData($request, 'FAQs') + [
+            'pageTitle' => 'FAQs',
+            'intro' => 'Find quick answers to common questions about shopping, payments, delivery, and account support at Express Bazaar.',
+            'sections' => [
+                [
+                    'heading' => 'How do I place an order?',
+                    'body' => 'Browse products, choose the items you want, add them to your cart, and continue to checkout. You can review your order, delivery details, and payment option before confirming.',
+                ],
+                [
+                    'heading' => 'Do I need an account to shop?',
+                    'body' => 'Customers may browse products without an account, but account login may be required for checkout, saved addresses, order tracking, wishlist features, and support history.',
+                ],
+                [
+                    'heading' => 'What payment methods are accepted?',
+                    'body' => 'Express Bazaar may support common payment methods such as cards, UPI, Stripe, and other available options shown during checkout. Payment availability can vary by order and location.',
+                ],
+                [
+                    'heading' => 'Can I change or cancel my order?',
+                    'body' => 'Order changes or cancellations may be possible before the order is processed or dispatched. Visit your account orders page or contact customer support as soon as possible for help.',
+                ],
+                [
+                    'heading' => 'How do I contact support?',
+                    'body' => 'Use the Contact Us page to send your question with order details, product information, or account information so the support team can respond quickly.',
+                ],
+            ],
+        ]);
+    }
+
+    public function shipping(Request $request)
+    {
+        return view('storefront.static-page', $this->storefrontData($request, 'Shipping Policy') + [
+            'pageTitle' => 'Shipping Policy',
+            'intro' => 'This sample shipping policy explains how Express Bazaar handles delivery estimates, address details, and order fulfillment.',
+            'sections' => [
+                [
+                    'heading' => 'Delivery Coverage',
+                    'body' => 'Express Bazaar delivers to supported service areas shown during location selection and checkout. Availability may depend on seller coverage, delivery partners, and product type.',
+                ],
+                [
+                    'heading' => 'Shipping Charges',
+                    'body' => 'Shipping fees, free-delivery offers, and handling charges may vary based on order value, seller, delivery address, product weight, and promotional rules shown at checkout.',
+                ],
+                [
+                    'heading' => 'Delivery Timelines',
+                    'body' => 'Estimated delivery dates are provided for convenience and may change due to stock availability, payment confirmation, weather, traffic, holidays, or delivery partner delays.',
+                ],
+                [
+                    'heading' => 'Address Accuracy',
+                    'body' => 'Customers should provide a complete delivery address, phone number, and any helpful instructions. Incorrect or incomplete details may delay delivery or require support follow-up.',
+                ],
+                [
+                    'heading' => 'Damaged or Missing Items',
+                    'body' => 'If an item arrives damaged, incorrect, or missing, contact support with the order number and relevant details. The team may review the issue and help with replacement, refund, or resolution options.',
+                ],
+            ],
+        ]);
+    }
+
     public function submitContact(Request $request)
     {
         $data = $request->validate([

@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use ZipArchive;
 
 class ProductBulkImportService
 {
@@ -76,11 +75,7 @@ class ProductBulkImportService
 
     private function readRows(UploadedFile $file): array
     {
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        return $extension === 'xlsx'
-            ? $this->readXlsx($file)
-            : $this->readCsv($file);
+        return $this->readCsv($file);
     }
 
     private function readCsv(UploadedFile $file): array
@@ -118,73 +113,6 @@ class ProductBulkImportService
 
         if (empty($rows)) {
             throw ValidationException::withMessages(['file' => 'The CSV file does not contain any product rows.']);
-        }
-
-        return $rows;
-    }
-
-    private function readXlsx(UploadedFile $file): array
-    {
-        $zip = new ZipArchive();
-        if ($zip->open($file->getRealPath()) !== true) {
-            throw ValidationException::withMessages(['file' => 'Unable to read the uploaded Excel file.']);
-        }
-
-        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
-        if ($sheetXml === false) {
-            $zip->close();
-            throw ValidationException::withMessages(['file' => 'The Excel file must include a Products sheet.']);
-        }
-
-        $sharedStrings = $this->readSharedStrings($zip);
-        $zip->close();
-
-        $worksheet = simplexml_load_string($sheetXml);
-        if (! $worksheet) {
-            throw ValidationException::withMessages(['file' => 'Unable to parse the uploaded Excel file.']);
-        }
-
-        $rawRows = [];
-        foreach ($worksheet->sheetData->row as $rowNode) {
-            $row = [];
-            foreach ($rowNode->c as $cellNode) {
-                $attributes = $cellNode->attributes();
-                $cellRef = (string) ($attributes['r'] ?? '');
-                $column = $this->columnNumberFromCell($cellRef);
-                if ($column < 1) {
-                    continue;
-                }
-
-                $row[$column - 1] = $this->xlsxCellValue($cellNode, $sharedStrings);
-            }
-
-            if (collect($row)->some(fn ($value) => trim((string) $value) !== '')) {
-                ksort($row);
-                $rawRows[] = $row;
-            }
-        }
-
-        $header = array_map(fn ($value) => $this->normalizeHeader((string) $value), array_values(array_shift($rawRows) ?? []));
-        if (empty($header)) {
-            throw ValidationException::withMessages(['file' => 'The Excel file must include a header row.']);
-        }
-
-        $rows = [];
-        foreach ($rawRows as $rawRow) {
-            $row = [];
-            foreach ($header as $index => $key) {
-                if ($key !== '') {
-                    $row[$key] = trim((string) ($rawRow[$index] ?? ''));
-                }
-            }
-
-            if (collect($row)->some(fn ($value) => trim((string) $value) !== '')) {
-                $rows[] = $row;
-            }
-        }
-
-        if (empty($rows)) {
-            throw ValidationException::withMessages(['file' => 'The Excel file does not contain any product rows.']);
         }
 
         return $rows;
@@ -464,59 +392,6 @@ class ProductBulkImportService
         $number = $this->normalizeNumber($value);
 
         return is_numeric($number) ? max(0, (int) round((float) $number)) : null;
-    }
-
-    private function readSharedStrings(ZipArchive $zip): array
-    {
-        $xml = $zip->getFromName('xl/sharedStrings.xml');
-        if ($xml === false) {
-            return [];
-        }
-
-        $strings = [];
-        $shared = simplexml_load_string($xml);
-        foreach ($shared->si ?? [] as $item) {
-            $text = '';
-            if (isset($item->t)) {
-                $text = (string) $item->t;
-            } elseif (isset($item->r)) {
-                foreach ($item->r as $run) {
-                    $text .= (string) $run->t;
-                }
-            }
-            $strings[] = $text;
-        }
-
-        return $strings;
-    }
-
-    private function xlsxCellValue(\SimpleXMLElement $cellNode, array $sharedStrings): string
-    {
-        $attributes = $cellNode->attributes();
-        $type = (string) ($attributes['t'] ?? '');
-
-        if ($type === 's') {
-            return (string) ($sharedStrings[(int) $cellNode->v] ?? '');
-        }
-
-        if ($type === 'inlineStr') {
-            return (string) ($cellNode->is->t ?? '');
-        }
-
-        return (string) ($cellNode->v ?? '');
-    }
-
-    private function columnNumberFromCell(string $cell): int
-    {
-        preg_match('/^[A-Z]+/i', $cell, $matches);
-        $letters = strtoupper($matches[0] ?? '');
-        $number = 0;
-
-        for ($index = 0; $index < strlen($letters); $index++) {
-            $number = ($number * 26) + (ord($letters[$index]) - 64);
-        }
-
-        return $number;
     }
 
     private function normalizeDate(?string $value): ?string
