@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Curd &amp; Yogurt</title>
+  <desc id="desc">ExpressBazaar subcategory image for Curd &amp; Yogurt</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E6F0FF"/>
+      <stop offset="1" stop-color="#B9D7FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="240" rx="28" fill="url(#bg)"/>
+  <circle cx="270" cy="44" r="62" fill="#ffffff" opacity=".28"/>
+  <circle cx="48" cy="214" r="70" fill="#ffffff" opacity=".2"/>
+  <path d="M120 90h72l16 38v74H104v-74l16-38ZM128 90V64h56v26M104 132h104M132 162h40" fill="none" stroke="#2366A8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="24" y="24" width="88" height="26" rx="13" fill="#ffffff" opacity=".72"/>
+  <text x="44" y="42" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#2366A8">ExpressBazaar</text>
+</svg>

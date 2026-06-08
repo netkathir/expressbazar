@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Cut &amp; Packed Fruits</title>
+  <desc id="desc">ExpressBazaar subcategory image for Cut &amp; Packed Fruits</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D9F4C7"/>
+      <stop offset="1" stop-color="#8ED66D"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="240" rx="28" fill="url(#bg)"/>
+  <circle cx="270" cy="44" r="62" fill="#ffffff" opacity=".28"/>
+  <circle cx="48" cy="214" r="70" fill="#ffffff" opacity=".2"/>
+  <path d="M162 196c-43-8-72-38-72-78 46-3 75 17 87 56M160 190c-4-53 24-91 77-101 8 50-17 88-77 101M158 112c0-20 12-36 31-44" fill="none" stroke="#246B2E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="24" y="24" width="88" height="26" rx="13" fill="#ffffff" opacity=".72"/>
+  <text x="44" y="42" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#246B2E">ExpressBazaar</text>
+</svg>

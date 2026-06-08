@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 320 240" role="img" aria-labelledby="title desc">
+  <title id="title">Kulfi</title>
+  <desc id="desc">ExpressBazaar subcategory image for Kulfi</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE0EC"/>
+      <stop offset="1" stop-color="#FFC7A8"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="240" rx="28" fill="url(#bg)"/>
+  <circle cx="270" cy="44" r="62" fill="#ffffff" opacity=".28"/>
+  <circle cx="48" cy="214" r="70" fill="#ffffff" opacity=".2"/>
+  <path d="M118 102a48 48 0 0 1 96 0c0 17-9 32-22 41l-46 74-46-74c-13-9-22-24-22-41ZM112 146h104" fill="none" stroke="#B94F69" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="24" y="24" width="88" height="26" rx="13" fill="#ffffff" opacity=".72"/>
+  <text x="44" y="42" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#B94F69">ExpressBazaar</text>
+</svg>
