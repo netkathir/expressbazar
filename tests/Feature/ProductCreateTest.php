@@ -10,6 +10,7 @@ use App\Models\ProductImage;
 use App\Models\ProductInventory;
 use App\Models\RegionZone;
 use App\Models\Role;
+use App\Models\Subcategory;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -94,6 +95,7 @@ class ProductCreateTest extends TestCase
                 'inventory_mode',
                 'stock_quantity',
                 'unit',
+                'images',
                 'status',
             ]);
     }
@@ -123,6 +125,71 @@ class ProductCreateTest extends TestCase
                 'low_stock_threshold' => 4,
             ]))
             ->assertSessionHasErrors(['low_stock_threshold']);
+    }
+
+    public function test_admin_product_create_requires_an_image(): void
+    {
+        $admin = $this->adminUser();
+        $category = Category::create(['category_name' => 'Groceries', 'status' => 'active']);
+        $vendor = $this->vendor();
+        $payload = $this->validPayload($category, $vendor);
+        unset($payload['images']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.store'), $payload)
+            ->assertSessionHasErrors(['images']);
+
+        $this->assertDatabaseMissing('products', [
+            'product_name' => 'Premium Rice',
+            'vendor_id' => $vendor->id,
+        ]);
+    }
+
+    public function test_admin_product_create_rejects_subcategory_from_another_category(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->adminUser();
+        $category = Category::create(['category_name' => 'Groceries', 'status' => 'active']);
+        $otherCategory = Category::create(['category_name' => 'Fresh Food', 'status' => 'active']);
+        $subcategory = Subcategory::create([
+            'category_id' => $otherCategory->id,
+            'subcategory_name' => 'Vegetables',
+            'status' => 'active',
+        ]);
+        $vendor = $this->vendor();
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.store'), $this->validPayload($category, $vendor, [
+                'subcategory_id' => $subcategory->id,
+            ]))
+            ->assertSessionHasErrors(['subcategory_id']);
+    }
+
+    public function test_admin_product_name_uniqueness_is_per_vendor(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->adminUser();
+        $category = Category::create(['category_name' => 'Groceries', 'status' => 'active']);
+        $vendorOne = $this->vendor('one');
+        $vendorTwo = $this->vendor('two');
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.store'), $this->validPayload($category, $vendorOne, [
+                'product_name' => 'Shared Product',
+                'images' => [$this->fakePng('shared-one.png')],
+            ]))
+            ->assertRedirect(route('admin.products.index'));
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.store'), $this->validPayload($category, $vendorTwo, [
+                'product_name' => 'Shared Product',
+                'images' => [$this->fakePng('shared-two.png')],
+            ]))
+            ->assertRedirect(route('admin.products.index'));
+
+        $this->assertSame(2, Product::where('product_name', 'Shared Product')->count());
     }
 
     public function test_admin_product_create_rejects_too_many_or_invalid_images(): void
@@ -178,6 +245,9 @@ class ProductCreateTest extends TestCase
             'unit' => 'kg',
             'low_stock_threshold' => 5,
             'status' => 'active',
+            'images' => [
+                $this->fakePng('product.png'),
+            ],
         ], $overrides);
     }
 
@@ -195,31 +265,31 @@ class ProductCreateTest extends TestCase
         ]);
     }
 
-    private function vendor(): Vendor
+    private function vendor(string $suffix = 'one'): Vendor
     {
         $country = Country::create([
-            'country_name' => 'Test Country',
-            'country_code' => 'TC',
+            'country_name' => 'Test Country '.$suffix,
+            'country_code' => 'TC'.strtoupper($suffix),
             'currency' => 'GBP',
             'status' => 'active',
         ]);
         $city = City::create([
             'country_id' => $country->id,
-            'city_name' => 'Test City',
-            'city_code' => 'TCY',
+            'city_name' => 'Test City '.$suffix,
+            'city_code' => 'TCY'.strtoupper($suffix),
             'status' => 'active',
         ]);
         $zone = RegionZone::create([
             'country_id' => $country->id,
             'city_id' => $city->id,
-            'zone_name' => 'Central',
-            'zone_code' => 'CENTRAL',
+            'zone_name' => 'Central '.$suffix,
+            'zone_code' => 'CENTRAL'.strtoupper($suffix),
             'status' => 'active',
         ]);
 
         return Vendor::create([
-            'vendor_name' => 'Vendor One',
-            'email' => 'vendor-one@example.test',
+            'vendor_name' => 'Vendor '.$suffix,
+            'email' => 'vendor-'.$suffix.'@example.test',
             'phone' => '1234567890',
             'address' => 'Test address',
             'country_id' => $country->id,

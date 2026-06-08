@@ -16,6 +16,7 @@ use App\Services\ProductBulkTemplateService;
 use App\Support\UploadedImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -131,9 +132,14 @@ class ProductController extends Controller
 
         $this->validateDiscountDates($data);
 
-        $product = Product::create($data);
-        $this->syncInventory($product, $request);
-        $this->syncImages($product, $request, false);
+        $product = DB::transaction(function () use ($data, $request) {
+            $product = Product::create($data);
+            $this->syncInventory($product, $request);
+            $this->syncImages($product, $request, false);
+
+            return $product;
+        });
+
         $this->queueEposSyncIfNeeded($product);
 
         return $this->redirectToIndex($request, 'vendor.products.index', 'Product created successfully.');
@@ -171,10 +177,13 @@ class ProductController extends Controller
 
         $this->validateDiscountDates($data);
 
-        $product->update($data);
-        $this->syncInventory($product, $request);
-        $this->removeSelectedImages($product, $request);
-        $this->syncImages($product, $request, true);
+        DB::transaction(function () use ($product, $data, $request) {
+            $product->update($data);
+            $this->syncInventory($product, $request);
+            $this->removeSelectedImages($product, $request);
+            $this->syncImages($product, $request, true);
+        });
+
         $this->queueEposSyncIfNeeded($product);
 
         return $this->redirectToIndex($request, 'vendor.products.index', 'Product updated successfully.');
@@ -227,7 +236,11 @@ class ProductController extends Controller
             ],
             'description' => ['nullable', 'string'],
             'category_id' => ['required', 'exists:categories,id'],
-            'subcategory_id' => ['nullable', 'exists:subcategories,id'],
+            'subcategory_id' => [
+                'nullable',
+                Rule::exists('subcategories', 'id')
+                    ->where(fn ($query) => $query->where('category_id', $request->integer('category_id'))),
+            ],
             'tax_id' => [
                 'nullable',
                 Rule::exists('taxes', 'id')
@@ -243,7 +256,7 @@ class ProductController extends Controller
             'stock_quantity' => ['required_if:inventory_mode,internal', 'integer', 'min:0'],
             'unit' => ['required', Rule::in(['kg', 'nos', 'pieces'])],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
-            'images' => ['nullable', 'array', 'max:5'],
+            'images' => [$product ? 'nullable' : 'required', 'array', 'max:5'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
             'remove_image_ids' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
@@ -260,6 +273,7 @@ class ProductController extends Controller
             'discount_end_date.after_or_equal' => 'Discount end date must be after or equal to the start date.',
             'stock_quantity.required_if' => 'Stock quantity is required for internal inventory products.',
             'unit.required' => 'Unit is required.',
+            'images.required' => 'At least one product image is required.',
             'images.*.max' => 'Each product image must be 2 MB or smaller.',
             'images.*.mimes' => 'Product images must be JPG, JPEG, PNG, WEBP or GIF files.',
         ]);
