@@ -45,7 +45,7 @@
                                 <span>Track this order from your order history</span><i class="ti ti-chevron-right"></i>
                             </a>
                             @if ($paymentStatus === 'paid')
-                                <div class="sf-coupon-row"><span>Payment confirmed through Stripe</span><i class="ti ti-chevron-right"></i></div>
+                               
                             @endif
                             <a href="{{ route('user.home') }}" class="sf-coupon-row text-decoration-none text-dark">
                                 <span>Continue shopping for more items</span><i class="ti ti-chevron-right"></i>
