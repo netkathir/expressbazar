@@ -1332,7 +1332,8 @@ class StorefrontController extends Controller
             $query->where('subcategory_id', $subcategory->id);
         }
 
-        return $query->limit(60)->get();
+            return $query->get();
+
     }
 
     private function categoryProductSections(?array $location, ?Category $category = null, ?Subcategory $subcategory = null, int $limitPerSection = 12): array
@@ -1414,12 +1415,11 @@ class StorefrontController extends Controller
     }
 
     private function subcategoryProducts(Subcategory $subcategory)
-    {
-        return $this->productsQuery($this->browsingLocation())
-            ->where('subcategory_id', $subcategory->id)
-            ->limit(60)
-            ->get();
-    }
+{
+    return $this->productsQuery($this->browsingLocation())
+        ->where('subcategory_id', $subcategory->id)
+        ->get();
+}
 
     private function vendorProducts(Vendor $vendor, ?array $location)
     {
