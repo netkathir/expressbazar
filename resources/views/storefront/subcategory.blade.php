@@ -26,22 +26,7 @@
             </div>
 
             <div class="sf-filter-row">
-                <button type="button" class="sf-filter-pill">Brand</button>
-                <button type="button" class="sf-filter-pill">Price</button>
                 <button type="button" class="sf-filter-pill active">All products</button>
-                <form method="GET" action="{{ route('storefront.subcategory', $subcategory) }}" class="d-inline-flex align-items-center gap-2">
-                    @if (!empty($pincode ?? null))
-                        <input type="hidden" name="pincode" value="{{ $pincode }}">
-                    @endif
-                    <select name="vendor_id" class="form-select form-select-sm rounded-pill js-filter-input" style="min-width: 220px;" onchange="if (!window.storefrontAjaxFilters) this.form.submit()">
-                        <option value="">Vendors</option>
-                        @forelse (($vendors ?? collect()) as $vendor)
-                            <option value="{{ $vendor->id }}" @selected((string) ($selectedVendorId ?? request('vendor_id')) === (string) $vendor->id)>{{ $vendor->vendor_name }}</option>
-                        @empty
-                            <option disabled>{{ config('ui_messages.no_vendors') }}</option>
-                        @endforelse
-                    </select>
-                </form>
             </div>
 
             <div class="sf-grid sf-product-grid js-product-list" id="product-list">

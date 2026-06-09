@@ -2056,7 +2056,7 @@ class StorefrontController extends Controller
         $senderMessage = implode("\n", [
             'Hi '.$data['name'].',',
             '',
-            'Thank you for contacting '.config('app.name', 'Express Bazaar').'. We have received your message and our team will get back to you soon.',
+            'Thank you for contacting our support team. We have received your message and our team will get back to you soon.',
             '',
             'Reference: '.$inquiryReference,
             'Subject: '.$data['subject'],
@@ -2081,7 +2081,7 @@ class StorefrontController extends Controller
 
         try {
             Mail::to($data['email'])->send(new GenericTemplateMail(
-                'We received your message - '.config('app.name', 'Express Bazaar'),
+                'We received your message - Support Team',
                 $senderMessage
             ));
         } catch (Throwable $exception) {
