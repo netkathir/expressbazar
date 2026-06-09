@@ -122,13 +122,14 @@
                                     $offerUnit = \App\Support\StoreOfferPricing::cartItemOfferUnit($item);
                                     $itemSavings = \App\Support\StoreOfferPricing::cartItemSavings($item);
                                     $discountLabel = \App\Support\StoreOfferPricing::discountLabel($item['product'], $baseUnit, $offerUnit);
+                                    $hasOfferPrice = $baseUnit > $offerUnit;
                                 @endphp
                                 <div class="d-flex justify-content-between align-items-start gap-3 small mb-2">
                                     <span>
                                         <span class="d-block">{{ $item['product']->product_name }} x {{ $item['quantity'] }}</span>
                                         <span class="d-block text-secondary">
-                                            Offer price: <span class="fw-semibold text-success">{{ \App\Support\StoreCurrency::format($offerUnit, 0) }}</span>
-                                            @if ($baseUnit > $offerUnit)
+                                            {{ $hasOfferPrice ? 'Offer price' : 'Price' }}: <span class="fw-semibold text-success">{{ \App\Support\StoreCurrency::format($offerUnit, 0) }}</span>
+                                            @if ($hasOfferPrice)
                                                 <span class="text-decoration-line-through ms-1">{{ \App\Support\StoreCurrency::format($baseUnit, 0) }}</span>
                                             @endif
                                         </span>
